@@ -8,7 +8,7 @@ const root = resolve('site');
 const required = [
   'index.html', 'histoires.html', 'ecouter.html', 'qui-suis-je.html', 'confidentialite.html', '404.html',
   'config.js', 'robots.txt', '_headers', '_redirects',
-  'assets/main.js', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'data/histoires.json'
+  'assets/main.js', 'assets/images.config.json', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'data/histoires.json'
 ];
 for (const filename of required) {
   const file = resolve(root, filename);
@@ -82,7 +82,7 @@ assert.match(home,/class="section-heading"/, 'L’en-tête de la rubrique doit r
 assert.match(home,/href="histoires.html"/, 'La bibliothèque doit rester accessible.');
 for(const s of stories){
  assert.ok(Array.isArray(s.tags) && s.tags.length>0,`${s.slug}: thèmes absents`);
- assert.match(s.image,/^assets\/stories\/[a-z0-9-]+\.svg$/,`${s.slug}: couverture non locale`);
+ assert.match(s.image,/^assets\/(?:images|stories)\/[a-zA-Z0-9_.-]+\.(?:svg|png|jpe?g|webp|avif)$/i,`${s.slug}: couverture non locale`);
  assert.ok((await stat(resolve(root,s.image))).isFile(),`${s.slug}: couverture locale manquante`);
 }
 for (const file of ['index.html','histoires.html','ecouter.html','qui-suis-je.html','confidentialite.html','data/histoires.json',...stories.map(s=>`histoires/${s.slug}/index.html`)]) {
@@ -93,3 +93,16 @@ for (const file of ['index.html','histoires.html','ecouter.html','qui-suis-je.ht
 }
 assert.match(sitemap,/https:\/\/histoires2dansmatete\.fr\/histoires\//);
 console.log('✓ V5 : domaine final, 13 couvertures locales, absence de liens WordPress, accueil sans grille.');
+
+// V6 : intégrité des assets configurés et présence des liens officiels
+const imgConf=JSON.parse(await readFile(resolve(root,'assets/images.config.json'),'utf8'));
+assert.equal(Object.keys(imgConf.stories).length,stories.length,'Toutes les histoires doivent avoir une image configurée');
+for(const key of ['logo','author'])assert.ok(imgConf.globals[key],`Image globale ${key} non configurée`);
+for(const s of stories)assert.ok(imgConf.stories[s.slug],`Image non configurée pour ${s.slug}`);
+for(const icon of ['instagram','facebook','spotify','apple-podcasts','deezer','amazon'])assert.ok((await stat(resolve(root,`assets/icons/${icon}.svg`))).isFile(),`Icône ${icon} manquante`);
+for(const page of htmlPages.filter(p=>p!=='404.html')){
+ const content=await readFile(resolve(root,page),'utf8');
+ assert.ok(content.includes('https://www.instagram.com/les_histoires_2_dans_ma_tete/'),`${page}: Instagram absent`);
+ assert.ok(content.includes('https://www.facebook.com/profile.php?id=61587115217827'),`${page}: Facebook absent`);
+}
+console.log('✓ V6 : configuration des images, logos des plateformes et liens sociaux contrôlés.');

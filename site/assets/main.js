@@ -87,6 +87,8 @@
   if(coverNodes.length){
     fetch('/data/histoires.json',{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(stories=>{
       const active=new Set(stories.map(s=>s.slug));
+      const bySlug=new Map(stories.map(s=>[s.slug,s]));
+      coverNodes.forEach(card=>{const s=bySlug.get(card.dataset.storySlug);const img=card.querySelector('img.cover-image');if(s&&img){img.dataset.fallback=`assets/stories/${s.slug}.svg`;img.src=s.image;}});
       coverNodes.forEach(card=>{if(!active.has(card.dataset.storySlug)){card.remove();}});
       const cards=[...document.querySelectorAll('.cover-card[data-cover]')];
       cards.forEach((card,n)=>card.dataset.cover=String(n));

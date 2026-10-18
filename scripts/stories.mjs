@@ -1,6 +1,7 @@
 /** Génération de pages d'histoires statiques, publiées par Cloudflare Pages. */
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { configuredImages, imageFor, globalImageFor } from './images.mjs';
 
 export const escapeHtml = (value='') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const safeSlug = slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
@@ -15,6 +16,8 @@ export async function data(){
  if(!Array.isArray(stories))throw Error('Catalogue invalide');
  if(stories.some(s=>!safeSlug(s.slug)))throw Error('Un identifiant d’histoire contient un caractère invalide');
  if(new Set(stories.map(s=>s.slug)).size!==stories.length)throw Error('Identifiants en double');
+ const config=await configuredImages();
+ for(const story of stories)story.image=await imageFor(story,config);
  return stories;
 }
 /** Pas de HTML actif : uniquement la typographie et les paragraphes du récit. */
@@ -30,14 +33,15 @@ export function sanitizeStoryHTML(raw){
  return cleaned;
 }
 const platformNames = {spotify:'Spotify',apple:'Apple Podcasts',deezer:'Deezer',amazon:'Amazon Music'};
-const platformShort = {spotify:'◉',apple:'♫',deezer:'▥',amazon:'◖'};
+const platformIcons = {spotify:'spotify.svg',apple:'apple-podcasts.svg',deezer:'deezer.svg',amazon:'amazon.svg'};
 const plural = (n, one, many) => `${n} ${n>1?many:one}`;
 
+function socialFooter(prefix){return `<nav class="social-links" aria-label="Réseaux sociaux"><a href="https://www.instagram.com/les_histoires_2_dans_ma_tete/" target="_blank" rel="noopener noreferrer" aria-label="Les histoires de Dans ma tête sur Instagram"><img src="${prefix}assets/icons/instagram.svg" alt="" aria-hidden="true"> Instagram</a><a href="https://www.facebook.com/profile.php?id=61587115217827" target="_blank" rel="noopener noreferrer" aria-label="Les histoires de Dans ma tête sur Facebook"><img src="${prefix}assets/icons/facebook.svg" alt="" aria-hidden="true"> Facebook</a></nav>`}
 export function renderStory(story,index,all){
  const h=escapeHtml;
  const title=h(story.title||'Histoire');
  const subtitle=story.subtitle ? `<p class="episode-subtitle">${h(story.subtitle)}</p>`:'';
- const image= /^assets\/stories\/[a-z0-9-]+\.svg$/.test(story.image||'') ? '../../'+story.image : safeURL(story.image);
+ const image= /^assets\/(?:stories|images)\/[a-zA-Z0-9_.-]+\.(?:svg|png|jpe?g|webp|avif)$/i.test(story.image||'') ? '../../'+story.image : safeURL(story.image);
  const body= sanitizeStoryHTML(story.bodyHtml);
  const audio=safeMedia(story.audioUrl);
  const showReady= Boolean(audio);
@@ -47,7 +51,7 @@ export function renderStory(story,index,all){
  const prev=all[(index - 1 + all.length)%all.length], next=all[(index + 1)%all.length];
  const platforms=Object.entries(platformNames).map(([key,name])=>{
   const u=safeURL(story.platforms?.[key]);
-  return `<a class="episode-platform ${u?'episode-platform-ready':''}" data-platform="${key}" ${u?`href="${h(u)}" target="_blank" rel="noopener noreferrer"`:'aria-disabled="true"'}><span class="episode-platform-mark" aria-hidden="true">${platformShort[key]}</span><span>${name}</span><span class="platform-status">${u?'Écouter ↗':'À venir'}</span></a>`;
+  return `<a class="episode-platform ${u?'episode-platform-ready':''}" data-platform="${key}" ${u?`href="${h(u)}" target="_blank" rel="noopener noreferrer"`:'aria-disabled="true"'}><span class="episode-platform-mark" aria-hidden="true"><img src="../../assets/icons/${platformIcons[key]}" alt="" loading="lazy"></span><span>${name}</span><span class="platform-status">${u?'Écouter ↗':'À venir'}</span></a>`;
  }).join('');
  const reader=body
  ? `<div class="reading-body">${body}</div>`
@@ -64,13 +68,14 @@ export function renderStory(story,index,all){
 <section class="episode-audio" id="audio"><div class="container"><div class="section-kicker">✳ LE PODCAST</div><h2>À écouter <em>en famille</em></h2>${player}<div class="episode-platforms"><h3>Retrouvez aussi le podcast sur vos plateformes</h3><div class="episode-platform-grid">${platforms}</div><p class="episode-platform-note">Les liens de chaque épisode s’activeront après publication. Vous pouvez aussi consulter la <a href="../../ecouter.html">page « Où écouter ? »</a>.</p></div></div></section>
 <section class="reading-section" id="lecture"><div class="container"><div class="reading-heading"><div><div class="section-kicker">✶ PLACE À L’IMAGINATION</div><h2>L’histoire <em>à lire</em></h2><p>Installez-vous confortablement… il était une fois !</p></div><span aria-hidden="true">❦</span></div><article class="reading-paper" aria-label="Texte intégral de l’histoire ${title}">${reader}${body?`<div class="reading-end" aria-hidden="true">✳ &nbsp; ✳ &nbsp; ✳</div>`:''}</article><div class="reading-source">Texte © Les histoires de « Dans ma tête » — Tous droits réservés.</div></div></section>
 <section class="episode-more"><div class="container"><div class="section-kicker">✳ POUR CONTINUER À RÊVER</div><h2>Encore une <em>petite histoire ?</em></h2><div class="episode-neighbors"><a href="../${h(prev.slug)}/"><span>← Une autre aventure</span><strong>${h(prev.title)}</strong></a><a href="../${h(next.slug)}/"><span>Une autre aventure →</span><strong>${h(next.title)}</strong></a></div><a class="all-episodes" href="${pageURL}">Voir toutes les histoires ↗</a></div></section></main>
-<footer class="site-footer"><div class="container footer-top"><a class="brand footer-brand" href="../../index.html"><img class="brand-logo" src="../../assets/logo.webp" alt="" width="45" height="45"><span class="brand-copy"><span class="brand-small">Les histoires de</span><strong>Dans ma tête<span class="brand-period">.</span></strong></span></a><p>Des histoires inventées avec le cœur,<br>à lire aujourd’hui et bientôt à écouter.</p><nav class="footer-nav" aria-label="Liens utiles"><a href="${pageURL}">Toutes les histoires</a><a href="../../ecouter.html">Où écouter ?</a><a href="../../qui-suis-je.html">Qui suis-je ?</a><a href="../../confidentialite.html">Confidentialité</a></nav></div><div class="container footer-bottom">© 2026 Les histoires de « Dans ma tête » — Tous droits réservés.</div></footer></body></html>`;
+<footer class="site-footer"><div class="container footer-top"><a class="brand footer-brand" href="../../index.html"><img class="brand-logo" src="../../assets/logo.webp" alt="" width="45" height="45"><span class="brand-copy"><span class="brand-small">Les histoires de</span><strong>Dans ma tête<span class="brand-period">.</span></strong></span></a><p>Des histoires inventées avec le cœur,<br>à lire aujourd’hui et bientôt à écouter.</p><nav class="footer-nav" aria-label="Liens utiles"><a href="${pageURL}">Toutes les histoires</a><a href="../../ecouter.html">Où écouter ?</a><a href="../../qui-suis-je.html">Qui suis-je ?</a><a href="../../confidentialite.html">Confidentialité</a></nav>${socialFooter("../../")}</div><div class="container footer-bottom">© 2026 Les histoires de « Dans ma tête » — Tous droits réservés.</div></footer></body></html>`;
 }
 export async function writePublicStories(stories){
+ const cfg=await configuredImages();const globalLogo=await globalImageFor('logo',cfg);
  const target=resolve('site/histoires');
  await rm(target,{recursive:true,force:true});
  for(const [i,story] of stories.entries()){
-  const dir=join(target,story.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory(story,i,stories));
+  const dir=join(target,story.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory(story,i,stories).replaceAll('../../assets/logo.webp','../../'+globalLogo));
  }
  console.log(`✓ ${plural(stories.length,'fiche podcast publique','fiches podcast publiques')} générées dans site/histoires/.`);
 }

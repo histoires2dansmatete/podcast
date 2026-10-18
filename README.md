@@ -1,3 +1,36 @@
+# Les histoires de Dans ma tête — V6
+
+**Nouveautés V6 :** images configurables centralement, logos vectoriels locaux des réseaux et plateformes, confidentialité avec contact Instagram et Facebook.
+
+## Configurer les 13 images
+
+1. Copiez vos images originales dans `site/assets/images/`.
+2. Ouvrez `site/assets/images.config.json`. Chaque histoire y possède une entrée avec le **nom du fichier original WordPress** et une URL locale `assets/images/NomDuFichier.png`. Adaptez le nom si votre image a été renommée.
+3. Lancez `npm run dev` (ou `npm run build`). Le générateur vérifie que les fichiers existent : **si présents, ils s'affichent** dans les pages histoires, le catalogue, le carrousel de l'accueil et les balises de partage ; sinon, une couverture SVG intégrée est utilisée.
+4. Les images ne sont pas comprises dans cette archive si elles n'étaient pas dans la V5 transmise. Aucune image n'est chargée depuis l'ancien WordPress.
+
+## Liens sociaux et logos des plateformes
+
+- Instagram : https://www.instagram.com/les_histoires_2_dans_ma_tete/
+- Facebook : https://www.facebook.com/profile.php?id=61587115217827
+- Icônes vectorielles locales dans `site/assets/icons/` ; attribution dans `site/assets/icons/ATTRIBUTION.md`.
+- Les plateformes audio sont encore désactivées tant que leurs URLs ne sont pas renseignées dans `site/config.js`.
+- La confidentialité renvoie vers Instagram et Facebook pour contacter l’éditrice.
+
+## Développement et Cloudflare
+
+```bash
+npm ci
+npm run dev
+npm run check
+npm run test:security
+npm run build
+```
+
+Déployer `dist/` via GitHub → Cloudflare Pages (build `npm run build`). La configuration D1 et la protection Cloudflare Access de `/admin/` restent requises en production.
+
+---
+
 # Les histoires de Dans ma tête — V5
 
 Un site statique pour Cloudflare Pages, avec **13 récits intégralement importés**, catalogue filtrable, pages de podcast et administration privée pour les statistiques et les publications.

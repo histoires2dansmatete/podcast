@@ -1,0 +1,23 @@
+{
+  "$schema": "./images.config.schema.json",
+  "description": "Correspondance unique entre les fichiers images locaux et les emplacements du site. Copiez les images dans assets/images/ ; les couvertures SVG sont utilisées en secours.",
+  "globals": {
+    "logo": "assets/images/logo.webp",
+    "author": "assets/images/aubout_me.png"
+  },
+  "stories": {
+    "lamitie-comme-sur-des-roulettes": "assets/images/minipeton.png",
+    "flemme": "assets/images/toctoc.png",
+    "la-disparition": "assets/images/kevin.png",
+    "herissonne-de-paques": "assets/images/spikette.png",
+    "petit-ourson-deviendra-grand": "assets/images/flash.png",
+    "les-aventures-de-perly-et-popette": "assets/images/perly_popette.png",
+    "les-aventures-de-perly-et-popette-2": "assets/images/perly_popette_halloween.png",
+    "les-aventures-de-perly-et-popette-3": "assets/images/perly_popette_olympics.png",
+    "libres": "assets/images/flocon.png",
+    "salade-de-trefles": "assets/images/shipou.png",
+    "les-mysteres-de-la-rue-station": "assets/images/rustation.png",
+    "les-aventures-de-perly-et-popette-4": "assets/images/perly_popette_chandeleur.png",
+    "bas-les-masques": "assets/images/bas_les_masques.png"
+  }
+}

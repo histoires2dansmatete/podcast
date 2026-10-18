@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "globals",
+    "stories"
+  ],
+  "properties": {
+    "globals": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "stories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^assets/images/[A-Za-z0-9_.-]+\\.(png|jpg|jpeg|webp|svg|avif)$"
+      }
+    }
+  }
+}

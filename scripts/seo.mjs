@@ -2,12 +2,14 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { data, escapeHtml } from './stories.mjs';
+import {configuredImages,globalImageFor} from './images.mjs';
 const siteBase = (process.env.SITE_URL || 'https://histoires2dansmatete.fr').replace(/\/+$/, '');
 const u = new URL(siteBase);
 if (u.protocol !== 'https:' || u.pathname !== '/' || u.search || u.hash) throw new Error('SITE_URL doit être une origine HTTPS sans chemin (ex: https://podcast.exemple.fr).');
 const site = u.origin;
 const h=escapeHtml;
 const stories=await data();
+const globalLogo=await globalImageFor('logo',await configuredImages());
 const general = {
  'index.html': {url:'/',title:'Histoires pour enfants à lire et bientôt à écouter | Dans ma tête',description:'Découvrez les histoires pour enfants de Dans ma tête : 13 aventures illustrées à lire en famille et bientôt à écouter en podcast.',type:'WebPage'},
  'histoires.html': {url:'/histoires.html',title:'Toutes les histoires pour enfants | Dans ma tête',description:'Une bibliothèque de 13 histoires illustrées à lire : animaux, amitié, confiance, courage et émotions. Les futurs épisodes audio de Dans ma tête.',type:'CollectionPage'},
@@ -17,8 +19,9 @@ const general = {
  '404.html': {url:'/404.html',title:'Page introuvable | Dans ma tête',description:'Cette page n’existe pas.',type:'WebPage',noindex:true}
 };
 const published=[];
-const author={ '@type':'Person',name:'Griotte Lapone' };
-const publisher={ '@type':'Organization',name:'Les histoires de Dans ma tête',url:site+'/',logo:{'@type':'ImageObject',url:site+'/assets/logo.webp'}};
+const socials=['https://www.instagram.com/les_histoires_2_dans_ma_tete/','https://www.facebook.com/profile.php?id=61587115217827'];
+const author={ '@type':'Person',name:'Griotte Lapone',sameAs:socials };
+const publisher={ '@type':'Organization',name:'Les histoires de Dans ma tête',url:site+'/',sameAs:socials,logo:{'@type':'ImageObject',url:site+'/'+globalLogo}};
 const entries = [...Object.entries(general).map(([filename,p])=>({filename,...p}))];
 for (const s of stories) entries.push({filename:`histoires/${s.slug}/index.html`,url:`/histoires/${s.slug}/`, title:`${s.title}${s.subtitle?' — '+s.subtitle:''} | Histoire pour enfants`,description:s.description || `Lisez ${s.title}, une histoire pour enfants imaginée par Griotte Lapone.`,type:'Article',story:s,lastmod:s.modified||s.date});
 for (const entry of entries){
@@ -29,7 +32,7 @@ for (const entry of entries){
  html=html.replace(/<meta\s+(?:[^>]*?)(?:name|property)=["'](?:description|robots|og:[^"']+|twitter:[^"']+)["'][^>]*>/gi,'');
  const absolute=site+entry.url;
  const fullTitle=entry.title;
- const ogImage=entry.story?.image?.startsWith('assets/') ? site+'/'+entry.story.image : site+'/assets/logo.webp';
+ const ogImage=entry.story?.image?.startsWith('assets/') ? site+'/'+entry.story.image : site+'/'+globalLogo;
  const seoJson=[
   {'@context':'https://schema.org','@type':'WebSite',name:'Les histoires de Dans ma tête',url:site+'/',inLanguage:'fr-FR',publisher},
   {'@context':'https://schema.org','@type':entry.type,name:entry.story?entry.story.title:fullTitle,headline:entry.story?entry.story.title:fullTitle,description:entry.description,url:absolute,inLanguage:'fr-FR',...(entry.story?{datePublished:entry.story.date,dateModified:entry.story.modified||entry.story.date,author,publisher,image:ogImage,mainEntityOfPage:absolute,genre:entry.story.tags||[],isAccessibleForFree:true}:{} )},
