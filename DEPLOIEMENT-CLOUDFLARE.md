@@ -153,3 +153,13 @@ Dans **Cloudflare → Workers & Pages → podcast-7ck → Settings → Variables
 Le générateur utilise automatiquement les WebP plus légers lorsqu'ils existent ; si l'un est absent, il utilise l'original ou sa couverture de secours. Les animations GIF et les SVG ne sont pas modifiés. Pour changer les paramètres d'optimisation, relancez `npm run optimize:images -- --force --quality 80 --max-size 1400`.
 
 Le build ajoute `decoding="async"` et `loading="lazy"` aux images non prioritaires, et allège les CSS dans `dist/`. Ces changements n'affectent pas les sources HTML ou CSS, et sont vérifiés en CI. La réduction réelle dépend de vos images originales ; l'archive n'inclut pas ces originaux.
+
+## V12.3 — Diagnostic sans accès aux secrets de Cloudflare
+
+Après publication de la V12.3 sur la branche Production, exécutez depuis le dossier local où l'accès admin fonctionne :
+
+```bash
+npm run admin:verify-cloudflare -- --url https://podcast-7ck.pages.dev
+```
+
+Cette commande compare la paire de secrets active côté Cloudflare à la paire dans votre `.env.local`, **sans transmettre ces valeurs**. Référez-vous à `CORRECTIF-ADMIN-PRODUCTION.md` pour interpréter les résultats. Un `admin:sync-cloudflare` réussi ne démontre pas que le déploiement actif a déjà repris les nouvelles valeurs : redéployez la production après la synchronisation.

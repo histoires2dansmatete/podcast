@@ -127,3 +127,15 @@ Le nouveau header présente deux icônes rondes **Instagram** et **Facebook** av
 - **Statistiques** : visites et interactions sur consentement, sans suivi nominatif. Les statistiques de production apparaissent après la mise en place de D1 et les premières visites consenties. Pour un suivi plus large, utilisez aussi Cloudflare Web Analytics (configuration distincte).
 
 Les fichiers `functions/` à la racine du dépôt sont indispensables pour l'administration et les états des histoires : le déploiement doit se faire **via l'intégration GitHub**, pas uniquement en publiant un ZIP du dossier `dist/`.
+
+## V12.3 — Diagnostic d'authentification sur le déploiement actif
+
+Le message « Mot de passe incorrect » signifie que PBKDF2 n'a pas validé le mot de passe avec le hash fourni à l'instance (ce n'est pas la réponse 429 de limitation de tentatives). Après la synchronisation, vérifiez que le dernier **déploiement Production** a effectivement chargé les nouveaux secrets. Pour lever le doute sans les divulguer, la V12.3 ajoute :
+
+```bash
+npm run admin:verify-cloudflare -- --url https://podcast-7ck.pages.dev
+```
+
+La commande envoie une **preuve HMAC de courte durée**, jamais le mot de passe, le hash ou la clé. Un succès certifie que les deux valeurs secrètes utilisées par l'instance Cloudflare correspondent à `.env.local` ; un échec désigne un décalage de configuration/de déploiement. Consultez `CORRECTIF-ADMIN-PRODUCTION.md` pour la procédure détaillée. La commande nécessite que la V12.3 soit déjà publiée sur Pages.
+
+Pour vérifier que le mot de passe utilisé correspond bien au hash **contenu dans `.env.local`** (et non à une éventuelle variable d’environnement prioritaire du terminal), exécutez `npm run admin:check-password` dans un vrai terminal : la saisie est masquée et aucun secret n’est transmis.
