@@ -24,12 +24,12 @@ for(const m of xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)){
  const categories=[...block.matchAll(/<category\s+[^>]*domain="post_tag"[^>]*>([\s\S]*?)<\/category>/g)].map(x=>text(x[1]));
  const body=sanitizeStoryHTML(get(block,'content:encoded'));
  result.set(slug,{
-  slug,title,subtitle:original.subtitle||'',
+  ...original,slug,title,subtitle:original.subtitle||'',
   theme:original.theme||categories.join(' & ')||'Histoires',
   description:original.description||text(body).slice(0,190),
   source:source||original.source||'https://histoires2dansmatete.fr/',
   image:original.image||'',emoji:original.emoji||'📖',
-  minutes:original.minutes||'',date:original.date||get(block,'wp:post_date').slice(0,10),
+  minutes:original.minutes||'',date:original.date||get(block,'wp:post_date').slice(0,10),modified:get(block,'wp:post_modified').slice(0,10)||original.modified||'',tags:categories,author:'Griotte Lapone',
   bodyHtml:body||original.bodyHtml||''
  });count++;
 }

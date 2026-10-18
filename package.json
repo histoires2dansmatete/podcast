@@ -1,20 +1,22 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
   "scripts": {
     "dev": "node scripts/server.mjs",
-    "check": "node scripts/generate.mjs && node scripts/check.mjs",
-    "build": "node scripts/generate.mjs && node scripts/check.mjs && node scripts/build.mjs",
+    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/check.mjs",
+    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/check.mjs && node scripts/build.mjs",
     "preview": "node scripts/server.mjs --preview",
     "drafts": "node scripts/generate.mjs",
     "sync:blog": "node scripts/sync-blog.mjs",
     "import:wordpress": "node scripts/import-wordpress.mjs",
     "generate:stories": "node scripts/generate.mjs",
-    "predev": "node scripts/generate.mjs",
-    "build:sync": "node scripts/sync-blog.mjs && npm run build"
+    "predev": "node scripts/generate.mjs && node scripts/seo.mjs",
+    "build:sync": "node scripts/sync-blog.mjs && npm run build",
+    "generate:seo": "node scripts/generate.mjs && node scripts/seo.mjs",
+    "test:security": "node scripts/test-functions.mjs"
   },
   "engines": {
     "node": ">=22"

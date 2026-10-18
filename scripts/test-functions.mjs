@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { webcrypto } from 'node:crypto';
+import {authorize} from '../functions/_lib/access.js';
+import {onRequestGet as admin} from '../functions/admin/index.js';
+import {onRequestGet as stats} from '../functions/api/admin/stats.js';
+import {onRequestPost as track} from '../functions/api/track.js';
+const env={ACCESS_TEAM_DOMAIN:'mytest.cloudflareaccess.com',ACCESS_AUD:'test-aud'};
+const request=(token)=>new Request('https://podcast.example.fr/admin/',{headers:token?{'Cf-Access-Jwt-Assertion':token}:{}});
+let result=await authorize({env,request:request()});assert.equal(result.status,401);
+result=await authorize({env:{},request:request()});assert.equal(result.status,503);
+result=await authorize({env,request:request('a.b.c')});assert.equal(result.status,403);
+result=await admin({env,request:request()});assert.equal(result.status,401);
+result=await stats({env,request:request()});assert.equal(result.status,401);
+const kp=await webcrypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
+const pub=await webcrypto.subtle.exportKey('jwk',kp.publicKey);pub.kid='testing';
+const before=globalThis.fetch;
+globalThis.fetch=async url=>{assert.match(url,/mytest\.cloudflareaccess\.com/);return Response.json({keys:[pub]});};
+function b64(x){return Buffer.from(typeof x==='string'?x:JSON.stringify(x)).toString('base64url');}
+async function token(payload){const encoded=b64({alg:'RS256',kid:'testing'})+'.'+b64(payload);const sig=await webcrypto.subtle.sign('RSASSA-PKCS1-v1_5',kp.privateKey,new TextEncoder().encode(encoded));return encoded+'.'+Buffer.from(sig).toString('base64url');}
+const now=Math.floor(Date.now()/1000);
+const good=await token({iss:'https://mytest.cloudflareaccess.com',aud:['test-aud'],iat:now,exp:now+3600});
+result=await authorize({env,request:request(good)});assert.equal(result,null);
+const bad=await token({iss:'https://untrusted.example',aud:['test-aud'],iat:now,exp:now+3600});
+result=await authorize({env,request:request(bad)});assert.equal(result.status,403);
+const wrongAudience=await token({iss:'https://mytest.cloudflareaccess.com',aud:['other'],iat:now,exp:now+3600});
+result=await authorize({env,request:request(wrongAudience)});assert.equal(result.status,403);
+result=await admin({env,request:request(good)});assert.equal(result.status,200);assert.match(await result.text(),/Votre audience/);
+globalThis.fetch=before;
+const trReq=new Request('https://podcast.example.fr/api/track',{method:'POST',headers:{'Origin':'https://podcast.example.fr','Content-Type':'application/json'},body:JSON.stringify({consent:true,event:'pageview',page:'/',session:'123456789abcdef123456789abcde',device:'desktop'})});
+result=await track({request:trReq,env:{}});assert.equal(result.status,503);
+console.log('✓ Authentification : aucun token refusé, JWT valide accepté, émetteur et audience incorrects rejetés ; analytics sans configuration désactivée.');

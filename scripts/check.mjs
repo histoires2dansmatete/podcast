@@ -60,3 +60,17 @@ for (const key of ['spotify', 'apple', 'deezer', 'amazon']) {
   }
 }
 console.log('✓ Fichiers, liens locaux, ancres et plateformes vérifiés.');
+
+// V4 : SEO et corpus complet ; empêchons le retour accidentel à des fiches vides.
+const sitemap = await readFile(resolve(root,'sitemap.xml'),'utf8');
+assert.equal(stories.length,13,'Les 13 articles publiés du WordPress doivent être dans le catalogue.');
+assert.equal((sitemap.match(/<url>/g)||[]).length,17,'Le sitemap doit comprendre 13 histoires et 4 pages principales.');
+for(const story of stories){
+ assert.ok(story.bodyHtml?.length>350,`${story.slug} : texte intégral absent`);
+ const html=await readFile(resolve(root,'histoires',story.slug,'index.html'),'utf8');
+ assert.match(html,/class="reading-body"/,`${story.slug} : récit non affiché`);
+ assert.match(html,/<link rel="canonical" href="https:\/\//,`${story.slug} : URL canonique manquante`);
+ assert.match(html,/<script type="application\/ld\+json">/,`${story.slug} : données structurées manquantes`);
+ assert.ok(sitemap.includes(`/histoires/${story.slug}/`),`${story.slug} : absent du sitemap`);
+}
+console.log('✓ Corpus complet : 13 récits, 17 URLs sitemap, métadonnées et données structurées contrôlées.');

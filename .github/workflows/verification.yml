@@ -28,6 +28,9 @@ jobs:
       - name: Vérifier le site
         run: npm run check
 
+      - name: Tester la sécurité des fonctions
+        run: npm run test:security
+
       - name: Construire le site
         run: npm run build
 
@@ -44,3 +47,11 @@ jobs:
           # Les pages de podcasts sont publiques dans la V3.
           test -f dist/ecouter.html
           test -f dist/histoires/bas-les-masques/index.html
+
+      - name: Vérifier le sitemap et les Functions
+        run: |
+          test -f dist/sitemap.xml
+          test -f dist/_routes.json
+          test -f functions/admin/index.js
+          test -f functions/api/admin/stats.js
+          test -f functions/api/track.js

@@ -24,3 +24,11 @@ site/histoires/
 # Export WordPress privé (ne jamais committer le XML brut)
 *.xml
 !site/sitemap.xml
+
+# Variables secrètes locales Wrangler
+.dev.vars
+.dev.vars.*
+.wrangler/
+
+# Flux RSS généré au build
+site/histoires.xml
