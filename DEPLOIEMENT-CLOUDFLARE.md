@@ -1,4 +1,4 @@
-# Diagnostic et déploiement Cloudflare — V10
+# Diagnostic et déploiement Cloudflare — V11
 
 ## Quel produit Cloudflare choisir ?
 
@@ -84,3 +84,29 @@ Confirmez la présence sur GitHub de `functions/`, `site/assets/style.css`, `sit
 ## Domaine de production
 
 Lorsque le site sur `*.pages.dev` est entièrement validé, associez `histoires2dansmatete.fr` **au projet Pages** (Custom Domains), puis effectuez la modification DNS adaptée dans Cloudflare. Ne modifiez pas le domaine avant d'avoir vérifié toutes les routes Pages et l'administration. La configuration DNS et le basculement de l'ancien WordPress nécessitent votre accès Cloudflare.
+
+## Erreur « Origine non autorisée » après le mot de passe
+
+Sur `https://podcast-7ck.pages.dev`, **utilisez `/admin/`** et non l'API `/api/admin/login` (qui reçoit un formulaire POST, et n'est pas une page web à ouvrir directement). L'ancien code vérifiait `Origin` sans alternative côté Pages, contrairement au serveur local.
+
+La V11 émet un jeton signé et temporaire dans le formulaire serveur de Pages et vérifie ce jeton lorsqu'`Origin` est absent ou `null`. Les origines tierces explicites et les navigations `Sec-Fetch-Site: cross-site` restent refusées.
+
+Commandes à lancer **dans votre dépôt Git local** :
+
+```bash
+npm ci
+npm run test:security
+npm run build
+npm run test:dist
+git add .
+git commit -m "V11 corrige la connexion admin Cloudflare Pages"
+git push origin main
+```
+
+Attendez un déploiement **Successful** dans Cloudflare Pages, puis :
+
+```bash
+npm run test:remote -- https://podcast-7ck.pages.dev
+```
+
+Cette commande doit indiquer **« Administration : jeton anti-CSRF V11 présent »**. Si elle indique `503`, vérifiez votre base D1 et les secrets de l'environnement adéquat ; le contrôle anti-CSRF ne remplace pas les secrets de production.

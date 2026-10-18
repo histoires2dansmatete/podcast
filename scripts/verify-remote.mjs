@@ -33,4 +33,7 @@ if(catalogue){
 }
 const admin=await get('/admin/','text/html',/admin|connexion|mot de passe/i);
 if(!admin)console.warn('ℹ Vérifiez que la base D1 et les Pages Functions sont bien associées.');
+else if(!/name=["']csrf["']/.test(admin)){
+ console.error('✗ Administration : formulaire sans jeton anti-CSRF. Ancien code serveur encore déployé.');errors++;
+}else console.log('✓ Administration : jeton anti-CSRF V11 présent.');
 if(errors){console.error(`Échec : ${errors} anomalie(s). Contrôlez le projet PAGES, dist et les assets.`);process.exitCode=1;}else{console.log('✓ Vérification du site distant terminée.');}

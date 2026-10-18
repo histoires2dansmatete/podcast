@@ -1,7 +1,7 @@
 /** Authentification admin serveur et protections contre la modification non autorisée. */
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
-import {passwordHash,verifyPassword,createSession,validSession,authorize,createLoginFormToken,validLoginFormToken,localLoginOriginAllowed} from '../functions/_lib/access.js';
+import {passwordHash,verifyPassword,createSession,validSession,authorize,createLoginFormToken,validLoginFormToken,localLoginOriginAllowed,loginOriginAllowed} from '../functions/_lib/access.js';
 import {onRequestGet as admin} from '../functions/admin/index.js';
 import {onRequestPost as login} from '../functions/api/admin/login.js';
 import {onRequestPost as logout} from '../functions/api/admin/logout.js';
@@ -24,13 +24,23 @@ assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{Origin
 assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{Origin:'https://evil.example'}}),csrf,secret),false);
 assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{'Sec-Fetch-Site':'cross-site'}}),csrf,secret),false);
 assert.equal(await localLoginOriginAllowed(new Request(localUrl),null,secret),false);
+// Pages Functions (HTTPS) : certaines requêtes de formulaire arrivent sans Origin.
+// Un jeton signé émis par /admin/ doit suffire, mais ni un site tiers ni une
+// requête sans Origin ET sans jeton ne doivent être acceptés.
+const pagesUrl='https://podcast-7ck.pages.dev/api/admin/login';
+assert.equal(await loginOriginAllowed(new Request(pagesUrl,{headers:{'Sec-Fetch-Site':'same-origin'}}),csrf,secret),true);
+assert.equal(await loginOriginAllowed(new Request(pagesUrl,{headers:{Origin:'null','Sec-Fetch-Site':'same-origin'}}),csrf,secret),true);
+assert.equal(await loginOriginAllowed(new Request(pagesUrl),null,secret),false);
+assert.equal(await loginOriginAllowed(new Request(pagesUrl,{headers:{Origin:'https://evil.example'}}),csrf,secret),false);
+assert.equal(await loginOriginAllowed(new Request(pagesUrl,{headers:{'Sec-Fetch-Site':'cross-site'}}),csrf,secret),false);
+assert.equal(await loginOriginAllowed(new Request('http://not-secure.example/api/admin/login'),csrf,secret),false);
 const base='https://histoires2dansmatete.fr';
 const request=(path,token='',options={})=>new Request(base+path,{...options,headers:{...(token?{Cookie:`h2_admin_session=${token}`}:{}) ,...options.headers}});
 const noSession=request('/admin/');
 assert.equal((await authorize({env,request:noSession})).status,401);
 assert.equal((await authorize({env:{},request:noSession})).status,503);
 const guest=await admin({env,request:noSession});assert.equal(guest.status,200);
-const guestHTML=await guest.text();assert.match(guestHTML,/Mot de passe administrateur/);assert.doesNotMatch(guestHTML,/Gérer la bibliothèque/);
+const guestHTML=await guest.text();assert.match(guestHTML,/Mot de passe administrateur/);assert.doesNotMatch(guestHTML,/Gérer la bibliothèque/);assert.match(guestHTML,/<input type="hidden" name="csrf" value="f1\./);
 assert.equal((await stats({env,request:request('/api/admin/stats')})).status,401);
 assert.equal((await storyList({env,request:request('/api/admin/stories')})).status,401);
 function loginRequest(password,origin=base){return request('/api/admin/login','',{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded','CF-Connecting-IP':'203.0.113.11'},body:new URLSearchParams({password})});}
@@ -38,6 +48,18 @@ const fakeLimits=new Map(),storyStates=new Map();
 const db={prepare(sql){let bound=[];return {bind(...args){bound=args;return this;},async first(){if(sql.includes('admin_login_limits')){const value=fakeLimits.get(bound[0]);return value||null;}return null;},async all(){return {results:[...storyStates].filter(([,enabled])=>enabled===0).map(([slug])=>({slug}))};},async run(){if(sql.includes('INSERT INTO admin_login_limits')){const [key,end]=bound;const old=fakeLimits.get(key);fakeLimits.set(key,{failures:old&&old.expires_at>Date.now()/1000?old.failures+1:1,expires_at:old&&old.expires_at>Date.now()/1000?old.expires_at:end});}else if(sql.includes('DELETE FROM admin_login_limits'))fakeLimits.delete(bound[0]);else if(sql.includes('INSERT INTO story_states'))storyStates.set(bound[0],bound[1]);return {success:true};}}}};
 const config={...env,ANALYTICS_DB:db,ASSETS:{fetch:async()=>Response.json([{slug:'bas-les-masques',title:'Bas les masques'}])}};
 assert.equal((await login({env:config,request:loginRequest('wrong')})).status,303);
+const pagesRequest=(password,headers={},csrfValue=csrf)=>new Request(pagesUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','CF-Connecting-IP':'203.0.113.33',...headers},body:new URLSearchParams({password,csrf:csrfValue})});
+const pagesGuest=await admin({env:config,request:new Request('https://podcast-7ck.pages.dev/admin/')});
+assert.equal(pagesGuest.status,200);
+const pagesGuestHtml=await pagesGuest.text();
+assert.match(pagesGuestHtml,/<input type="hidden" name="csrf" value="f1\./);
+const productionFormToken=pagesGuestHtml.match(/name="csrf" value="([^"]+)"/)?.[1];
+assert.ok(productionFormToken,'Cloudflare : jeton signé émis par /admin/');
+assert.equal((await login({env:config,request:pagesRequest(pass,{'Sec-Fetch-Site':'same-origin'},productionFormToken)})).status,303);
+assert.equal((await login({env:config,request:pagesRequest(pass,{Origin:'null'})})).status,303);
+assert.equal((await login({env:config,request:pagesRequest(pass,{},'')})).status,403);
+assert.equal((await login({env:config,request:pagesRequest(pass,{Origin:'https://evil.example'})})).status,403);
+assert.equal((await login({env:config,request:pagesRequest(pass,{'Sec-Fetch-Site':'cross-site'})})).status,403);
 assert.equal((await login({env:config,request:loginRequest(pass,'https://evil.example')})).status,403);
 const success=await login({env:config,request:loginRequest(pass)});
 assert.equal(success.status,303);assert.equal(success.headers.get('location'),'/admin/');

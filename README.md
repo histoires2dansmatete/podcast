@@ -1,6 +1,19 @@
-# Les histoires de Dans ma tête — version 10
+# Les histoires de Dans ma tête — version 11
 
 Site Web statique pour **https://histoires2dansmatete.fr**, développé en local avec Node.js 22+ et déployé depuis GitHub vers **Cloudflare Pages**. Il conserve les 13 textes intégraux importés du WordPress (avec comparaison XML à chaque build), les fiches podcasts et les contenus SEO.
+
+## V11 — Correction de « Origine non autorisée » sur Cloudflare Pages
+
+Le formulaire de connexion **en production** contient maintenant un jeton anti-CSRF signé et limité à 20 minutes, comme en local. Certains navigateurs / intermédiaires suppriment l'en-tête `Origin` sur une soumission classique : la V10 rejetait alors le mot de passe **avant de le vérifier**. La V11 accepte ces cas uniquement si le jeton du formulaire est valide et si la requête n'est pas déclarée `cross-site`. Les origines externes explicites sont **toujours refusées**. `Origin` correct fonctionne normalement, sans jeton obligatoire (compatibilité).
+
+Après mise en ligne depuis GitHub :
+
+1. Vérifiez que Cloudflare **Pages** a publié la dernière branche `main` et que la page `/admin/` contient un champ caché `name="csrf"`. Un ancien déploiement ne l'a pas.
+2. Ouvrez **https://podcast-7ck.pages.dev/admin/** (pas directement `/api/admin/login`), rechargez intégralement avec Ctrl+F5, puis saisissez le mot de passe.
+3. Exécutez `npm run test:remote -- https://podcast-7ck.pages.dev` pour contrôler le build, les ressources et le formulaire de connexion (sans envoyer de mot de passe).
+4. Si vous recevez **503** après ce correctif, vérifiez `ANALYTICS_DB`, `admin_login_limits`, `ADMIN_PASSWORD_HASH` et `ADMIN_SESSION_SECRET` dans l'environnement Cloudflare Pages concerné (Production ou Preview). Si vous recevez **403**, vérifiez dans les outils réseau du navigateur les en-têtes `Origin` et `Sec-Fetch-Site` ainsi que la présence du champ `csrf` (ne partagez pas sa valeur).
+
+**Important :** un simple changement local ne corrige pas le site distant : il faut `git add`, `git commit` et `git push`, puis attendre la réussite du déploiement Pages. La V11 n'a pas été publiée automatiquement.
 
 ## Diagnostic Cloudflare
 

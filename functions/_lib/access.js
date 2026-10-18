@@ -73,15 +73,26 @@ export async function validLoginFormToken(token,secret,now=Date.now()){
   return await crypto.subtle.verify('HMAC',key,b64ToBin(chunks[3]),utf8.encode(chunks.slice(0,3).join('.')));
  }catch{return false;}
 }
-/** Les origines explicitement externes ne doivent jamais être admises en local. */
-export async function localLoginOriginAllowed(request,csrfToken,secret){
+/** Validation du POST de connexion (local ET Cloudflare Pages).
+ * - Origin explicite et identique à l'URL : OK.
+ * - Origin manquant ou « null » : exige un jeton de formulaire HMAC court,
+ *   livré uniquement par /admin/ (aucun secret exposé au navigateur).
+ * - Origin étranger ou Sec-Fetch-Site: cross-site : TOUJOURS refusé.
+ * On ne fait pas confiance aux en-têtes X-Forwarded-* fournis par le client.
+ */
+export async function loginOriginAllowed(request,csrfToken,secret,{local=false}={}){
  if(sameOrigin(request))return true;
  const origin=request.headers.get('Origin');
  const fetchSite=request.headers.get('Sec-Fetch-Site');
  if(fetchSite==='cross-site'||(origin&&origin!=='null'))return false;
  const url=new URL(request.url);
- if(url.protocol!=='http:'||!['localhost','127.0.0.1'].includes(url.hostname))return false;
+ if(local){
+  if(url.protocol!=='http:'||!['localhost','127.0.0.1'].includes(url.hostname))return false;
+ }else if(url.protocol!=='https:')return false;
  return validLoginFormToken(csrfToken,secret);
+}
+export function localLoginOriginAllowed(request,csrfToken,secret){
+ return loginOriginAllowed(request,csrfToken,secret,{local:true});
 }
 export function loginHTML({error=false,local=false,csrfToken=""}={}){
  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Connexion · Administration privée</title><link rel="icon" href="/assets/favicon.ico"><link rel="stylesheet" href="/assets/admin.css"></head><body class="admin-login"><main class="login-card"><a class="login-back" href="/">← Retour aux histoires</a><img class="login-logo" src="/assets/logo.webp" alt="" width="72" height="72"><p class="eyebrow">ESPACE PRIVÉ</p><h1>Bienvenue dans votre espace</h1><p>Entrez votre mot de passe pour consulter les statistiques et gérer la publication des histoires.</p>${error?'<p class="login-error" role="alert">Mot de passe incorrect ou trop de tentatives. Réessayez dans quelques minutes.</p>':''}<form action="/api/admin/login" method="POST">${csrfToken?`<input type="hidden" name="csrf" value="${csrfToken}">`:""}<label for="password">Mot de passe administrateur</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus minlength="1" maxlength="256"><button type="submit">Se connecter →</button></form><small>${local?'Administration locale : mêmes protections que la production.':'Accès strictement réservé à l’éditrice.'}</small></main></body></html>`;

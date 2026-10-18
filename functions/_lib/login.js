@@ -1,4 +1,4 @@
-import {isConfigured,verifyPassword,createSession,cookieHeader,clearCookie,noStore,privateResponse,sameOrigin,localLoginOriginAllowed} from './access.js';
+import {isConfigured,verifyPassword,createSession,cookieHeader,clearCookie,noStore,privateResponse,sameOrigin,loginOriginAllowed} from './access.js';
 const windowSeconds=15*60;
 const attemptsMax=5;
 const localAttempts=new Map();
@@ -30,9 +30,9 @@ export async function login(context,{local=false}={}){
  if(raw.length>1024)return privateResponse('Requête trop volumineuse.',413);
  const input=new URLSearchParams(raw);
  const password=input.get('password')||'';
- const allowed=local?await localLoginOriginAllowed(request,input.get('csrf'),env.ADMIN_SESSION_SECRET):sameOrigin(request);
+ const allowed=await loginOriginAllowed(request,input.get('csrf'),env.ADMIN_SESSION_SECRET,{local});
  if(!allowed){
-  if(local)console.warn('[admin/login] Origine refusée :',JSON.stringify({host:new URL(request.url).host,origin:request.headers.get('Origin')||'(absente)',fetchSite:request.headers.get('Sec-Fetch-Site')||'(absent)'}));
+  console.warn('[admin/login] Origine refusée :',JSON.stringify({mode:local?'local':'production',host:new URL(request.url).host,origin:request.headers.get('Origin')||'(absente)',fetchSite:request.headers.get('Sec-Fetch-Site')||'(absent)',csrfPresent:!!input.get('csrf')}));
   return privateResponse('Origine non autorisée. Rechargez /admin/ et réessayez.',403);
  }
  const ip=local?'localhost':request.headers.get('cf-connecting-ip')||'unknown';
