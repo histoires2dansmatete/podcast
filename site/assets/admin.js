@@ -43,5 +43,38 @@ async function load(){
   $('status').textContent=`Données du ${d.from} au ${d.to} · rafraîchies à ${new Date().toLocaleTimeString('fr-FR')}`;
  }catch(e){$('status').textContent='Statistiques indisponibles : '+e.message;}
 }
-$('days').addEventListener('change',load);load();
+async function loadStories(){
+ const status=$('stories-status');status.textContent='Chargement des états de publication…';
+ try{
+  const resp=await fetch('/api/admin/stories',{cache:'no-store'});
+  if(!resp.ok)throw Error('Service indisponible ('+resp.status+')');
+  const result=await resp.json();
+  const list=$('admin-story-list');list.replaceChildren();
+  result.stories.forEach(story=>{
+   const row=document.createElement('div');row.className='admin-story-row';
+   const info=document.createElement('div');info.className='admin-story-copy';
+   const title=document.createElement('strong');title.textContent=story.title;
+   const subtitle=document.createElement('small');subtitle.textContent=story.subtitle||story.slug;
+   info.append(title,subtitle);
+   const label=document.createElement('label');label.className='admin-story-toggle';
+   const caption=document.createElement('span');caption.textContent=story.enabled?'Publiée':'Masquée';
+   const input=document.createElement('input');input.type='checkbox';input.checked=story.enabled;
+   input.setAttribute('aria-label',`Publier ${story.title} ${story.subtitle||''}`);
+   input.addEventListener('change',async()=>{
+    const next=input.checked;input.disabled=true;caption.textContent='Enregistrement…';
+    try{
+     const result=await fetch('/api/admin/stories',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'PodcastAdmin'},body:JSON.stringify({slug:story.slug,enabled:next})});
+     if(!result.ok)throw Error((await result.json().catch(()=>({}))).error||'Erreur de sauvegarde');
+     caption.textContent=next?'Publiée':'Masquée';
+     status.textContent=`État de « ${story.title} » enregistré.`;
+    }catch(e){input.checked=!next;caption.textContent=!next?'Publiée':'Masquée';status.textContent='Impossible de modifier : '+e.message;}
+    finally{input.disabled=false;}
+   });
+   label.append(caption,input);row.append(info,label);list.append(row);
+  });
+  status.textContent=`${result.stories.filter(s=>s.enabled).length} histoire(s) publique(s) sur ${result.stories.length}.`;
+ }catch(e){status.textContent='Publication indisponible : '+e.message;}
+}
+$('refresh-stories').addEventListener('click',loadStories);
+$('days').addEventListener('change',load);load();loadStories();
 })();

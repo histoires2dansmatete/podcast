@@ -3,7 +3,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; img-src 'self' https://histoires2dansmatete.fr data:; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self'; media-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self'; media-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'
 
 /assets/*
   Cache-Control: public, max-age=86400
@@ -18,3 +18,9 @@
 /api/*
   Cache-Control: private, no-store
   X-Robots-Tag: noindex, nofollow
+
+/data/histoires.json
+  Cache-Control: no-store
+
+/histoires/*
+  Cache-Control: no-store

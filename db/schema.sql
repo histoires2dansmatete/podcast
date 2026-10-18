@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS visits (
  time TEXT NOT NULL,
  session_digest TEXT NOT NULL,
  page TEXT NOT NULL,
- event TEXT NOT NULL CHECK(event IN ('pageview','audio_play','platform_click')),
+ event TEXT NOT NULL CHECK(event IN ('pageview','audio_play','platform_click','story_end')),
  referrer_host TEXT NOT NULL,
  country TEXT NOT NULL,
  device TEXT NOT NULL CHECK(device IN ('mobile','tablet','desktop','other')),
@@ -15,3 +15,10 @@ CREATE TABLE IF NOT EXISTS visits (
 CREATE INDEX IF NOT EXISTS idx_visits_day ON visits(day);
 CREATE INDEX IF NOT EXISTS idx_visits_event_day ON visits(event,day);
 CREATE INDEX IF NOT EXISTS idx_visits_digest_time ON visits(session_digest,time);
+
+-- Etat éditorial : 1 = publié, 0 = masqué. Absence = publié.
+CREATE TABLE IF NOT EXISTS story_states (
+  slug TEXT PRIMARY KEY,
+  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0,1)),
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

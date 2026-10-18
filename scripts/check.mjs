@@ -7,7 +7,7 @@ import vm from 'node:vm';
 const root = resolve('site');
 const required = [
   'index.html', 'histoires.html', 'ecouter.html', 'qui-suis-je.html', 'confidentialite.html', '404.html',
-  'config.js', 'robots.txt', '_headers',
+  'config.js', 'robots.txt', '_headers', '_redirects',
   'assets/main.js', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'data/histoires.json'
 ];
 for (const filename of required) {
@@ -74,3 +74,22 @@ for(const story of stories){
  assert.ok(sitemap.includes(`/histoires/${story.slug}/`),`${story.slug} : absent du sitemap`);
 }
 console.log('✓ Corpus complet : 13 récits, 17 URLs sitemap, métadonnées et données structurées contrôlées.');
+
+// V5 : vérifie l'autonomie des illustrations, le domaine, et l'index épuré.
+const home=await readFile(resolve(root,'index.html'),'utf8');
+assert.ok(!home.includes('id="story-grid"'), 'La story-grid ne doit plus être sur l’accueil.');
+assert.match(home,/class="section-heading"/, 'L’en-tête de la rubrique doit rester.');
+assert.match(home,/href="histoires.html"/, 'La bibliothèque doit rester accessible.');
+for(const s of stories){
+ assert.ok(Array.isArray(s.tags) && s.tags.length>0,`${s.slug}: thèmes absents`);
+ assert.match(s.image,/^assets\/stories\/[a-z0-9-]+\.svg$/,`${s.slug}: couverture non locale`);
+ assert.ok((await stat(resolve(root,s.image))).isFile(),`${s.slug}: couverture locale manquante`);
+}
+for (const file of ['index.html','histoires.html','ecouter.html','qui-suis-je.html','confidentialite.html','data/histoires.json',...stories.map(s=>`histoires/${s.slug}/index.html`)]) {
+ const content=await readFile(resolve(root,file),'utf8');
+ assert.ok(!content.includes('https://podcast.histoires2dansmatete.fr'),`${file}: ancien sous-domaine`);
+ assert.ok(!content.includes('https://histoires2dansmatete.fr/wp-content/'),`${file}: dépendance WordPress`);
+ assert.ok(!/ancien blog|blog d.origine|sur le blog|Le blog ↗/i.test(content),`${file}: ancien blog encore évoqué`);
+}
+assert.match(sitemap,/https:\/\/histoires2dansmatete\.fr\/histoires\//);
+console.log('✓ V5 : domaine final, 13 couvertures locales, absence de liens WordPress, accueil sans grille.');

@@ -3,6 +3,7 @@ import { webcrypto } from 'node:crypto';
 import {authorize} from '../functions/_lib/access.js';
 import {onRequestGet as admin} from '../functions/admin/index.js';
 import {onRequestGet as stats} from '../functions/api/admin/stats.js';
+import {onRequestGet as storyList,onRequestPost as storyToggle} from '../functions/api/admin/stories.js';
 import {onRequestPost as track} from '../functions/api/track.js';
 const env={ACCESS_TEAM_DOMAIN:'mytest.cloudflareaccess.com',ACCESS_AUD:'test-aud'};
 const request=(token)=>new Request('https://podcast.example.fr/admin/',{headers:token?{'Cf-Access-Jwt-Assertion':token}:{}});
@@ -11,6 +12,7 @@ result=await authorize({env:{},request:request()});assert.equal(result.status,50
 result=await authorize({env,request:request('a.b.c')});assert.equal(result.status,403);
 result=await admin({env,request:request()});assert.equal(result.status,401);
 result=await stats({env,request:request()});assert.equal(result.status,401);
+result=await storyList({env,request:request()});assert.equal(result.status,401);
 const kp=await webcrypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
 const pub=await webcrypto.subtle.exportKey('jwk',kp.publicKey);pub.kid='testing';
 const before=globalThis.fetch;
@@ -25,6 +27,17 @@ result=await authorize({env,request:request(bad)});assert.equal(result.status,40
 const wrongAudience=await token({iss:'https://mytest.cloudflareaccess.com',aud:['other'],iat:now,exp:now+3600});
 result=await authorize({env,request:request(wrongAudience)});assert.equal(result.status,403);
 result=await admin({env,request:request(good)});assert.equal(result.status,200);assert.match(await result.text(),/Votre audience/);
+// Le contrôle de publication utilise aussi Access, valide les slugs et exige une origine même site.
+const store=new Map();
+const fakeDb={prepare(sql){let bound=[];return {bind(...args){bound=args;return this;},async all(){return {results:[...store].filter(([slug,enabled])=>enabled===0).map(([slug])=>({slug}))};},async run(){store.set(bound[0],bound[1]);return {success:true};}};}};
+const assets={fetch:async()=>Response.json([{slug:'bas-les-masques',title:'Bas les masques'}])};
+const cfg={...env,ANALYTICS_DB:fakeDb,ASSETS:assets};
+const toRequest=(enabled,origin='https://histoires2dansmatete.fr')=>new Request('https://histoires2dansmatete.fr/api/admin/stories',{method:'POST',headers:{'Cf-Access-Jwt-Assertion':good,'Origin':origin,'Content-Type':'application/json','X-Requested-With':'PodcastAdmin'},body:JSON.stringify({slug:'bas-les-masques',enabled})});
+result=await storyToggle({env:cfg,request:toRequest(false)});assert.equal(result.status,200);
+assert.equal(store.get('bas-les-masques'),0);
+result=await storyList({env:cfg,request:new Request('https://histoires2dansmatete.fr/api/admin/stories',{headers:{'Cf-Access-Jwt-Assertion':good}})});assert.equal(result.status,200);assert.equal((await result.json()).stories[0].enabled,false);
+result=await storyToggle({env:cfg,request:toRequest(true,'https://attacker.invalid')});assert.equal(result.status,403);
+result=await storyToggle({env:cfg,request:toRequest(true)});assert.equal(result.status,200);assert.equal(store.get('bas-les-masques'),1);
 globalThis.fetch=before;
 const trReq=new Request('https://podcast.example.fr/api/track',{method:'POST',headers:{'Origin':'https://podcast.example.fr','Content-Type':'application/json'},body:JSON.stringify({consent:true,event:'pageview',page:'/',session:'123456789abcdef123456789abcde',device:'desktop'})});
 result=await track({request:trReq,env:{}});assert.equal(result.status,503);

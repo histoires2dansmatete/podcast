@@ -82,6 +82,18 @@
   const year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
 
+  // Les couvertures retirées de publication ne doivent plus figurer sur l'accueil.
+  const coverNodes = [...document.querySelectorAll('.cover-card[data-story-slug]')];
+  if(coverNodes.length){
+    fetch('/data/histoires.json',{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(stories=>{
+      const active=new Set(stories.map(s=>s.slug));
+      coverNodes.forEach(card=>{if(!active.has(card.dataset.storySlug)){card.remove();}});
+      const cards=[...document.querySelectorAll('.cover-card[data-cover]')];
+      cards.forEach((card,n)=>card.dataset.cover=String(n));
+      if(cards.length)document.querySelector('.hero-art')?.dispatchEvent(new Event('covers:updated'));
+    }).catch(()=>{coverNodes.forEach(card=>card.hidden=true);});
+  }
+
   // Galerie de couvertures : avance automatiquement, arrêt au survol et au clavier.
   const covers = [...document.querySelectorAll('.cover-card[data-cover]')];
   const coverArea = document.querySelector('.hero-art');
@@ -89,18 +101,21 @@
     let active = 0; let paused = false;
     const indexLabel = document.querySelector('.cover-index');
     const show = (i) => {
-      active = (i + covers.length) % covers.length;
-      covers.forEach((card, n) => {
-        const delta = (n - active + covers.length) % covers.length;
+      const visible=covers.filter(c=>c.isConnected && !c.hidden);
+      if(!visible.length)return;
+      active = (i + visible.length) % visible.length;
+      visible.forEach((card, n) => {
+        const delta = (n - active + visible.length) % visible.length;
         card.classList.toggle('cover-card-active',delta===0);
         card.classList.toggle('cover-card-stacked',delta!==0);
         card.style.setProperty('--stack',delta);
         card.setAttribute('aria-hidden',String(delta!==0));
       });
-      if(indexLabel) indexLabel.textContent = `${active + 1} / ${covers.length}`;
+      if(indexLabel) indexLabel.textContent = `${active + 1} / ${visible.length}`;
     };
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));
     document.querySelector('.cover-next')?.addEventListener('click',()=>show(active+1));
+    coverArea.addEventListener('covers:updated',()=>show(0));
     coverArea.addEventListener('mouseenter',()=>{paused=true;});
     coverArea.addEventListener('mouseleave',()=>{paused=false;});
     coverArea.addEventListener('focusin',()=>{paused=true;});

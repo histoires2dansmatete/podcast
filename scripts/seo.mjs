@@ -2,7 +2,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { data, escapeHtml } from './stories.mjs';
-const siteBase = (process.env.SITE_URL || 'https://podcast.histoires2dansmatete.fr').replace(/\/+$/, '');
+const siteBase = (process.env.SITE_URL || 'https://histoires2dansmatete.fr').replace(/\/+$/, '');
 const u = new URL(siteBase);
 if (u.protocol !== 'https:' || u.pathname !== '/' || u.search || u.hash) throw new Error('SITE_URL doit être une origine HTTPS sans chemin (ex: https://podcast.exemple.fr).');
 const site = u.origin;
@@ -29,7 +29,7 @@ for (const entry of entries){
  html=html.replace(/<meta\s+(?:[^>]*?)(?:name|property)=["'](?:description|robots|og:[^"']+|twitter:[^"']+)["'][^>]*>/gi,'');
  const absolute=site+entry.url;
  const fullTitle=entry.title;
- const ogImage=entry.story?.image?.startsWith('https://') ? entry.story.image : site+'/assets/logo.webp';
+ const ogImage=entry.story?.image?.startsWith('assets/') ? site+'/'+entry.story.image : site+'/assets/logo.webp';
  const seoJson=[
   {'@context':'https://schema.org','@type':'WebSite',name:'Les histoires de Dans ma tête',url:site+'/',inLanguage:'fr-FR',publisher},
   {'@context':'https://schema.org','@type':entry.type,name:entry.story?entry.story.title:fullTitle,headline:entry.story?entry.story.title:fullTitle,description:entry.description,url:absolute,inLanguage:'fr-FR',...(entry.story?{datePublished:entry.story.date,dateModified:entry.story.modified||entry.story.date,author,publisher,image:ogImage,mainEntityOfPage:absolute,genre:entry.story.tags||[],isAccessibleForFree:true}:{} )},

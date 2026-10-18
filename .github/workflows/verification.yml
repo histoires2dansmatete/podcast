@@ -38,6 +38,7 @@ jobs:
         run: |
           test -f dist/index.html
           test -f dist/_headers
+          test -f dist/_redirects
           test -f dist/404.html
           test -f dist/assets/main.js
           test -f dist/assets/logo.webp
@@ -55,3 +56,6 @@ jobs:
           test -f functions/admin/index.js
           test -f functions/api/admin/stats.js
           test -f functions/api/track.js
+          test -f functions/_middleware.js
+          test -f functions/api/admin/stories.js
+          test -f tests/fixtures/histoires-wordpress-public.xml

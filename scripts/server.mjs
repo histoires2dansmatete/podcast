@@ -4,6 +4,7 @@
  * npm run preview -> http://localhost:4173, sert exactement le dossier dist/
  */
 import http from 'node:http';
+import {handleLocalRoute} from './local-admin.mjs';
 import { watch } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
@@ -38,7 +39,7 @@ try {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
+  if (!['GET','HEAD','POST'].includes(req.method)) {
     res.writeHead(405, { Allow: 'GET, HEAD' });
     res.end();
     return;
@@ -63,6 +64,11 @@ const server = http.createServer(async (req, res) => {
     req.on('close', () => clients.delete(res));
     return;
   }
+
+  try {
+    if(await handleLocalRoute(req,res,pathname,{preview,port,root}))return;
+  }catch(error){console.error('Route locale :',error);res.writeHead(500);res.end('Erreur locale');return;}
+  if (!['GET','HEAD'].includes(req.method)) {res.writeHead(405);res.end('Méthode interdite');return;}
 
   const candidate = resolve(root, '.' + pathname, pathname.endsWith('/') ? 'index.html' : '');
   if (candidate !== root && !candidate.startsWith(root + sep)) {

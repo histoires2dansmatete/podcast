@@ -1,1 +1,13 @@
-{"version":1,"include":["/api/*","/admin/*","/admin"],"exclude":[]}
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/admin/*",
+    "/admin",
+    "/histoires/*",
+    "/data/histoires.json",
+    "/sitemap.xml",
+    "/histoires.xml"
+  ],
+  "exclude": []
+}
