@@ -1,0 +1,39 @@
+name: Vérification du site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Vérifier l'installation
+        run: npm ci
+
+      - name: Vérifier le site
+        run: npm run check
+
+      - name: Construire le site
+        run: npm run build
+
+      - name: Vérifier les fichiers destinés à Cloudflare
+        run: |
+          test -f dist/index.html
+          test -f dist/_headers
+          test -f dist/404.html
+          test -f dist/assets/main.js

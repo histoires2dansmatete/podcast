@@ -1,0 +1,19 @@
+# Résultat généré par `npm run build` : Cloudflare le reconstruit.
+dist/
+
+# Dépendances (aucune nécessaire dans la version actuelle).
+node_modules/
+
+# Secrets éventuels : ne jamais les committer.
+.env
+.env.*
+!.env.example
+
+# Fichiers des systèmes / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.log
