@@ -1,12 +1,18 @@
-# Les histoires de Dans ma tête — version 9
+# Les histoires de Dans ma tête — version 10
 
 Site Web statique pour **https://histoires2dansmatete.fr**, développé en local avec Node.js 22+ et déployé depuis GitHub vers **Cloudflare Pages**. Il conserve les 13 textes intégraux importés du WordPress (avec comparaison XML à chaque build), les fiches podcasts et les contenus SEO.
+
+## Diagnostic Cloudflare
+
+➡ **[DEPLOIEMENT-CLOUDFLARE.md](DEPLOIEMENT-CLOUDFLARE.md)** décrit la différence Pages / Worker statique, la correction des CSS et la procédure de vérification du site réel.
+
+La V10 convertit tous les liens internes du build `dist/` en chemins absolus, vérifie leurs cibles et réduit le risque de servir une ancienne feuille CSS en cache. Commandes supplémentaires : `npm run test:dist`, `npm run check:images`, `npm run test:remote -- https://VOTRE-PROJET.pages.dev`.
 
 ## Installation CLI complète
 
 ➡ **Suivez [INSTALLATION-CLI.md](INSTALLATION-CLI.md)** pour l'installation depuis votre PC (Windows, macOS ou Linux), les tests locaux, GitHub et la liaison avec Cloudflare Pages/D1.
 
-## Corrections de la version 9
+## Corrections de la version 10
 
 - **Copyright du footer :** le texte est désormais regroupé dans un paragraphe unique, sans étirement sur toute la largeur, sur toutes les pages (y compris « Qui suis-je ? » et Confidentialité).
 - **Footer :** dédoublonnage des anciens `footer-social-area` et génération idempotente : même après plusieurs `npm run build`, **une seule** zone sociale par page.

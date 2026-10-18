@@ -1,8 +1,10 @@
-# Installer, tester et publier « Les histoires de Dans ma tête » — guide CLI V9
+# Installer, tester et publier « Les histoires de Dans ma tête » — guide CLI V10
 
 Ce document couvre **Windows (PowerShell)**, **macOS/Linux (terminal)**, le développement local, la mise en place de GitHub et les derniers réglages Cloudflare Pages.
 
 Adresse de production prévue : **https://histoires2dansmatete.fr**. Le projet est volontairement statique pour les pages publiques ; les API et le tableau de bord privé utilisent **Cloudflare Pages Functions** et **D1** en production.
+
+> **Problème Workers :** si vous voyez « Variables cannot be added to a Worker that only has static assets », ouvrez d’abord [DEPLOIEMENT-CLOUDFLARE.md](DEPLOIEMENT-CLOUDFLARE.md). Il faut un projet **Pages avec Pages Functions** et non un Worker purement statique.
 
 ## 0. Préparation du poste
 
@@ -44,13 +46,13 @@ Si vous avez déjà Node installé dans une version ancienne, mettez-le à jour 
 
 ## 1. Décompresser le projet
 
-Téléchargez l'archive `histoires-podcast-v9-github-cloudflare.zip`.
+Téléchargez l'archive `histoires-podcast-v10-github-cloudflare.zip`.
 
 **Windows / PowerShell :**
 
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\Documents\histoires-podcast" | Out-Null
-Expand-Archive -Path "$HOME\Downloads\histoires-podcast-v9-github-cloudflare.zip" -DestinationPath "$HOME\Documents\histoires-podcast" -Force
+Expand-Archive -Path "$HOME\Downloads\histoires-podcast-v10-github-cloudflare.zip" -DestinationPath "$HOME\Documents\histoires-podcast" -Force
 Set-Location "$HOME\Documents\histoires-podcast"
 ```
 
@@ -59,10 +61,10 @@ Set-Location "$HOME\Documents\histoires-podcast"
 ```bash
 mkdir -p ~/projets/histoires-podcast
 cd ~/projets/histoires-podcast
-unzip ~/Downloads/histoires-podcast-v9-github-cloudflare.zip
+unzip ~/Downloads/histoires-podcast-v10-github-cloudflare.zip
 ```
 
-Le bon dossier contient notamment `package.json`, `site/`, `scripts/`, `functions/`, `db/` et `README.md`. Si vous **mettez à jour un dépôt déjà cloné**, décompressez la V9 dans ce dépôt sans effacer `.git/`, `.env.local`, `.local/` et votre dossier `site/assets/images/` ; conservez les secrets locaux.
+Le bon dossier contient notamment `package.json`, `site/`, `scripts/`, `functions/`, `db/` et `README.md`. Si vous **mettez à jour un dépôt déjà cloné**, décompressez la V10 dans ce dépôt sans effacer `.git/`, `.env.local`, `.local/` et votre dossier `site/assets/images/` ; conservez les secrets locaux.
 
 ## 2. Installer et démarrer en local
 
@@ -87,13 +89,13 @@ Pour arrêter le serveur : **Ctrl+C**. Après mise à jour du code serveur, **ar
 
 ### Si vous voyez encore « Origine non autorisée »
 
-1. Assurez-vous que vous exécutez bien la **V9** : `node -p "require('./package.json').version"` doit retourner `9.0.0`.
-2. Arrêtez toutes les anciennes instances `npm run dev` avec **Ctrl+C** puis relancez depuis le dossier V9.
+1. Assurez-vous que vous exécutez bien la **V10** : `node -p "require('./package.json').version"` doit retourner `10.0.0`.
+2. Arrêtez toutes les anciennes instances `npm run dev` avec **Ctrl+C** puis relancez depuis le dossier V10.
 3. Accédez uniquement à **http://localhost:5173/admin/** ; ne mélangez pas les onglets `localhost` et `127.0.0.1` pour une même session.
 4. Rechargez `/admin/` pour recevoir un nouveau **jeton de formulaire signé** ; réessayez dans une fenêtre privée si une extension perturbe la soumission.
 5. Consultez le terminal : les refus affichent la valeur de `Origin` et `Sec-Fetch-Site` **sans journaliser votre mot de passe**.
 
-La V9 accepte les formulaires locaux valides avec jeton signé même lorsque le navigateur omet `Origin` ; elle refuse toujours les origines externes.
+La V10 accepte les formulaires locaux valides avec jeton signé même lorsque le navigateur omet `Origin` ; elle refuse toujours les origines externes.
 
 ## 3. Vérifier le site et tester la version de production
 
@@ -105,6 +107,8 @@ npm run test:security
 npm run test:layout
 npm run test:xml
 npm run build
+npm run test:dist
+npm run check:images
 npm run preview
 ```
 
@@ -147,7 +151,7 @@ Acceptez l'authentification GitHub dans le navigateur si demandée. Depuis le do
 git init -b main
 git add .
 git status --short
-git commit -m "Site podcasts V9 : admin locale et footer corrigés"
+git commit -m "Site podcasts V10 : admin locale et footer corrigés"
 gh repo create histoires-dans-ma-tete --private --source=. --remote=origin --push
 ```
 
@@ -249,7 +253,17 @@ Cloudflare Pages détecte automatiquement ce push GitHub et publie la nouvelle v
 - **Administration locale** : données de test dans `.local/story-states.json`, séparées de la base D1 de production.
 - **Modifier le mot de passe** : `npm run admin:setup` puis mise à jour des deux secrets sur Cloudflare et redéploiement (les sessions antérieures seront invalidées).
 - **Statistiques vides** : vérifiez le consentement, la liaison `ANALYTICS_DB`, `ANALYTICS_SALT` et l'arrivée de véritables visites.
-- **Login local refusé** : vérifiez d'abord la version V9 et l'ancien serveur encore actif ; le terminal affiche des diagnostics d'origine sans jamais imprimer le mot de passe.
+- **Login local refusé** : vérifiez d'abord la version V10 et l'ancien serveur encore actif ; le terminal affiche des diagnostics d'origine sans jamais imprimer le mot de passe.
 - **Images manquantes** : vérifiez l'orthographe exacte (majuscules comprises) des noms du catalogue et la présence effective de `site/assets/images/` dans Git.
 
 Documentation officielle : [Pages et GitHub](https://developers.cloudflare.com/pages/configuration/git-integration/) · [Cloudflare D1](https://developers.cloudflare.com/d1/wrangler-commands/) · [Bindings Pages](https://developers.cloudflare.com/pages/functions/bindings/) · [Domaines Pages](https://developers.cloudflare.com/pages/configuration/custom-domains/) · [Wrangler Pages](https://developers.cloudflare.com/workers/wrangler/commands/pages/).
+
+## Diagnostic du déploiement public
+
+Une fois votre projet **Pages** déployé sur son domaine `*.pages.dev`, lancez :
+
+```bash
+npm run test:remote -- https://VOTRE-PROJET.pages.dev
+```
+
+Le guide [DEPLOIEMENT-CLOUDFLARE.md](DEPLOIEMENT-CLOUDFLARE.md) explique comment interpréter les erreurs 404, le type MIME CSS, les images manquantes et le mauvais type de projet Cloudflare.
