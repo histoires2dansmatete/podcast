@@ -1,22 +1,38 @@
 import { data, writePublicStories } from './stories.mjs';
 import { writeFile,readFile } from 'node:fs/promises';
 import {configuredImages,globalImageFor} from './images.mjs';
+import {applySocialLayout} from './layout.mjs';
 const stories = await data();
 await writePublicStories(stories);
 await writeFile('site/data/histoires.json', JSON.stringify(stories,null,2)+'\n');
 const withoutText = stories.filter(s=>!s.bodyHtml?.trim()).length;
 if (withoutText) console.warn(`ℹ ${withoutText}/${stories.length} histoires sans texte importé : la fiche propose la lecture intégrale sur le blog. Lancez npm run sync:blog ou import:wordpress pour les intégrer.`);
 
-// Met à jour les images globales à partir du même fichier de configuration.
+// Les différentes illustrations de présentation sont indépendantes dans le JSON.
 const globalConfig=await configuredImages();
 const globalLogo=await globalImageFor('logo',globalConfig);
-const authorImage=await globalImageFor('author',globalConfig);
-const swapImgSrc=(html,predicate,src)=>html.replace(/<img\b[^>]*>/g,tag=>predicate(tag)?tag.replace(/\bsrc="[^"]*"/,`src="${src}"`):tag);
-for(const page of ['index.html','histoires.html','ecouter.html','qui-suis-je.html','confidentialite.html']){
+const aboutImage=await globalImageFor('aboutVisual',globalConfig);
+const bioImage=await globalImageFor('bioImage',globalConfig);
+const listenImage=await globalImageFor('listenArt',globalConfig);
+function imageInBlock(html,className,src){
+ const pattern=new RegExp(`(<div\\b[^>]*class="[^"]*\\b${className}\\b[^"]*"[^>]*>[\\s\\S]*?<img\\b[^>]*?)\\bsrc="[^"]*"`);
+ // Les pages existantes possèdent un unique bloc par classe.
+ const changed=html.replace(pattern,`$1src="${src}"`);
+ if(changed===html && !html.includes(`src="${src}"`))throw Error(`Image du bloc ${className} introuvable`);
+ return changed;
+}
+const pages=['index.html','histoires.html','ecouter.html','qui-suis-je.html','confidentialite.html'];
+for(const page of pages){
  let html=await readFile('site/'+page,'utf8');
- html=swapImgSrc(html,tag=>/class="[^"]*\bbrand-logo\b/.test(tag),globalLogo);
- if(page==='index.html')html=html.replace(/(<div class="about-visual">[\s\S]*?<img\b[^>]*?)\bsrc="[^"]*"/,`$1src="${authorImage}"`);
- if(page==='qui-suis-je.html')html=html.replace(/(<div class="bio-image">[\s\S]*?<img\b[^>]*?)\bsrc="[^"]*"/,`$1src="${authorImage}"`);
- if(page==='ecouter.html')html=html.replace(/(<div class="listen-reading-art">[\s\S]*?<img\b[^>]*?)\bsrc="[^"]*"/,`$1src="${authorImage}"`);
+ html=html.replace(/<img\b[^>]*class="[^"]*\bbrand-logo\b[^"]*"[^>]*>/g,tag=>tag.replace(/\bsrc="[^"]*"/,`src="${globalLogo}"`));
+ if(page==='index.html')html=imageInBlock(html,'about-visual',aboutImage);
+ if(page==='qui-suis-je.html')html=imageInBlock(html,'bio-image',bioImage);
+ if(page==='ecouter.html')html=imageInBlock(html,'listen-reading-art',listenImage);
+ html=applySocialLayout(html,'');
  await writeFile('site/'+page,html);
+}
+// Les fiches sont régénérées à chaque construction : le même habillage leur est appliqué.
+for(const story of stories){
+ const file=`site/histoires/${story.slug}/index.html`;
+ await writeFile(file,applySocialLayout(await readFile(file,'utf8'),'../../'));
 }

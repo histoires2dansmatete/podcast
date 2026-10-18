@@ -4,6 +4,9 @@
  * npm run preview -> http://localhost:4173, sert exactement le dossier dist/
  */
 import http from 'node:http';
+import {readFile as readSecrets} from 'node:fs/promises';
+// Variables locales uniquement ; jamais exposées dans le site ni dans dist/.
+try {const raw=await readSecrets('.env.local','utf8');for(const line of raw.split(/\r?\n/)){const m=line.match(/^([A-Z_]+)=(.*)$/);if(m&&!(m[1] in process.env))process.env[m[1]]=m[2];}}catch(e){if(e.code!=='ENOENT')throw e;}
 import {handleLocalRoute} from './local-admin.mjs';
 import { watch } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
@@ -129,5 +132,7 @@ server.on('error', error => {
 });
 server.listen(port, host, () => {
   console.log(`${preview ? 'Aperçu du build' : 'Développement (rechargement automatique)'} : http://localhost:${port}`);
+  console.log('Administration : http://localhost:'+port+'/admin/ (connexion par mot de passe)');
+  if(!process.env.ADMIN_PASSWORD_HASH||!process.env.ADMIN_SESSION_SECRET) console.warn('⚠ Admin non configurée : lancez npm run admin:setup.');
   console.log('Pour arrêter : Ctrl + C');
 });

@@ -421,3 +421,35 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 @media(max-width:1150px){.footer-top{grid-template-columns:1fr 1fr}.footer-top>.social-links{grid-column:1/-1;flex-direction:row}}
 @media(max-width:750px){.footer-top{grid-template-columns:1fr 1fr}.footer-top>.social-links{grid-column:1/-1}}
 @media(max-width:480px){.footer-top{grid-template-columns:1fr}.footer-top>.social-links{grid-column:1/-1}}
+
+/* V7 — réseaux sociaux élégants et accessibles dans l'en-tête et le pied. */
+.header-socials{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.header-socials a{height:37px;width:37px;display:grid;place-items:center;border-radius:50%;border:1px solid #e5d9dd;background:#fff9f5;transition:background .2s,transform .2s,border-color .2s}
+.header-socials img{width:19px;height:19px;object-fit:contain}
+.header-socials a:hover,.header-socials a:focus-visible{transform:translateY(-2px);background:#f0e5ed;border-color:#bda3b4}
+.footer-top{grid-template-columns:minmax(200px,1.1fr) minmax(180px,1fr) minmax(180px,1.2fr);align-items:center;gap:36px;padding-bottom:32px}
+.footer-top .footer-nav{justify-content:flex-end}
+.footer-social-area{display:flex;align-items:center;justify-content:space-between;gap:25px;border-top:1px solid #e5dbd6;border-bottom:1px solid #e5dbd6;padding-top:24px;padding-bottom:24px}
+.footer-social-message{display:grid;gap:3px}
+.footer-social-eyebrow{font-size:10px;letter-spacing:.15em;color:#9a7187;font-weight:800}
+.footer-social-message strong{color:#4a354f;font-family:var(--serif);font-size:20px;font-weight:600}
+.footer-social-message p{color:#817781;font-size:12px;margin:0}
+.footer-social-buttons{display:flex;gap:10px;flex-wrap:wrap}
+.footer-social-buttons a{display:inline-flex;align-items:center;gap:10px;border:1px solid #dbcbd6;background:#fffdf9;padding:11px 16px;border-radius:14px;color:#58445d;font-weight:700;font-size:13px;transition:transform .2s,border-color .2s}
+.footer-social-buttons a img{width:21px;height:21px}
+.footer-social-buttons a:hover,.footer-social-buttons a:focus-visible{transform:translateY(-2px);border-color:#a585a0}
+.footer-bottom{padding-top:22px}
+@media(max-width:1050px){.header-inner{gap:14px}.primary-nav{gap:13px}.header-socials a{height:34px;width:34px}}
+@media(max-width:750px){.header-inner{justify-content:space-between;gap:10px}.header-socials{margin-left:auto;order:2}.menu-toggle{order:3}.primary-nav{order:4}.footer-top{grid-template-columns:1fr 1fr;gap:24px}.footer-top .footer-nav{grid-column:1/-1;justify-content:flex-start}.footer-social-area{align-items:flex-start;flex-direction:column;gap:16px}}
+@media(max-width:480px){.header-inner{gap:7px}.brand-logo{width:41px;height:41px}.header-socials{gap:4px}.header-socials a{height:31px;width:31px}.header-socials img{width:17px;height:17px}.footer-top{grid-template-columns:1fr}.footer-top .footer-nav{grid-column:auto}.footer-social-message strong{font-size:18px}}
+
+@media(max-width:480px){.site-header .header-inner > .nav-button{display:none}}
+
+/* V8 — préserver les illustrations verticales originales (853 × 1280).
+   On ne recadre plus ces portraits dans un carré / cadre de type cover. */
+.listen-reading-art{width:min(100%,300px);box-sizing:border-box}
+.listen-reading-art img{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain;object-position:center}
+.about-visual img{width:min(250px,65%);height:auto;max-height:385px;aspect-ratio:auto;object-fit:contain;object-position:center}
+@media(max-width:920px){.about-visual img{width:min(225px,62%);height:auto;max-height:345px}}
+@media(max-width:750px){.about-visual img{width:min(205px,62%);height:auto;max-height:315px}}
+@media(max-width:480px){.about-visual img{width:min(180px,62%);height:auto;max-height:285px}}

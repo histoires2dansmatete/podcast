@@ -97,7 +97,7 @@ console.log('✓ V5 : domaine final, 13 couvertures locales, absence de liens Wo
 // V6 : intégrité des assets configurés et présence des liens officiels
 const imgConf=JSON.parse(await readFile(resolve(root,'assets/images.config.json'),'utf8'));
 assert.equal(Object.keys(imgConf.stories).length,stories.length,'Toutes les histoires doivent avoir une image configurée');
-for(const key of ['logo','author'])assert.ok(imgConf.globals[key],`Image globale ${key} non configurée`);
+for(const key of ['logo','aboutVisual','bioImage','listenArt'])assert.ok(imgConf.globals[key],`Image globale ${key} non configurée`);
 for(const s of stories)assert.ok(imgConf.stories[s.slug],`Image non configurée pour ${s.slug}`);
 for(const icon of ['instagram','facebook','spotify','apple-podcasts','deezer','amazon'])assert.ok((await stat(resolve(root,`assets/icons/${icon}.svg`))).isFile(),`Icône ${icon} manquante`);
 for(const page of htmlPages.filter(p=>p!=='404.html')){
@@ -105,4 +105,16 @@ for(const page of htmlPages.filter(p=>p!=='404.html')){
  assert.ok(content.includes('https://www.instagram.com/les_histoires_2_dans_ma_tete/'),`${page}: Instagram absent`);
  assert.ok(content.includes('https://www.facebook.com/profile.php?id=61587115217827'),`${page}: Facebook absent`);
 }
-console.log('✓ V6 : configuration des images, logos des plateformes et liens sociaux contrôlés.');
+for(const page of htmlPages.filter(p=>p!=='404.html')){
+ const content=await readFile(resolve(root,page),'utf8');
+ assert.match(content,/class="header-socials"/,`${page}: icônes des réseaux absentes du header`);
+ assert.equal((content.match(/class="container footer-social-area"/g)||[]).length,1,`${page}: footer-social-area doit être présent une seule fois`);
+}
+for(const [file,classname,key] of [['index.html','about-visual','aboutVisual'],['qui-suis-je.html','bio-image','bioImage'],['ecouter.html','listen-reading-art','listenArt']]){
+ const html=await readFile(resolve(root,file),'utf8');
+ const {globalImageFor,configuredImages}=await import('./images.mjs');
+ const expected=await globalImageFor(key,await configuredImages());
+ const regex=new RegExp(`<div class="${classname}">[\\s\\S]*?<img\\b[^>]*\\bsrc="${expected.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}"`);
+ assert.match(html,regex,`${file}: image globale non issue du JSON ${key}`);
+}
+console.log('✓ V7 : les images bio/accueil/écoute, le header et le footer sont pilotés et vérifiés.');

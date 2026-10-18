@@ -27,7 +27,8 @@ for (const s of stories) entries.push({filename:`histoires/${s.slug}/index.html`
 for (const entry of entries){
  const file=resolve('site',entry.filename);
  let html=await readFile(file,'utf8');
- html=html.replace(/<!-- SEO-START -->[\s\S]*?<!-- SEO-END -->/g,'');
+ // Retirer aussi les lignes vides adjacentes : sinon chaque build ajoute un saut de ligne.
+ html=html.replace(/(?:[ \t]*\r?\n)*<!-- SEO-START -->[\s\S]*?<!-- SEO-END -->(?:[ \t]*\r?\n)*/g,'\n');
  // Nettoyer les anciennes meta OG et meta description (remplacées par les données correctes).
  html=html.replace(/<meta\s+(?:[^>]*?)(?:name|property)=["'](?:description|robots|og:[^"']+|twitter:[^"']+)["'][^>]*>/gi,'');
  const absolute=site+entry.url;

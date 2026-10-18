@@ -22,3 +22,11 @@ CREATE TABLE IF NOT EXISTS story_states (
   enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0,1)),
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Limitation des tentatives de connexion admin sur 15 minutes.
+-- bucket : HMAC anonymisé de l'adresse source, sans IP brute enregistrée.
+CREATE TABLE IF NOT EXISTS admin_login_limits (
+  bucket TEXT PRIMARY KEY,
+  failures INTEGER NOT NULL DEFAULT 0,
+  expires_at INTEGER NOT NULL
+);

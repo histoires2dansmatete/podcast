@@ -1,9 +1,11 @@
 {
   "$schema": "./images.config.schema.json",
-  "description": "Correspondance unique entre les fichiers images locaux et les emplacements du site. Copiez les images dans assets/images/ ; les couvertures SVG sont utilisées en secours.",
+  "description": "Catalogue des images pour toutes les pages. Les entrées globales pilotent explicitement le logo, la présentation accueil, la bio et la page écoute. Si un fichier est absent, le logo local est utilisé.",
   "globals": {
-    "logo": "assets/images/logo.webp",
-    "author": "assets/images/aubout_me.png"
+    "logo": "assets/logo.webp",
+    "aboutVisual": "assets/images/logo.png",
+    "bioImage": "assets/images/about_me.png",
+    "listenArt": "assets/images/about_me.png"
   },
   "stories": {
     "lamitie-comme-sur-des-roulettes": "assets/images/minipeton.png",

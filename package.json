@@ -1,13 +1,13 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "6.0.0",
+  "version": "8.0.0",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
   "scripts": {
     "dev": "node scripts/server.mjs",
-    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-integration.mjs",
-    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/build.mjs",
+    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-integration.mjs",
+    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/build.mjs",
     "preview": "node scripts/server.mjs --preview",
     "drafts": "node scripts/generate.mjs",
     "import:wordpress": "node scripts/import-wordpress.mjs",
@@ -16,7 +16,9 @@
     "generate:seo": "node scripts/generate.mjs && node scripts/seo.mjs",
     "test:security": "node scripts/test-functions.mjs",
     "test:xml": "node scripts/generate.mjs && node scripts/test-wordpress.mjs",
-    "test:integration": "node scripts/test-integration.mjs"
+    "test:integration": "node scripts/test-integration.mjs",
+    "test:layout": "node scripts/test-layout.mjs",
+    "admin:setup": "node scripts/setup-admin.mjs"
   },
   "engines": {
     "node": ">=22"
