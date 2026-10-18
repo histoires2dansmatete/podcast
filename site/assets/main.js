@@ -46,7 +46,7 @@
   const platforms = window.PODCAST_CONFIG?.platforms || {};
   let available = 0;
   document.querySelectorAll('[data-platform]').forEach(link => {
-    const url = platforms[link.dataset.platform];
+    const url = link.getAttribute('href') || platforms[link.dataset.platform];
     if (typeof url !== 'string' || !/^https:\/\/[^\s]+$/i.test(url)) return;
     try {
       const parsed = new URL(url);
@@ -75,6 +75,9 @@
       this.removeEventListener('error', fallback);
       this.src = this.dataset.fallback;
     }, { once: true });
+  });
+  document.querySelectorAll('img[data-episode-image]').forEach(img => {
+    img.addEventListener('error', () => {img.hidden = true;const symbol = img.nextElementSibling;if(symbol)symbol.hidden=false;}, {once:true});
   });
   const year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());

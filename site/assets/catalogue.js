@@ -11,14 +11,14 @@
   const validUrl = url => { try {return new URL(url).protocol === 'https:';}catch{return false;} };
   function card(story){
     const article=element('article','story-card catalogue-card');
-    const image=element('a','story-image'); image.href=validUrl(story.source)?story.source:'https://histoires2dansmatete.fr/';image.target='_blank';image.rel='noopener noreferrer';image.setAttribute('aria-label',`Lire ${story.title} sur le blog`);
+    const image=element('a','story-image'); image.href=`histoires/${encodeURIComponent(story.slug)}/`;image.setAttribute('aria-label',`Découvrir la fiche de ${story.title}`);
     image.style.background='#ead7c5'; const emoji=element('span','card-fallback',story.emoji || '✦');emoji.setAttribute('aria-hidden','true'); image.append(emoji);
     if(validUrl(story.image)){ const img=element('img','');img.src=story.image;img.alt=`Illustration de ${story.title}`;img.loading='lazy';img.addEventListener('error',()=>img.remove(),{once:true});image.append(img);}
     image.append(element('span','story-sticker','♫ Bientôt en podcast'));
     const content=element('div','story-content');content.append(element('div','catalogue-tag',story.theme||'Une belle histoire'));
     content.append(element('h3','',story.title));if(story.subtitle)content.append(element('div','catalogue-subtitle',story.subtitle));
     content.append(element('p','',story.description||'Une nouvelle aventure à découvrir sur le blog.'));
-    const link=element('a','story-link','Lire sur le blog ↗');link.href=image.href;link.target='_blank';link.rel='noopener noreferrer';content.append(link);
+    const link=element('a','story-link','Découvrir l’histoire ↗');link.href=image.href;content.append(link);
     article.append(image,content);return article;
   }
   fetch('data/histoires.json',{cache:'no-store'}).then(response=>{if(!response.ok)throw Error('Impossible de lire le catalogue');return response.json();}).then(stories=>{

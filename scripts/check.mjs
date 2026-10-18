@@ -6,9 +6,9 @@ import vm from 'node:vm';
 
 const root = resolve('site');
 const required = [
-  'index.html', 'histoires.html', 'qui-suis-je.html', 'confidentialite.html', '404.html',
+  'index.html', 'histoires.html', 'ecouter.html', 'qui-suis-je.html', 'confidentialite.html', '404.html',
   'config.js', 'robots.txt', '_headers',
-  'assets/main.js', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'assets/banniere.webp', 'data/histoires.json'
+  'assets/main.js', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'data/histoires.json'
 ];
 for (const filename of required) {
   const file = resolve(root, filename);
@@ -16,7 +16,8 @@ for (const filename of required) {
   assert.ok((await stat(file)).isFile(), `Fichier manquant : ${filename}`);
 }
 
-const htmlPages = ['index.html', 'histoires.html', 'qui-suis-je.html', 'confidentialite.html', '404.html'];
+const stories = JSON.parse(await readFile(resolve(root, 'data/histoires.json'), 'utf8'));
+const htmlPages = ['index.html', 'histoires.html', 'ecouter.html', 'qui-suis-je.html', 'confidentialite.html', '404.html', ...stories.map(s => `histoires/${s.slug}/index.html`)];
 for (const page of htmlPages) {
   const html = await readFile(resolve(root, page), 'utf8');
   assert.match(html, /<html[^>]+lang="fr"/, `${page} : attribut lang="fr" absent`);
@@ -34,7 +35,10 @@ for (const page of htmlPages) {
     const target = resolve(dirname(resolve(root, page)), localPart);
     assert.ok(target.startsWith(root + sep), `Chemin hors du site : ${url}`);
     try {
-      assert.ok((await stat(target)).isFile(), `${page} : lien local absent ${url}`);
+      const fileStat = await stat(target);
+      if (fileStat.isDirectory()) {
+        assert.ok((await stat(resolve(target, 'index.html'))).isFile(), `${page} : dossier sans index ${url}`);
+      } else assert.ok(fileStat.isFile(), `${page} : lien local absent ${url}`);
     } catch (error) {
       if (error.code === 'ENOENT') throw new Error(`${page} : fichier local introuvable ${url}`);
       throw error;

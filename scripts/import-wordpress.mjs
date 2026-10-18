@@ -4,7 +4,7 @@
  * Le fichier export personnel reste local et n'est pas commité.
  */
 import { readFile, writeFile } from 'node:fs/promises';
-import { data, writeDrafts, sanitizeStoryHTML } from './stories.mjs';
+import { data, writePublicStories, sanitizeStoryHTML } from './stories.mjs';
 const file=process.argv[2];
 if(!file){console.error('Usage : npm run import:wordpress -- fichier-export-wordpress.xml');process.exit(1);}
 const xml=await readFile(file,'utf8');
@@ -36,5 +36,5 @@ for(const m of xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)){
 if(!count){console.error('Aucun article publié détecté : exporter « Articles » depuis WordPress.');process.exit(1);}
 const all=[...result.values()];
 await writeFile('site/data/histoires.json',JSON.stringify(all,null,2)+'\n');
-await writeDrafts(all);
+await writePublicStories(all);
 console.log(`✓ ${count} articles importés depuis votre WordPress ; ${all.length} histoires dans le catalogue.`);

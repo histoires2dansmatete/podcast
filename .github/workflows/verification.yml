@@ -38,9 +38,9 @@ jobs:
           test -f dist/404.html
           test -f dist/assets/main.js
           test -f dist/assets/logo.webp
-          test -f dist/assets/banniere.webp
           test -f dist/histoires.html
           test -f dist/qui-suis-je.html
           test -f dist/data/histoires.json
-          # Les fiches individuelles doivent rester privées jusqu'au lancement du podcast.
-          test ! -d dist/histoires
+          # Les pages de podcasts sont publiques dans la V3.
+          test -f dist/ecouter.html
+          test -f dist/histoires/bas-les-masques/index.html

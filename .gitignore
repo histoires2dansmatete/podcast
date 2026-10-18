@@ -17,3 +17,10 @@ Thumbs.db
 !.vscode/settings.json
 .idea/
 *.log
+
+# Pages individuelles régénérées par npm run generate:stories
+site/histoires/
+
+# Export WordPress privé (ne jamais committer le XML brut)
+*.xml
+!site/sitemap.xml

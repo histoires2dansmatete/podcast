@@ -1,47 +1,77 @@
-/** Préparation des fiches : jamais exposées publiquement sans accord explicite. */
+/** Génération de pages d'histoires statiques, publiées par Cloudflare Pages. */
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 
 export const escapeHtml = (value='') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-const safeURL = url => { try { const u=new URL(url);return u.protocol==='https:'?u.href:''; } catch {return '';} };
 const safeSlug = slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+const safeURL = url => {try{const x=new URL(url);return x.protocol==='https:'?x.href:'';}catch{return '';}};
+const safeMedia = value => {
+  const url = String(value || '').trim();
+  if (url.startsWith('assets/audio/') && /^assets\/audio\/[a-zA-Z0-9_-]+\.(mp3|m4a|ogg)$/i.test(url)) return `../../${url}`;
+  return safeURL(url);
+};
 export async function data(){
  const stories=JSON.parse(await readFile(resolve('site/data/histoires.json'),'utf8'));
- if (!Array.isArray(stories)) throw Error('Catalogue invalide');
- if (stories.some(s=>!safeSlug(s.slug))) throw Error('Un slug contient un caractère invalide');
- if (new Set(stories.map(s=>s.slug)).size!==stories.length) throw Error('Slugs dupliqués');
+ if(!Array.isArray(stories))throw Error('Catalogue invalide');
+ if(stories.some(s=>!safeSlug(s.slug)))throw Error('Un identifiant d’histoire contient un caractère invalide');
+ if(new Set(stories.map(s=>s.slug)).size!==stories.length)throw Error('Identifiants en double');
  return stories;
 }
-/** On utilise uniquement les balises inoffensives dans l'HTML éditorial du blog personnel. */
+/** Pas de HTML actif : uniquement la typographie et les paragraphes du récit. */
 export function sanitizeStoryHTML(raw){
  return String(raw||'')
  .replace(/<!--[\s\S]*?-->/g,'')
- .replace(/<(script|style|iframe|object|svg|form|video|audio|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,'')
+ .replace(/<(script|style|iframe|object|svg|form|video|audio|button|template|figure|figcaption|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,'')
  .replace(/<\/?(?!p\b|br\b|strong\b|em\b|b\b|i\b|ul\b|ol\b|li\b|blockquote\b|h2\b|h3\b|h4\b)[a-z][^>]*>/gi,'')
  .replace(/<([a-z][a-z0-9]*)\b[^>]*>/gi, (whole,tag)=>['p','br','strong','em','b','i','ul','ol','li','blockquote','h2','h3','h4'].includes(tag.toLowerCase()) ? `<${tag.toLowerCase()}>` : '')
  .replace(/<\s*(?:p|h2|h3|h4|blockquote)\s*>\s*<\/\s*(?:p|h2|h3|h4|blockquote)\s*>/gi,'')
  .trim();
 }
-export function renderStory(story,publicPage=false){
+const platformNames = {spotify:'Spotify',apple:'Apple Podcasts',deezer:'Deezer',amazon:'Amazon Music'};
+const platformShort = {spotify:'◉',apple:'♫',deezer:'▥',amazon:'◖'};
+const plural = (n, one, many) => `${n} ${n>1?many:one}`;
+
+export function renderStory(story,index,all){
  const h=escapeHtml;
- // Local draft location: brouillons/histoires/slug/index.html ; on peut l'ouvrir directement.
- const assets= publicPage ? '../../assets/' : '../../../site/assets/';
- const home= publicPage ? '../../index.html' : '../../../site/index.html';
- const catalogue=publicPage?'../../histoires.html':'../../../site/histoires.html';
+ const title=h(story.title||'Histoire');
+ const subtitle=story.subtitle ? `<p class="episode-subtitle">${h(story.subtitle)}</p>`:'';
  const source=safeURL(story.source)||'https://histoires2dansmatete.fr/';
  const image=safeURL(story.image);
- const body=story.bodyHtml?sanitizeStoryHTML(story.bodyHtml):`<p>Cette histoire existe sur le blog d’origine. Son texte complet pourra être importé en exécutant <code>npm run sync:blog</code> depuis votre ordinateur.</p>`;
- const title=h(story.title);
- return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#faf7ef"><meta name="robots" content="${publicPage?'index,follow':'noindex,nofollow'}"><title>${title} — Les histoires de « Dans ma tête »</title><meta name="description" content="${h(story.description)}"><link rel="icon" href="${assets}favicon.ico"><link rel="stylesheet" href="${assets}style.css"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet"></head><body><div class="announcement">✳ Les histoires de « Dans ma tête » ✳</div><header class="site-header"><div class="container header-inner"><a href="${home}" class="brand"><img src="${assets}logo.webp" alt="" class="brand-logo" width="56" height="56"><span class="brand-copy"><span class="brand-small">Les histoires de</span><strong>Dans ma tête<span class="brand-period">.</span></strong></span></a><nav class="story-page-nav"><a href="${catalogue}">← Toutes les histoires</a></nav></div></header><main class="draft-story"><div class="container"><a class="draft-breadcrumb" href="${catalogue}">La bibliothèque <span>›</span> ${title}</a><div class="draft-article"><div class="section-kicker">✶ ${h(story.theme||'UNE BELLE HISTOIRE')}</div><h1>${title}</h1>${story.subtitle?`<p class="draft-subtitle">${h(story.subtitle)}</p>`:''}<p class="draft-lead">${h(story.description)}</p><div class="draft-image">${image?`<img src="${h(image)}" alt="Illustration de ${title}" loading="lazy">`:`<span aria-hidden="true">${h(story.emoji||'✳')}</span>`}</div><div class="draft-text">${body}</div><div class="draft-audio"><span aria-hidden="true">♫</span><strong>Le podcast arrive bientôt</strong><p>Cette histoire n’est pas encore disponible en version audio.</p></div><a href="${h(source)}" target="_blank" rel="noopener noreferrer" class="button button-outline">Lire sur le blog d’origine ↗</a></div></div></main><footer class="site-footer"><div class="container footer-bottom">© Les histoires de « Dans ma tête » — Tous droits réservés.</div></footer></body></html>`;
-}
-export async function writeDrafts(stories){
- const target=resolve('brouillons/histoires');
- await rm(target,{recursive:true,force:true});
- for(const s of stories){const dir=join(target,s.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory(s,false));}
- console.log(`✓ ${stories.length} fiches privées disponibles dans brouillons/histoires/ (non déployées).`);
+ const body= sanitizeStoryHTML(story.bodyHtml);
+ const audio=safeMedia(story.audioUrl);
+ const showReady= Boolean(audio);
+ const minutes=story.minutes ? `<span>◷ ${h(story.minutes)}</span>`:'';
+ const altTitle=story.subtitle?`${title} — ${h(story.subtitle)}`:title;
+ const pageURL=`../../histoires.html`;
+ const prev=all[(index - 1 + all.length)%all.length], next=all[(index + 1)%all.length];
+ const platforms=Object.entries(platformNames).map(([key,name])=>{
+  const u=safeURL(story.platforms?.[key]);
+  return `<a class="episode-platform ${u?'episode-platform-ready':''}" data-platform="${key}" ${u?`href="${h(u)}" target="_blank" rel="noopener noreferrer"`:'aria-disabled="true"'}><span class="episode-platform-mark" aria-hidden="true">${platformShort[key]}</span><span>${name}</span><span class="platform-status">${u?'Écouter ↗':'À venir'}</span></a>`;
+ }).join('');
+ const reader=body
+ ? `<div class="reading-body">${body}</div>`
+ : `<div class="reading-pending"><span aria-hidden="true">✳</span><h3>Le texte complet n’a pas encore été importé.</h3><p>Cette histoire est disponible en intégralité sur le blog d’origine. Vous pouvez la lire dès maintenant grâce au lien ci-dessous. Son texte sera affiché ici après synchronisation WordPress.</p><a class="button button-primary" href="${h(source)}" target="_blank" rel="noopener noreferrer">Lire l’histoire intégrale sur le blog ↗</a></div>`;
+ const player=showReady
+ ? `<div class="episode-player"><div class="player-mark" aria-hidden="true">♫</div><div class="player-copy"><strong>L’épisode à écouter</strong><span>Appuyez sur Lecture pour commencer l’histoire.</span></div><audio controls preload="none" src="${h(audio)}">Votre navigateur ne permet pas de lire ce fichier audio.</audio></div>`
+ : `<div class="episode-player episode-player-waiting"><div class="player-mark" aria-hidden="true">♫</div><div class="player-copy"><strong>Bientôt dans vos oreilles</strong><span>La version audio n’est pas encore publiée. Découvrez le récit ci-dessous en attendant.</span></div><div class="player-pill">En préparation</div></div>`;
+ const illustration=image ? `<img src="${h(image)}" alt="Illustration de ${title}" loading="eager" data-episode-image="true"><span class="episode-visual-emoji" hidden>${h(story.emoji||'✦')}</span>` : `<span class="episode-visual-emoji">${h(story.emoji||'✦')}</span>`;
+ return `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#faf7ef"><meta name="robots" content="index,follow"><meta name="description" content="${h(story.description||'Découvrez cette histoire pour enfants, à lire et bientôt à écouter.')}"><meta property="og:title" content="${altTitle} — Dans ma tête"><meta property="og:type" content="article"><title>${altTitle} — Les histoires de « Dans ma tête »</title><link rel="icon" href="../../assets/favicon.ico"><link rel="apple-touch-icon" href="../../assets/favicon-180.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../assets/style.css"><script defer src="../../config.js"></script><script defer src="../../assets/main.js"></script></head>
+<body><a class="skip-link" href="#contenu">Aller au contenu</a><div class="announcement"><span>✳</span> Des histoires à lire… et bientôt à écouter <span>✳</span></div>
+<header class="site-header"><div class="container header-inner"><a class="brand" href="../../index.html" aria-label="Accueil — Dans ma tête"><img class="brand-logo" src="../../assets/logo.webp" alt="" width="56" height="56"><span class="brand-copy"><span class="brand-small">Les histoires de</span><strong>Dans ma tête<span class="brand-period">.</span></strong></span></a><button class="menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button><nav class="primary-nav" id="primary-nav" aria-label="Navigation principale"><a href="../../index.html#univers">L’univers</a><a href="${pageURL}">Toutes les histoires</a><a href="../../ecouter.html">Où écouter ?</a><a href="../../qui-suis-je.html">Qui suis-je ?</a><a class="nav-button" href="https://histoires2dansmatete.fr/" target="_blank" rel="noopener noreferrer">Le blog ↗</a></nav></div></header>
+<main id="contenu"><section class="episode-hero"><div class="container"><nav class="episode-breadcrumb" aria-label="Fil d’Ariane"><a href="../../index.html">Accueil</a><span>›</span><a href="${pageURL}">Les histoires</a><span>›</span><span aria-current="page">${title}</span></nav><div class="episode-hero-grid"><div class="episode-hero-copy"><span class="section-kicker">✦ UNE HISTOIRE DE DANS MA TÊTE</span><h1>${title}</h1>${subtitle}<p class="episode-intro">${h(story.description||'Un nouveau monde à découvrir.')}</p><div class="episode-metadata"><span>${h(story.theme||'Une jolie aventure')}</span>${minutes}</div><div class="episode-cta"><a class="button button-primary" href="#lecture">Lire cette histoire ↓</a><a class="button button-outline" href="#audio">${showReady?'Écouter l’épisode ♫':'Le podcast arrive ♫'}</a></div></div><div class="episode-visual">${illustration}<span class="episode-visual-tag">LES HISTOIRES DE DANS MA TÊTE ✳</span></div></div></div></section>
+<section class="episode-audio" id="audio"><div class="container"><div class="section-kicker">✳ LE PODCAST</div><h2>À écouter <em>en famille</em></h2>${player}<div class="episode-platforms"><h3>Retrouvez aussi le podcast sur vos plateformes</h3><div class="episode-platform-grid">${platforms}</div><p class="episode-platform-note">Les liens de chaque épisode s’activeront après publication. Vous pouvez aussi consulter la <a href="../../ecouter.html">page « Où écouter ? »</a>.</p></div></div></section>
+<section class="reading-section" id="lecture"><div class="container"><div class="reading-heading"><div><div class="section-kicker">✶ PLACE À L’IMAGINATION</div><h2>L’histoire <em>à lire</em></h2><p>Installez-vous confortablement… il était une fois !</p></div><span aria-hidden="true">❦</span></div><article class="reading-paper" aria-label="Texte intégral de l’histoire ${title}">${reader}${body?`<div class="reading-end" aria-hidden="true">✳ &nbsp; ✳ &nbsp; ✳</div>`:''}</article><div class="reading-source">Texte © Les histoires de « Dans ma tête » — <a href="${h(source)}" target="_blank" rel="noopener noreferrer">Voir la publication originale ↗</a></div></div></section>
+<section class="episode-more"><div class="container"><div class="section-kicker">✳ POUR CONTINUER À RÊVER</div><h2>Encore une <em>petite histoire ?</em></h2><div class="episode-neighbors"><a href="../${h(prev.slug)}/"><span>← Une autre aventure</span><strong>${h(prev.title)}</strong></a><a href="../${h(next.slug)}/"><span>Une autre aventure →</span><strong>${h(next.title)}</strong></a></div><a class="all-episodes" href="${pageURL}">Voir toutes les histoires ↗</a></div></section></main>
+<footer class="site-footer"><div class="container footer-top"><a class="brand footer-brand" href="../../index.html"><img class="brand-logo" src="../../assets/logo.webp" alt="" width="45" height="45"><span class="brand-copy"><span class="brand-small">Les histoires de</span><strong>Dans ma tête<span class="brand-period">.</span></strong></span></a><p>Des histoires inventées avec le cœur,<br>à lire aujourd’hui et bientôt à écouter.</p><nav class="footer-nav" aria-label="Liens utiles"><a href="${pageURL}">Toutes les histoires</a><a href="../../ecouter.html">Où écouter ?</a><a href="../../qui-suis-je.html">Qui suis-je ?</a><a href="../../confidentialite.html">Confidentialité</a></nav></div><div class="container footer-bottom">© 2026 Les histoires de « Dans ma tête » — Tous droits réservés.</div></footer></body></html>`;
 }
 export async function writePublicStories(stories){
- const target=resolve('dist/histoires');
- for(const s of stories){const dir=join(target,s.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory(s,true));}
- console.log(`✓ ${stories.length} pages individuelles publiées.`);
+ const target=resolve('site/histoires');
+ await rm(target,{recursive:true,force:true});
+ for(const [i,story] of stories.entries()){
+  const dir=join(target,story.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory(story,i,stories));
+ }
+ console.log(`✓ ${plural(stories.length,'fiche podcast publique','fiches podcast publiques')} générées dans site/histoires/.`);
 }
+// Alias pour compatibilité avec les anciennes commandes.
+export const writeDrafts = writePublicStories;

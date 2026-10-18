@@ -1,17 +1,20 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
   "scripts": {
     "dev": "node scripts/server.mjs",
-    "check": "node scripts/check.mjs",
-    "build": "node scripts/check.mjs && node scripts/build.mjs",
+    "check": "node scripts/generate.mjs && node scripts/check.mjs",
+    "build": "node scripts/generate.mjs && node scripts/check.mjs && node scripts/build.mjs",
     "preview": "node scripts/server.mjs --preview",
-    "drafts": "node scripts/drafts.mjs",
+    "drafts": "node scripts/generate.mjs",
     "sync:blog": "node scripts/sync-blog.mjs",
-    "import:wordpress": "node scripts/import-wordpress.mjs"
+    "import:wordpress": "node scripts/import-wordpress.mjs",
+    "generate:stories": "node scripts/generate.mjs",
+    "predev": "node scripts/generate.mjs",
+    "build:sync": "node scripts/sync-blog.mjs && npm run build"
   },
   "engines": {
     "node": ">=22"

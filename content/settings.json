@@ -1,4 +1,4 @@
 {
-  "publierPagesHistoires": false,
-  "commentaire": "Laisser false tant que les épisodes ne sont pas publiés. Les fiches sont générées dans brouillons/ (exclu du déploiement)."
+  "publierPagesHistoires": true,
+  "commentaire": "Les pages histoires sont publiques. Le texte apparait après import WordPress; audio activé par URL dans data/histoires.json."
 }
