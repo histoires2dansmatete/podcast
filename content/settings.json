@@ -1,0 +1,4 @@
+{
+  "publierPagesHistoires": false,
+  "commentaire": "Laisser false tant que les épisodes ne sont pas publiés. Les fiches sont générées dans brouillons/ (exclu du déploiement)."
+}

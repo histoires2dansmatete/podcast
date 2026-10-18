@@ -6,9 +6,9 @@ import vm from 'node:vm';
 
 const root = resolve('site');
 const required = [
-  'index.html', 'confidentialite.html', '404.html',
+  'index.html', 'histoires.html', 'qui-suis-je.html', 'confidentialite.html', '404.html',
   'config.js', 'robots.txt', '_headers',
-  'assets/main.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.svg'
+  'assets/main.js', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'assets/banniere.webp', 'data/histoires.json'
 ];
 for (const filename of required) {
   const file = resolve(root, filename);
@@ -16,7 +16,7 @@ for (const filename of required) {
   assert.ok((await stat(file)).isFile(), `Fichier manquant : ${filename}`);
 }
 
-const htmlPages = ['index.html', 'confidentialite.html', '404.html'];
+const htmlPages = ['index.html', 'histoires.html', 'qui-suis-je.html', 'confidentialite.html', '404.html'];
 for (const page of htmlPages) {
   const html = await readFile(resolve(root, page), 'utf8');
   assert.match(html, /<html[^>]+lang="fr"/, `${page} : attribut lang="fr" absent`);
@@ -26,9 +26,7 @@ for (const page of htmlPages) {
     const url = match[1];
     if (url === '/') continue; // La racine du site est une page valide.
     if (url.startsWith('#')) {
-      if (page === 'index.html') {
-        assert.ok(html.includes(`id="${url.slice(1)}"`), `Ancre introuvable : ${url}`);
-      }
+      assert.ok(html.includes(`id="${url.slice(1)}"`), `Ancre introuvable : ${url}`);
       continue;
     }
     if (/^(?:https?:|mailto:|tel:|data:|\/\/)/i.test(url)) continue;

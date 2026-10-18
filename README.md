@@ -1,3 +1,54 @@
+# Nouvelle version : pages, images et catalogue (octobre 2026)
+
+Le projet inclut maintenant le **logo** et la **bannière** fournis (hébergés localement dans `site/assets/`), un favicon dérivé du logo, une galerie de **six couvertures animées** avec flèches (respecte la préférence « animations réduites »), une page **[Qui suis-je ?](site/qui-suis-je.html)** reprenant le texte du blog, et une page **[Toutes les histoires](site/histoires.html)** avec recherche et filtre par thème.
+
+## Où sont les histoires et leurs fiches ?
+
+- `site/data/histoires.json` : le catalogue public. **10 histoires confirmées** sont préremplies depuis la première page du blog, dont plusieurs aventures de Perly et Popette qui possèdent le même titre mais des adresses différentes. Le blog indique **13 histoires au total** ; **3 autres ne sont pas encore importées**, car sa seconde page n'était pas accessible lors de la préparation.
+- `brouillons/histoires/<slug>/index.html` : une **fiche par histoire** existante, générée hors du dossier `site/` et du build `dist/`. Elles ne sont ni publiées sur Cloudflare Pages, ni liées depuis le catalogue. Ouvrez les fichiers localement pour les consulter. Les histoires sont représentées par leur titre, thème et résumé ; les textes complets seront ajoutés lors de l'import WordPress.
+- `content/settings.json` : `"publierPagesHistoires": false` par défaut. Lorsqu'un podcast est prêt et que vous souhaitez publier **toutes** les fiches, passez ce paramètre à `true` puis relancez `npm run build` et poussez sur GitHub. Ne l'activez pas prématurément : les pages générées deviendraient publiques et indexables ! Pour une activation histoire par histoire, une évolution du réglage sera nécessaire.
+
+### Importer toutes les histoires et les textes complets
+
+Le blog WordPress est la source de vérité. Pour récupérer les **13 histoires**, y compris leurs textes complets, deux méthodes :
+
+**Méthode A :** depuis votre ordinateur connecté à Internet, exécuter :
+
+```bash
+npm run sync:blog
+npm run build
+```
+
+La commande tente l'API publique WordPress, puis le flux RSS en cas d'erreur. Elle conserve vos descriptions personnalisées, ajoute les billets nouveaux et remplit les fiches privées avec le contenu des articles lorsque le blog l'expose. Selon la configuration WordPress, le RSS peut ne fournir que les dix billets les plus récents. Vérifiez le total affiché par la commande et dans `site/data/histoires.json`.
+
+**Méthode B (la plus fiable si l'API ou le RSS est limité) :** dans l'administration WordPress de votre blog, aller dans **Outils → Exporter → Articles**, télécharger le fichier `.xml`, le placer en dehors de ce dépôt et lancer :
+
+```bash
+npm run import:wordpress -- /chemin/vers/votre-export.xml
+npm run build
+```
+
+L'import XML récupère les textes des articles publiés ainsi que les titres et les URLs. Le fichier d'export lui-même peut contenir des informations personnelles : **ne le commitez jamais**. Seul le contenu des histoires est intégré aux fiches locales. Après import, validez le nombre et l'apparence des fiches.
+
+**IMPORTANT :** le site déployé comprend le catalogue de toutes les histoires connues, mais jamais les textes privés non publiés. L'import WordPress doit être déclenché **localement avant le `git push`** et n'est pas nécessaire pour les builds Cloudflare. Les illustrations des histoires sont pour l'instant chargées depuis votre blog : le logo et la bannière, eux, sont déjà locaux. Pour être autonome vis-à-vis de WordPress, vous pourrez ensuite copier les illustrations dans `site/assets/` et mettre à jour `site/data/histoires.json`.
+
+### Les commandes pratiques
+
+```bash
+npm ci
+npm run dev                # http://localhost:5173
+npm run drafts             # régénère les fiches privées
+npm run sync:blog          # complète le catalogue via WordPress (connexion requise)
+npm run import:wordpress -- /chemin/export.xml  # import depuis WordPress
+npm run check              # validations
+npm run build              # copie dans dist/ (sans les fiches privées)
+npm run preview            # http://localhost:4173 (version Cloudflare)
+```
+
+La publication GitHub → Cloudflare Pages ne change pas : commande de build `npm run build`, sortie `dist`, branche `main`.
+
+---
+
 # Les histoires de « Dans ma tête » — Site du podcast
 
 Projet prêt pour le développement en local, GitHub et **Cloudflare Pages avec déploiement automatique depuis GitHub**.

@@ -15,3 +15,15 @@ await rm(destination, { recursive: true, force: true });
 await mkdir(destination, { recursive: true });
 await cp(source, destination, { recursive: true, force: true });
 console.log('✓ Build prêt dans dist/ (Cloudflare Pages publie ce dossier).');
+
+// Les pages privées restent en dehors de dist/ et ne peuvent donc pas être vues en ligne.
+import { data, writeDrafts, writePublicStories } from './stories.mjs';
+import { readFile } from 'node:fs/promises';
+const stories = await data();
+const settings = JSON.parse(await readFile('content/settings.json','utf8'));
+await writeDrafts(stories);
+if (settings.publierPagesHistoires === true) {
+  await writePublicStories(stories);
+} else {
+  console.log('✓ Pages individuelles non publiées (content/settings.json : false).');
+}
