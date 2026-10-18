@@ -8,4 +8,5 @@ await rm(dest,{recursive:true,force:true});await mkdir(dest,{recursive:true});
 await cp(source,dest,{recursive:true});
 await normalizeOutputUrls();
 await verifyOutputUrls();
+await import('./optimize-output.mjs');
 console.log('✓ Site prêt dans dist/ : pages publiques et lecteurs audio configurés.');

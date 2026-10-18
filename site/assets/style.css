@@ -396,8 +396,6 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 @media(max-width:750px){.listen-page-grid,.episode-hero-grid,.listen-reading-grid{grid-template-columns:1fr}.listen-page-hero{padding:62px 0}.listen-page-hero h1{font-size:clamp(44px,8vw,66px)}.listen-page-art{height:300px}.listen-disc{width:240px;height:240px}.listen-art-caption{right:8%;bottom:0;font-size:16px}.listen-platform-grid{grid-template-columns:1fr}.listen-platform{min-height:105px}.how-grid{grid-template-columns:1fr;gap:13px}.how-listen{padding:62px 0}.episode-hero{padding:23px 0 65px}.episode-breadcrumb{margin-bottom:32px}.episode-visual{max-width:460px;width:86%;margin:0 auto}.episode-audio,.reading-section{padding:65px 0}.episode-player{align-items:flex-start}.player-pill{margin:0}.episode-player audio{width:100%}.reading-heading>span{font-size:45px}}
 @media(max-width:480px){.listen-page-hero h1,.episode-hero-copy h1{font-size:43px}.listen-page-art{height:270px}.listen-disc{width:206px;height:206px}.listen-art-caption{right:0;font-size:14px}.listen-platform-body strong{font-size:20px}.listen-platform-body small{font-size:12px}.listen-platform .platform-status{font-size:10px}.episode-platform-grid{grid-template-columns:1fr}.episode-platform{min-height:60px}.episode-player{padding:20px;gap:12px}.player-copy{min-width:180px}.episode-neighbors{grid-template-columns:1fr}.reading-body{font-size:18px;line-height:1.85}.reading-paper{padding:30px 22px}.reading-heading h2{font-size:37px}.listen-reading-art{max-width:210px}.faq-list summary{font-size:19px}}
 @media(prefers-reduced-motion:reduce){.listen-disc,.episode-visual{transform:none}}
-/* Consentement explicite au suivi d'audience */
-.analytics-consent{position:fixed;z-index:9999;bottom:18px;left:18px;right:18px;max-width:730px;margin:auto;padding:20px 25px;background:#fffdf9;color:#432e49;box-shadow:0 15px 60px #3a253d44;border:1px solid #eadce6;border-radius:22px;font-size:14px;line-height:1.65}.analytics-consent p{margin:0 0 12px}.analytics-consent div{display:flex;gap:12px;flex-wrap:wrap}.analytics-consent button{background:#f5eaf1;color:#543f58;border:0;border-radius:50px;padding:9px 19px;cursor:pointer;font-weight:700}.analytics-consent button.consent-yes{background:#5d3c65;color:#fff}
 
 /* Logos officiels des marques, stockés sur le site (aucune dépendance CDN). */
 .platform-icon .brand-icon,.listen-platform-symbol .brand-icon{width:60%;height:60%;object-fit:contain;display:block}
@@ -457,3 +455,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 /* V9 — le copyright reste un seul bloc lisible sur toutes les tailles d’écran. */
 .footer-bottom{display:block;text-align:center}
 .footer-copyright{margin:0;max-width:100%;line-height:1.65;white-space:normal;overflow-wrap:anywhere}
+
+/* Affichage lisible du choix accessible uniquement dans Confidentialité. */
+#analytics-consent-status{padding:13px 17px;border-left:3px solid var(--plum);border-radius:8px;background:var(--lavender);margin-bottom:18px}
+#analytics-allow[aria-pressed="true"],#analytics-deny[aria-pressed="true"]{outline:2px solid var(--plum);outline-offset:2px}

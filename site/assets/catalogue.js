@@ -6,13 +6,17 @@
   const make=(tag,name,value)=>{const el=document.createElement(tag);if(name)el.className=name;if(value)el.textContent=value;return el;};
   const normalize=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const tagsOf=s=>Array.isArray(s.tags)&&s.tags.length?s.tags:s.theme?.split(/\s*[&·]\s*/).filter(Boolean)||[];
-  const localCover=url=>/^assets\/(?:stories|images)\/[a-zA-Z0-9_.-]+\.(?:svg|png|jpe?g|webp|avif)$/i.test(url||'');
+  // Même règle de sécurité que scripts/local-image-path.mjs : les WebP optimisés
+  // peuvent résider dans assets/images/optimized/ et ses sous-dossiers.
+  const localCover=url=>typeof url==='string'
+    && /^assets\/(?:stories|images)\/(?:[a-zA-Z0-9_.-]+\/)*[a-zA-Z0-9_.-]+\.(?:svg|png|jpe?g|webp|avif|tiff?|bmp)$/i.test(url)
+    && !url.split('/').some(part=>part==='.'||part==='..');
   function card(s){
     const article=make('article','story-card catalogue-card');
     const link=`/histoires/${encodeURIComponent(s.slug)}/`;
     const image=make('a','story-image');image.href=link;image.setAttribute('aria-label',`Découvrir ${s.title}`);
     image.style.background='#ead7c5';image.append(make('span','card-fallback',s.emoji||'✦'));
-    if(localCover(s.image)){const img=make('img');img.src=`/${s.image.replace(/^\//,'')}`;img.alt=`Couverture de ${s.title}`;img.loading='lazy';img.addEventListener('error',()=>{img.src=`/assets/stories/${s.slug}.svg`;},{once:true});image.append(img);}
+    if(localCover(s.image)){const img=make('img');img.src=`/${s.image.replace(/^\//,'')}`;img.alt=`Couverture de ${s.title}`;img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>{img.src=`/assets/stories/${s.slug}.svg`;},{once:true});image.append(img);}
     image.append(make('span','story-sticker','♫ Bientôt en podcast'));
     const content=make('div','story-content');const category=make('div','catalogue-tag',tagsOf(s).join(' · ')||'Une belle histoire');content.append(category);
     content.append(make('h3','',s.title));if(s.subtitle)content.append(make('div','catalogue-subtitle',s.subtitle));

@@ -47,7 +47,11 @@ function loginRequest(password,origin=base){return request('/api/admin/login',''
 const fakeLimits=new Map(),storyStates=new Map();
 const db={prepare(sql){let bound=[];return {bind(...args){bound=args;return this;},async first(){if(sql.includes('admin_login_limits')){const value=fakeLimits.get(bound[0]);return value||null;}return null;},async all(){return {results:[...storyStates].filter(([,enabled])=>enabled===0).map(([slug])=>({slug}))};},async run(){if(sql.includes('INSERT INTO admin_login_limits')){const [key,end]=bound;const old=fakeLimits.get(key);fakeLimits.set(key,{failures:old&&old.expires_at>Date.now()/1000?old.failures+1:1,expires_at:old&&old.expires_at>Date.now()/1000?old.expires_at:end});}else if(sql.includes('DELETE FROM admin_login_limits'))fakeLimits.delete(bound[0]);else if(sql.includes('INSERT INTO story_states'))storyStates.set(bound[0],bound[1]);return {success:true};}}}};
 const config={...env,ANALYTICS_DB:db,ASSETS:{fetch:async()=>Response.json([{slug:'bas-les-masques',title:'Bas les masques'}])}};
-assert.equal((await login({env:config,request:loginRequest('wrong')})).status,303);
+const wrongLogin=await login({env:config,request:loginRequest('wrong')});
+assert.equal(wrongLogin.status,303);
+assert.equal(wrongLogin.headers.get('location'),'/admin/?erreur=1');
+const wrongPage=await admin({env:config,request:new Request(base+'/admin/?erreur=1')});
+assert.match(await wrongPage.text(),/Mot de passe incorrect/);
 const pagesRequest=(password,headers={},csrfValue=csrf)=>new Request(pagesUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','CF-Connecting-IP':'203.0.113.33',...headers},body:new URLSearchParams({password,csrf:csrfValue})});
 const pagesGuest=await admin({env:config,request:new Request('https://podcast-7ck.pages.dev/admin/')});
 assert.equal(pagesGuest.status,200);
@@ -79,7 +83,10 @@ assert.equal((await toggle(true)).status,200);assert.equal(storyStates.get('bas-
 const hidden=await storyList({env:config,request:request('/api/admin/stories',token)});assert.equal(hidden.status,200);
 // Blocage de 5 mots de passe erronés sur une même origine pour ralentir les attaques.
 for(let i=0;i<5;i++)assert.equal((await login({env:config,request:loginRequest('wrong'+i)})).status,303);
-assert.equal((await login({env:config,request:loginRequest(pass)})).status,429);
+const blocked=await login({env:config,request:loginRequest(pass)});
+assert.equal(blocked.status,429);
+assert.equal(blocked.headers.get('Retry-After'),'900');
+assert.match(await blocked.text(),/Trop de tentatives/);
 const trReq=new Request(base+'/api/track',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({consent:true,event:'pageview',page:'/',session:'123456789abcdef123456789abcde',device:'desktop'})});
 assert.equal((await track({request:trReq,env:{}})).status,503);
 console.log('✓ Sécurité : mot de passe PBKDF2, session HMAC de 8 h, cookies protégés, CSRF, limites de tentatives, API privée.');

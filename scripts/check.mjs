@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, dirname, sep } from 'node:path';
 import vm from 'node:vm';
+import { isLocalImagePath } from './local-image-path.mjs';
 
 const root = resolve('site');
 const required = [
@@ -82,7 +83,7 @@ assert.match(home,/class="section-heading"/, 'L’en-tête de la rubrique doit r
 assert.match(home,/href="histoires.html"/, 'La bibliothèque doit rester accessible.');
 for(const s of stories){
  assert.ok(Array.isArray(s.tags) && s.tags.length>0,`${s.slug}: thèmes absents`);
- assert.match(s.image,/^assets\/(?:images|stories)\/[a-zA-Z0-9_.-]+\.(?:svg|png|jpe?g|webp|avif)$/i,`${s.slug}: couverture non locale`);
+ assert.ok(isLocalImagePath(s.image), `${s.slug}: couverture non locale (${s.image})`);
  assert.ok((await stat(resolve(root,s.image))).isFile(),`${s.slug}: couverture locale manquante`);
 }
 for (const file of ['index.html','histoires.html','ecouter.html','qui-suis-je.html','confidentialite.html','data/histoires.json',...stories.map(s=>`histoires/${s.slug}/index.html`)]) {

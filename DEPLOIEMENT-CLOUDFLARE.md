@@ -110,3 +110,46 @@ npm run test:remote -- https://podcast-7ck.pages.dev
 ```
 
 Cette commande doit indiquer **« Administration : jeton anti-CSRF V11 présent »**. Si elle indique `503`, vérifiez votre base D1 et les secrets de l'environnement adéquat ; le contrôle anti-CSRF ne remplace pas les secrets de production.
+
+## V12 — Le mot de passe fonctionne en local, mais pas sur Pages
+
+Sur `https://podcast-7ck.pages.dev/admin/`, le formulaire est maintenant traité. Les messages doivent être distingués :
+
+- **« Mot de passe incorrect »** (renvoi à `/admin/?erreur=1`) : le mot de passe fourni **ne correspond pas au hash chargé par l'instance Cloudflare**. Ce hash peut être différent de celui de votre PC. Ne relancez pas `admin:setup` si votre mot de passe local vous convient.
+- **HTTP 429 « Trop de tentatives »** : la base D1 bloque temporairement les essais depuis cette adresse pendant **15 minutes**. N'essayez pas à répétition ; attendez la fin du délai avant un nouveau test.
+- **HTTP 503** : vérifier les secrets et le binding `ANALYTICS_DB`, et la table `admin_login_limits` dans D1.
+
+### Copier les mêmes secrets que ceux de votre ordinateur
+
+Depuis votre **vrai dossier Git local**, contenant le `.env.local` qui permet déjà de vous connecter :
+
+```bash
+npm ci
+npm run admin:diagnose
+npx wrangler login
+npm run admin:sync-cloudflare -- --project podcast-7ck
+```
+
+La dernière commande vous demande explicitement de confirmer le nom `podcast-7ck` et téléverse **uniquement** `ADMIN_PASSWORD_HASH` et `ADMIN_SESSION_SECRET` via `wrangler pages secret bulk`. Elle ne transmet jamais le mot de passe en clair et n'écrit pas vos secrets dans GitHub ou un fichier temporaire. Elle nécessite l'accès à votre compte Cloudflare et une connexion réseau.
+
+**Attention :** elle remplace la clé de session côté Cloudflare et invalide les sessions existantes. Vérifiez le nom du projet et l'environnement **Production** dans Cloudflare Pages. Les secrets de **Preview** peuvent être différents. `ANALYTICS_SALT` et le binding D1 ne sont pas remplacés par la commande.
+
+Déclenchez ensuite un nouveau déploiement réussi de `main` sur Cloudflare Pages (par exemple `git commit` + `git push` après votre mise à jour). Attendez si besoin 15 minutes que les tentatives précédentes expirent. Rechargez `/admin/` puis saisissez exactement le mot de passe utilisé en local.
+
+Dans **Cloudflare → Workers & Pages → podcast-7ck → Settings → Variables and Secrets**, vous pouvez contrôler que les deux **noms** existent pour l'environnement de production, mais leur valeur reste masquée : c'est normal. Ne communiquez jamais votre fichier `.env.local`, le hash, les cookies de session ni un mot de passe ici.
+
+### Ne pas utiliser « admin:setup » pour réparer sans comprendre
+
+`npm run admin:setup` crée un *nouveau* sel et une *nouvelle* clé même si le mot de passe saisi est identique. Le hash PBKDF2 sera donc différent. Si vous le relancez, vous devrez ensuite synchroniser les nouvelles valeurs avec Cloudflare.
+
+## V12 — Images et performance
+
+1. Conservez et ajoutez vos originaux dans `site/assets/images/`.
+2. Installez Python 3 et Pillow : `python -m pip install -r scripts/requirements-images.txt` (Windows : `py -3 -m pip install -r scripts/requirements-images.txt`).
+3. Prévisualisez les optimisations : `npm run optimize:images -- --dry-run`.
+4. Créez les variantes : `npm run optimize:images`. Le script traite toutes les sous-arborescences, conserve les noms et les proportions, respecte la rotation EXIF, préserve la transparence et garde les originaux.
+5. Exécutez `npm run build && npm run test:performance` puis ajoutez **aussi** `site/assets/images/optimized/` à Git avant de pousser.
+
+Le générateur utilise automatiquement les WebP plus légers lorsqu'ils existent ; si l'un est absent, il utilise l'original ou sa couverture de secours. Les animations GIF et les SVG ne sont pas modifiés. Pour changer les paramètres d'optimisation, relancez `npm run optimize:images -- --force --quality 80 --max-size 1400`.
+
+Le build ajoute `decoding="async"` et `loading="lazy"` aux images non prioritaires, et allège les CSS dans `dist/`. Ces changements n'affectent pas les sources HTML ou CSS, et sont vérifiés en CI. La réduction réelle dépend de vos images originales ; l'archive n'inclut pas ces originaux.

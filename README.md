@@ -1,6 +1,17 @@
-# Les histoires de Dans ma tête — version 11
+# Les histoires de Dans ma tête — version 12
 
 Site Web statique pour **https://histoires2dansmatete.fr**, développé en local avec Node.js 22+ et déployé depuis GitHub vers **Cloudflare Pages**. Il conserve les 13 textes intégraux importés du WordPress (avec comparaison XML à chaque build), les fiches podcasts et les contenus SEO.
+
+## V12 — Nettoyage, images optimisées et mot de passe Cloudflare
+
+- **Nettoyage :** un seul bloc social dans les fiches, suppression du rendu transitoire devenu inutile et correctif du nettoyage des éléments HTML des récits.
+- **Performances :** CSS de production légèrement allégé, décodage asynchrone et chargement différé des images secondaires ; les images originales peuvent être converties en WebP sans perte de leur rapport largeur/hauteur.
+- **Images :** `npm run optimize:images` parcourt toutes les images de `site/assets/images/` et crée les versions légères sous `site/assets/images/optimized/`, sans supprimer les originaux. Installer au préalable Pillow (`python -m pip install -r scripts/requirements-images.txt`).
+- **Administration :** erreurs différenciées (mot de passe invalide vs. limitation à 15 minutes), diagnostic local `npm run admin:diagnose`, synchronisation explicite des secrets vers Pages avec `npm run admin:sync-cloudflare -- --project podcast-7ck`.
+
+**La connexion qui réussit sur votre PC ne garantit pas que Cloudflare utilise le même hash.** Les secrets ne sont pas déployés depuis GitHub. Voir la section V12 de [DEPLOIEMENT-CLOUDFLARE.md](DEPLOIEMENT-CLOUDFLARE.md) pour synchroniser vos secrets locaux avec votre projet Pages, puis redéployer et attendre, si nécessaire, l'expiration de la limitation.
+
+**Illustrations :** les véritables fichiers de `site/assets/images/` restent à fournir depuis votre PC ; les versions WebP ne seront créées qu'après copie de ces fichiers. Ne partagez pas `.env.local` et ne le commitez pas.
 
 ## V11 — Correction de « Origine non autorisée » sur Cloudflare Pages
 

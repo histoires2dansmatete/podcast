@@ -267,3 +267,40 @@ npm run test:remote -- https://VOTRE-PROJET.pages.dev
 ```
 
 Le guide [DEPLOIEMENT-CLOUDFLARE.md](DEPLOIEMENT-CLOUDFLARE.md) explique comment interpréter les erreurs 404, le type MIME CSS, les images manquantes et le mauvais type de projet Cloudflare.
+
+## Mise à jour V12 : images, performance et mot de passe sur Cloudflare
+
+Dans votre dépôt local, après avoir conservé `.git`, `.env.local` et `site/assets/images/` :
+
+```bash
+npm ci
+npm run admin:diagnose
+python -m pip install -r scripts/requirements-images.txt
+npm run optimize:images -- --dry-run
+npm run optimize:images
+npm run check
+npm run test:security
+npm run build
+npm run test:dist
+npm run test:performance
+```
+
+Sous Windows, remplacez `python -m pip` par `py -3 -m pip` si nécessaire.
+
+Pour que le **même** mot de passe que sur votre ordinateur fonctionne en production :
+
+```bash
+npx wrangler login
+npm run admin:sync-cloudflare -- --project podcast-7ck
+```
+
+Confirmez le nom du projet lorsqu'il est demandé ; cette commande écrase les deux secrets d'administration du projet Cloudflare indiqué. Après publication de la V12 sur la branche `main`, attendez 15 minutes si le site a répondu « trop de tentatives ». Ce délai provient de la limitation des essais en base D1, et non du temps de déploiement.
+
+```bash
+git status
+git add .
+git commit -m "V12 : performance et correctif configuration admin"
+git push origin main
+```
+
+L'optimisation n'est **pas** automatique au build afin de ne pas nécessiter Pillow sur les serveurs Cloudflare. Vous la lancez localement lorsque vous ajoutez ou modifiez des images, puis vous versionnez les `.webp` optimisés sur GitHub.

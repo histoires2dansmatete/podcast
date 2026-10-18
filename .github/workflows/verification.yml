@@ -34,6 +34,11 @@ jobs:
       - name: Construire le site
         run: npm run build
 
+      - name: Vérifier la performance statique et la confidentialité
+        run: |
+          npm run test:performance
+          npm run test:privacy
+
       - name: Vérifier les fichiers destinés à Cloudflare
         run: |
           test -f dist/index.html

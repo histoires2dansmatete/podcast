@@ -38,7 +38,7 @@ export async function login(context,{local=false}={}){
  const ip=local?'localhost':request.headers.get('cf-connecting-ip')||'unknown';
  const key=await sessionKey(ip,env.ADMIN_SESSION_SECRET);
  try{
-  if(!(await canAttempt(env,key,{local})))return privateResponse('Trop de tentatives. Réessayez dans 15 minutes.',429);
+  if(!(await canAttempt(env,key,{local})))return new Response('Trop de tentatives. Réessayez dans 15 minutes.',{status:429,headers:{...noStore,'Content-Type':'text/plain; charset=utf-8','Retry-After':'900'}});
   const ok=await verifyPassword(password,env.ADMIN_PASSWORD_HASH);
   await remember(env,key,ok,{local});
   if(!ok)return redirect('/admin/?erreur=1');

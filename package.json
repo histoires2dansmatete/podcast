@@ -1,13 +1,13 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "11.0.0",
+  "version": "12.0.2",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
   "scripts": {
     "dev": "node scripts/server.mjs",
-    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-integration.mjs",
-    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/build.mjs",
+    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/test-image-paths.mjs && node scripts/test-catalogue.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-integration.mjs",
+    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/test-image-paths.mjs && node scripts/test-catalogue.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/build.mjs",
     "preview": "node scripts/server.mjs --preview",
     "drafts": "node scripts/generate.mjs",
     "import:wordpress": "node scripts/import-wordpress.mjs",
@@ -21,7 +21,13 @@
     "admin:setup": "node scripts/setup-admin.mjs",
     "test:remote": "node scripts/verify-remote.mjs",
     "test:dist": "node scripts/verify-dist.mjs",
-    "check:images": "node scripts/check-image-files.mjs"
+    "check:images": "node scripts/check-image-files.mjs",
+    "optimize:images": "node scripts/optimize-images.mjs",
+    "test:privacy": "node scripts/test-privacy.mjs",
+    "test:performance": "node scripts/test-performance.mjs",
+    "admin:diagnose": "node scripts/diagnose-admin.mjs",
+    "admin:sync-cloudflare": "node scripts/sync-admin-secrets.mjs",
+    "test:catalogue": "node scripts/test-catalogue.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -1,7 +1,14 @@
-# Images originales des histoires
+# Images originales et variantes optimisées
 
-Copiez ici les images de votre projet local `site/assets/images/`. Les noms attendus figurent dans `site/assets/images.config.json`.
+Copiez ici vos illustrations réelles (noms indiqués dans `../images.config.json`).
 
-Les images ne sont pas incluses dans la V5 reçue pour cette modification : le site affiche automatiquement une couverture SVG locale en attendant le fichier correspondant. Les images ne sont jamais téléchargées depuis WordPress ou un CDN.
+Optimisez-les en local :
 
-Vous pouvez changer chaque nom de fichier dans le JSON. Extensions permises : PNG, JPG, JPEG, WEBP, SVG ou AVIF. Les chemins doivent rester sous `assets/images/`.
+```bash
+python -m pip install -r scripts/requirements-images.txt
+npm run optimize:images
+```
+
+Le script conserve les originaux et produit `optimized/<nom>.webp` en conservant les sous-dossiers. Si le WebP est plus volumineux, il n'est pas conservé. Le générateur préfère automatiquement les variantes optimisées lorsqu'elles existent.
+
+Ajoutez les originaux et `optimized/` à Git avant de déployer sur Cloudflare. Ces images ne figurent pas dans l'archive de travail, car elles n'ont pas été fournies comme dossier au projet accessible ici.
