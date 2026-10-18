@@ -1,11 +1,16 @@
-# Les histoires de Dans ma tête — version 8
+# Les histoires de Dans ma tête — version 9
 
 Site Web statique pour **https://histoires2dansmatete.fr**, développé en local avec Node.js 22+ et déployé depuis GitHub vers **Cloudflare Pages**. Il conserve les 13 textes intégraux importés du WordPress (avec comparaison XML à chaque build), les fiches podcasts et les contenus SEO.
 
-## Corrections de la version 8
+## Installation CLI complète
 
+➡ **Suivez [INSTALLATION-CLI.md](INSTALLATION-CLI.md)** pour l'installation depuis votre PC (Windows, macOS ou Linux), les tests locaux, GitHub et la liaison avec Cloudflare Pages/D1.
+
+## Corrections de la version 9
+
+- **Copyright du footer :** le texte est désormais regroupé dans un paragraphe unique, sans étirement sur toute la largeur, sur toutes les pages (y compris « Qui suis-je ? » et Confidentialité).
 - **Footer :** dédoublonnage des anciens `footer-social-area` et génération idempotente : même après plusieurs `npm run build`, **une seule** zone sociale par page.
-- **Connexion locale :** la requête garde l'hôte utilisé par le navigateur (`localhost:5173` ou `127.0.0.1:5173`), ce qui corrige l'erreur « Origine non autorisée » sans désactiver le contrôle anti-CSRF.
+- **Connexion locale :** un jeton anti-CSRF signé est intégré au formulaire local pour les navigateurs qui omettent l’en-tête `Origin`. Les origines externes demeurent bloquées ; en cas de refus, le terminal affiche un diagnostic sûr. La requête garde l'hôte utilisé par le navigateur (`localhost:5173` ou `127.0.0.1:5173`), ce qui corrige l'erreur « Origine non autorisée » sans désactiver le contrôle anti-CSRF.
 - **Illustrations portrait (853 × 1280) :** l'illustration « Où écouter ? » et celle du bloc `about-visual` respectent leur format vertical (`height: auto`, `object-fit: contain`) sans couper le bas.
 - **Apple Podcasts :** remplacement du pictogramme précédent par un SVG dédié montrant le symbole Podcasts, sans second carré coloré à l'intérieur de la vignette.
 - **SEO :** nettoyage des lignes vides au moment de régénérer les métadonnées, afin d'obtenir un build stable lors d'exécutions successives.

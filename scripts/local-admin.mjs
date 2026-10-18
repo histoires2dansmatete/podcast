@@ -2,7 +2,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {adminHTML} from '../functions/_lib/admin-page.js';
-import {authorize,loginHTML,htmlHeaders,noStore} from '../functions/_lib/access.js';
+import {authorize,loginHTML,htmlHeaders,noStore,createLoginFormToken} from '../functions/_lib/access.js';
 import {login,logout} from '../functions/_lib/login.js';
 import {publicStories,isStoryPath,removeXmlItems} from '../functions/_lib/story-state.js';
 const statesFile=resolve(process.env.LOCAL_STATE_FILE||'.local/story-states.json');
@@ -38,7 +38,7 @@ export async function handleLocalRoute(req,res,path,{preview=false,port=5173,roo
   if(path==='/admin'||path==='/admin/'){
    if(req.method!=='GET'){plain(res,'Méthode non autorisée',405);return true;}
    if(rejected?.status===503){await respond(res,rejected);return true;}
-   const html=rejected?loginHTML({error:new URL(request.url).searchParams.has('erreur'),local:true}):adminHTML({local:true});
+   const html=rejected?loginHTML({error:new URL(request.url).searchParams.has('erreur'),local:true,csrfToken:await createLoginFormToken(process.env.ADMIN_SESSION_SECRET)}):adminHTML({local:true});
    await respond(res,new Response(html,{headers:htmlHeaders()}));return true;
   }
   if(rejected){await respond(res,rejected);return true;}

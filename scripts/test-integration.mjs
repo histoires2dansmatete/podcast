@@ -55,6 +55,20 @@ try{
  const localLogin=await testPost(formHeaders);
  assert.equal(localLogin.status,303,'Le formulaire localhost ne doit pas être bloqué par le contrôle Origin');
  assert.match(localLogin.headers['set-cookie'].join(';'),/h2_admin_session=/);
+ const localHtml=await (await fetch(url+'/admin/')).text();
+ const csrf=localHtml.match(/name="csrf" value="([^"]+)"/)?.[1];
+ assert.ok(csrf,'Formulaire local : jeton anti-CSRF manquant');
+ const postWithToken=(headers)=>new Promise((resolve,reject)=>{
+  const post=new URLSearchParams({password,csrf}).toString();
+  const r=httpRequest({hostname:'127.0.0.1',port,path:'/api/admin/login',method:'POST',headers:{Host:'localhost:'+port,'Content-Type':'application/x-www-form-urlencoded',...headers,'Content-Length':Buffer.byteLength(post)}},res=>{
+   res.resume();res.on('end',()=>resolve({status:res.statusCode,headers:res.headers}));
+  });r.on('error',reject);r.end(post);
+ });
+ assert.equal((await postWithToken({})).status,303,'Navigateur sans Origin avec jeton valide');
+ assert.equal((await postWithToken({Origin:'null','Sec-Fetch-Site':'same-origin'})).status,303,'Navigateur avec origine opaque et jeton valide');
+ assert.equal((await postWithToken({Origin:'https://evil.example'})).status,403,'Origine externe refusée même avec jeton');
+ assert.equal((await postWithToken({'Sec-Fetch-Site':'cross-site'})).status,403,'Site externe refusé même avec jeton');
+
  const crossOrigin=await testPost({...formHeaders,Origin:'https://ailleurs.exemple'});
  assert.equal(crossOrigin.status,403,'Une origine étrangère doit toujours être bloquée');
  const cookie=login.headers.get('set-cookie').split(';')[0];assert.match(cookie,/h2_admin_session=/);
@@ -72,5 +86,5 @@ try{
  assert.equal((await toggle(true)).status,200);
  assert.equal((await fetch(url+'/histoires/'+slug+'/')).status,200);
  const signout=await fetch(url+'/api/admin/logout',{method:'POST',redirect:'manual',headers:{Cookie:cookie,Origin:url}});assert.equal(signout.status,303);assert.match(signout.headers.get('set-cookie'),/Max-Age=0/);
- console.log('✓ Local HTTP : connexion depuis localhost ET 127.0.0.1, rejet des origines étrangères, publication et déconnexion.');
+ console.log('✓ Local HTTP : connexion depuis localhost/127.0.0.1, repli CSRF signé, origines étrangères refusées, publication et déconnexion.');
 }finally{server.kill();await new Promise(r=>server.once('exit',r));await rm(stateFile,{force:true});}

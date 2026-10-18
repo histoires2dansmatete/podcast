@@ -19,6 +19,18 @@ export function applySocialLayout(html,prefix){
    footer=footer.replace(/<nav class="social-links"[\s\S]*?<\/nav>/,'');
    const section=`<div class="container footer-social-area"><div class="footer-social-message"><span class="footer-social-eyebrow">✳ RESTONS EN CONTACT</span><strong>Retrouvons-nous pour la suite des histoires !</strong><p>Actualités du podcast, dessins et petits moments de notre univers.</p></div><nav class="footer-social-buttons" aria-label="Nos réseaux sociaux">${links(prefix)}</nav></div>`;
    if(!footer.includes('class="container footer-bottom"'))throw Error('Footer sans .footer-bottom : insertion des liens impossible');
+   footer=footer.replace(/(<div class="container footer-bottom"[^>]*>)([\s\S]*?)(<\/div>)/,(_match,open,text,close)=>{
+     let content=text.trim();
+     if(!content.includes('class="footer-copyright"')){
+       // La page Confidentialité a aussi un lien indépendant vers l’accueil.
+       if(/^<span>©[\s\S]*?<\/span>/.test(content)){
+         content=content.replace(/^<span>([\s\S]*?)<\/span>/,'<p class="footer-copyright">$1</p>');
+       }else{
+         content=`<p class="footer-copyright">${content}</p>`;
+       }
+     }
+     return open+content+close;
+   });
    return footer.replace(/(?=<div class="container footer-bottom"(?:\s[^>]*)?>)/,section);
  });
  return html;

@@ -1,4 +1,4 @@
-import {isConfigured,verifyPassword,createSession,cookieHeader,clearCookie,noStore,privateResponse,sameOrigin} from './access.js';
+import {isConfigured,verifyPassword,createSession,cookieHeader,clearCookie,noStore,privateResponse,sameOrigin,localLoginOriginAllowed} from './access.js';
 const windowSeconds=15*60;
 const attemptsMax=5;
 const localAttempts=new Map();
@@ -24,12 +24,17 @@ async function remember(env,key,successful,{local=false}={}){
 export async function login(context,{local=false}={}){
  const {request,env}=context;
  if(!isConfigured(env))return privateResponse('Administration non configurée.',503);
- if(!sameOrigin(request))return privateResponse('Origine non autorisée.',403);
  if(!/^application\/x-www-form-urlencoded(?:;|$)/i.test(request.headers.get('Content-Type')||''))return privateResponse('Formulaire requis.',415);
  if(Number(request.headers.get('content-length')||0)>1024)return privateResponse('Requête trop volumineuse.',413);
  let raw;try{raw=await request.text();}catch{return privateResponse('Requête invalide.',400)}
  if(raw.length>1024)return privateResponse('Requête trop volumineuse.',413);
- const password=new URLSearchParams(raw).get('password')||'';
+ const input=new URLSearchParams(raw);
+ const password=input.get('password')||'';
+ const allowed=local?await localLoginOriginAllowed(request,input.get('csrf'),env.ADMIN_SESSION_SECRET):sameOrigin(request);
+ if(!allowed){
+  if(local)console.warn('[admin/login] Origine refusée :',JSON.stringify({host:new URL(request.url).host,origin:request.headers.get('Origin')||'(absente)',fetchSite:request.headers.get('Sec-Fetch-Site')||'(absent)'}));
+  return privateResponse('Origine non autorisée. Rechargez /admin/ et réessayez.',403);
+ }
  const ip=local?'localhost':request.headers.get('cf-connecting-ip')||'unknown';
  const key=await sessionKey(ip,env.ADMIN_SESSION_SECRET);
  try{

@@ -1,7 +1,7 @@
 /** Authentification admin serveur et protections contre la modification non autorisée. */
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
-import {passwordHash,verifyPassword,createSession,validSession,authorize} from '../functions/_lib/access.js';
+import {passwordHash,verifyPassword,createSession,validSession,authorize,createLoginFormToken,validLoginFormToken,localLoginOriginAllowed} from '../functions/_lib/access.js';
 import {onRequestGet as admin} from '../functions/admin/index.js';
 import {onRequestPost as login} from '../functions/api/admin/login.js';
 import {onRequestPost as logout} from '../functions/api/admin/logout.js';
@@ -14,6 +14,16 @@ const hash=await passwordHash(pass);
 assert.equal(await verifyPassword(pass,hash),true);
 assert.equal(await verifyPassword('incorrect',hash),false);
 const env={ADMIN_PASSWORD_HASH:hash,ADMIN_SESSION_SECRET:secret};
+const csrf=await createLoginFormToken(secret);
+assert.equal(await validLoginFormToken(csrf,secret),true);
+assert.equal(await validLoginFormToken(csrf.slice(0,-2)+'zz',secret),false);
+assert.equal(await validLoginFormToken(csrf,secret,Date.now()+21*60*1000),false);
+const localUrl='http://localhost:5173/api/admin/login';
+assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{'Sec-Fetch-Site':'same-origin'}}),csrf,secret),true);
+assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{Origin:'null'}}),csrf,secret),true);
+assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{Origin:'https://evil.example'}}),csrf,secret),false);
+assert.equal(await localLoginOriginAllowed(new Request(localUrl,{headers:{'Sec-Fetch-Site':'cross-site'}}),csrf,secret),false);
+assert.equal(await localLoginOriginAllowed(new Request(localUrl),null,secret),false);
 const base='https://histoires2dansmatete.fr';
 const request=(path,token='',options={})=>new Request(base+path,{...options,headers:{...(token?{Cookie:`h2_admin_session=${token}`}:{}) ,...options.headers}});
 const noSession=request('/admin/');

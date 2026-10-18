@@ -453,3 +453,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 @media(max-width:920px){.about-visual img{width:min(225px,62%);height:auto;max-height:345px}}
 @media(max-width:750px){.about-visual img{width:min(205px,62%);height:auto;max-height:315px}}
 @media(max-width:480px){.about-visual img{width:min(180px,62%);height:auto;max-height:285px}}
+
+/* V9 — le copyright reste un seul bloc lisible sur toutes les tailles d’écran. */
+.footer-bottom{display:block;text-align:center}
+.footer-copyright{margin:0;max-width:100%;line-height:1.65;white-space:normal;overflow-wrap:anywhere}

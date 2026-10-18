@@ -55,7 +55,35 @@ export async function authorize(context){
  return await validSession(getCookie(context.request),context.env.ADMIN_SESSION_SECRET)?null:privateResponse('Authentification requise.',401);
 }
 export function sameOrigin(request){return request.headers.get('Origin')===new URL(request.url).origin && request.headers.get('Sec-Fetch-Site')!=='cross-site';}
-export function loginHTML({error=false,local=false}={}){
- return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Connexion · Administration privée</title><link rel="icon" href="/assets/favicon.ico"><link rel="stylesheet" href="/assets/admin.css"></head><body class="admin-login"><main class="login-card"><a class="login-back" href="/">← Retour aux histoires</a><img class="login-logo" src="/assets/logo.webp" alt="" width="72" height="72"><p class="eyebrow">ESPACE PRIVÉ</p><h1>Bienvenue dans votre espace</h1><p>Entrez votre mot de passe pour consulter les statistiques et gérer la publication des histoires.</p>${error?'<p class="login-error" role="alert">Mot de passe incorrect ou trop de tentatives. Réessayez dans quelques minutes.</p>':''}<form action="/api/admin/login" method="POST"><label for="password">Mot de passe administrateur</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus minlength="1" maxlength="256"><button type="submit">Se connecter →</button></form><small>${local?'Administration locale : mêmes protections que la production.':'Accès strictement réservé à l’éditrice.'}</small></main></body></html>`;
+/** Jeton de formulaire signé : alternative sûre si le navigateur local n’envoie pas Origin. */
+export async function createLoginFormToken(secret,now=Date.now()){
+ const expires=Math.floor(now/1000)+20*60;
+ const nonce=binToB64(crypto.getRandomValues(new Uint8Array(18)));
+ const payload=`f1.${expires}.${nonce}`;
+ return `${payload}.${await sign(payload,secret)}`;
+}
+export async function validLoginFormToken(token,secret,now=Date.now()){
+ if(typeof token!=='string'||token.length>240)return false;
+ const chunks=token.split('.');
+ if(chunks.length!==4||chunks[0]!=='f1'||!/^[0-9]{10}$/.test(chunks[1])||!/^[-_a-zA-Z0-9]+$/.test(chunks[2]))return false;
+ const current=Math.floor(now/1000),expiration=Number(chunks[1]);
+ if(expiration<=current||expiration>current+20*60)return false;
+ try{
+  const key=await crypto.subtle.importKey('raw',utf8.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+  return await crypto.subtle.verify('HMAC',key,b64ToBin(chunks[3]),utf8.encode(chunks.slice(0,3).join('.')));
+ }catch{return false;}
+}
+/** Les origines explicitement externes ne doivent jamais être admises en local. */
+export async function localLoginOriginAllowed(request,csrfToken,secret){
+ if(sameOrigin(request))return true;
+ const origin=request.headers.get('Origin');
+ const fetchSite=request.headers.get('Sec-Fetch-Site');
+ if(fetchSite==='cross-site'||(origin&&origin!=='null'))return false;
+ const url=new URL(request.url);
+ if(url.protocol!=='http:'||!['localhost','127.0.0.1'].includes(url.hostname))return false;
+ return validLoginFormToken(csrfToken,secret);
+}
+export function loginHTML({error=false,local=false,csrfToken=""}={}){
+ return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Connexion · Administration privée</title><link rel="icon" href="/assets/favicon.ico"><link rel="stylesheet" href="/assets/admin.css"></head><body class="admin-login"><main class="login-card"><a class="login-back" href="/">← Retour aux histoires</a><img class="login-logo" src="/assets/logo.webp" alt="" width="72" height="72"><p class="eyebrow">ESPACE PRIVÉ</p><h1>Bienvenue dans votre espace</h1><p>Entrez votre mot de passe pour consulter les statistiques et gérer la publication des histoires.</p>${error?'<p class="login-error" role="alert">Mot de passe incorrect ou trop de tentatives. Réessayez dans quelques minutes.</p>':''}<form action="/api/admin/login" method="POST">${csrfToken?`<input type="hidden" name="csrf" value="${csrfToken}">`:""}<label for="password">Mot de passe administrateur</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus minlength="1" maxlength="256"><button type="submit">Se connecter →</button></form><small>${local?'Administration locale : mêmes protections que la production.':'Accès strictement réservé à l’éditrice.'}</small></main></body></html>`;
 }
 export function htmlHeaders(){return {...noCache,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':privateCsp};}
