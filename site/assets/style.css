@@ -484,8 +484,16 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 .audio-tools{display:flex;flex-wrap:wrap;align-items:center;gap:9px;width:100%;padding:7px 0 0;color:var(--deep-plum);font-size:13px}
 .audio-tools button,.audio-tools select{cursor:pointer;background:#fff9f1;border:1px solid #cbb7cc;border-radius:11px;min-height:44px;padding:8px 13px;color:var(--deep-plum);font-weight:700}
 .audio-tools [data-audio-time]{margin-inline-start:auto;font-variant-numeric:tabular-nums}
-.story-card,.catalogue-card{content-visibility:auto;contain-intrinsic-size:auto 425px}
-.story-card:focus-within{content-visibility:visible}
+/* V14.1 — éviter le réaffichage brusque des vignettes à chaque scroll.
+   content-visibility:auto détermine la hauteur intrinsèque des cartes hors écran
+   et peut déstabiliser la grille lors de la première peinture. */
+.story-card:not(.catalogue-card){content-visibility:auto;contain-intrinsic-size:auto 425px}
+.story-card:not(.catalogue-card):focus-within{content-visibility:visible}
+.catalogue-grid .catalogue-card{content-visibility:visible;contain-intrinsic-size:none;transition:box-shadow .18s ease;transform:none}
+.catalogue-grid .catalogue-card:hover{transform:none;box-shadow:0 10px 24px rgba(54,40,48,.09)}
+.catalogue-grid .catalogue-card .story-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:none;transform:none}
+.catalogue-grid .catalogue-card:hover .story-image img{transform:none}
+@media(hover:none){.catalogue-grid .catalogue-card:hover{box-shadow:0 8px 22px rgba(54,40,48,.035)}}
 @media(max-width:900px){.catalogue-toolbar{gap:12px;flex-wrap:wrap}.audio-filters{width:100%}.episode-cta{flex-wrap:wrap}}
 @media(max-width:480px){.audio-filter{font-size:11px;padding-inline:12px}.catalogue-toolbar .audio-filters{justify-content:space-between}.episode-cta .button{min-height:48px}.episode-player{padding:20px 15px}.audio-tools{gap:7px}.audio-tools [data-audio-time]{margin-inline-start:0;width:100%;text-align:right}.closing-deco{font-size:120px;opacity:.15}.art-note{left:0}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}

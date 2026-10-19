@@ -46,7 +46,8 @@ test('Le site expose les commandes audio et partage accessibles et protège le m
  const css=await readFile('site/assets/style.css','utf8');
  const js=await readFile('site/assets/main.js','utf8');
  assert.match(css,/\.audio-filter\{/);assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
- assert.match(css,/content-visibility:auto/);
+ assert.match(css,/\.story-card:not\(\.catalogue-card\)\{content-visibility:auto/);
+ assert.match(css,/\.catalogue-grid \.catalogue-card\{content-visibility:visible/);
  assert.match(js,/navigator\.share/);assert.match(js,/navigator\.clipboard/);
  assert.match(js,/touchstart/);assert.match(js,/touchend/);
  assert.match(js,/data-audio-back/);assert.match(js,/data-audio-forward/);

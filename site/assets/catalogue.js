@@ -13,12 +13,12 @@
   const localCover=url=>typeof url==='string'
     && /^assets\/(?:stories|images)\/(?:[a-zA-Z0-9_.-]+\/)*[a-zA-Z0-9_.-]+\.(?:svg|png|jpe?g|webp|avif|tiff?|bmp)$/i.test(url)
     && !url.split('/').some(part=>part==='.'||part==='..');
-  function card(s){
+  function card(s,index){
     const article=make('article','story-card catalogue-card');
     const link=`/histoires/${encodeURIComponent(s.slug)}/`;
     const image=make('a','story-image');image.href=link;image.setAttribute('aria-label',`Découvrir ${s.title}`);
     image.style.background='#ead7c5';image.append(make('span','card-fallback',s.emoji||'✦'));
-    if(localCover(s.image)){const img=make('img');img.src=`/${s.image.replace(/^\//,'')}`;img.alt=`Couverture de ${s.title}`;img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>{img.src=`/assets/stories/${s.slug}.svg`;},{once:true});image.append(img);}
+    if(localCover(s.image)){const img=make('img');img.src=`/${s.image.replace(/^\//,'')}`;img.alt=`Couverture de ${s.title}`;img.loading=index<6?'eager':'lazy';img.decoding='async';img.width=600;img.height=470;if(index>=6)img.fetchPriority='low';img.addEventListener('error',()=>{img.src=`/assets/stories/${s.slug}.svg`;},{once:true});image.append(img);}
     image.append(make('span','story-sticker',hasPodcast(s) ? '♫ Podcast disponible' : '◷ À lire · podcast à venir'));
     const content=make('div','story-content');const category=make('div','catalogue-tag',tagsOf(s).join(' · ')||'Une belle histoire');content.append(category);
     content.append(make('h3','',s.title));if(s.subtitle)content.append(make('div','catalogue-subtitle',s.subtitle));
@@ -32,7 +32,7 @@
     themes.forEach(t=>{const opt=document.createElement('option');opt.value=t;opt.textContent=t;theme.append(opt)});
     // Construire chaque carte une seule fois : changer un filtre ne doit jamais
     // retirer/recréer les balises <img> (source des flashes observés).
-    const rendered=stories.map(s=>({story:s,node:card(s)}));
+    const rendered=stories.map((s,index)=>({story:s,node:card(s,index)}));
     grid.replaceChildren(...rendered.map(item=>item.node));
     function update(){
       const key=normalize(search.value.trim()),selected=theme.value;
