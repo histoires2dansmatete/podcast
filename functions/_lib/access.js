@@ -12,18 +12,27 @@ export const privateCsp = "default-src 'none'; style-src 'self'; script-src 'sel
 export function privateResponse(message,status=401){return new Response(message,{status,headers:{...noCache,'Content-Type':'text/plain; charset=utf-8'}})}
 const binToB64 = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64ToBin = b64 => Uint8Array.from(atob(b64.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-b64.length%4)%4)),c=>c.charCodeAt(0));
-export async function passwordHash(password,{salt=crypto.getRandomValues(new Uint8Array(16)),iterations=240000}={}) {
+export async function passwordHash(password,{salt=crypto.getRandomValues(new Uint8Array(16)),iterations=100000}={}) {
  if(typeof password!=='string'||password.length<12||password.length>256)throw Error('Choisissez un mot de passe de 12 à 256 caractères.');
  const key=await crypto.subtle.importKey('raw',utf8.encode(password),'PBKDF2',false,['deriveBits']);
  const value=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},key,256));
  return `pbkdf2_sha256$${iterations}$${binToB64(salt)}$${binToB64(value)}`;
+}
+/** Limite effective du runtime Cloudflare Workers pour UN appel PBKDF2. 
+ * Les anciens hash à 240 000 itérations restent vérifiables dans Node local
+ * pour permettre une migration sans changer de mot de passe.
+ */
+export function cloudflareHashSupported(hash){
+ const parts=String(hash||'').split('$');
+ const iterations=Number(parts[1]);
+ return parts.length===4 && parts[0]==='pbkdf2_sha256' && Number.isInteger(iterations) && iterations===100000;
 }
 export function isConfigured(env){return /^pbkdf2_sha256\$\d+\$[A-Za-z0-9_-]+\$[A-Za-z0-9_-]+$/.test(String(env.ADMIN_PASSWORD_HASH||'')) && String(env.ADMIN_SESSION_SECRET||'').length>=40;}
 export async function verifyPassword(password,stored){
  try {
   const [algorithm,n,salt,digest]=String(stored).split('$');
   const iterations=Number(n),saltBytes=b64ToBin(salt),expected=b64ToBin(digest);
-  if(algorithm!=='pbkdf2_sha256'||!Number.isInteger(iterations)||iterations<200000||iterations>1000000||saltBytes.length<16||expected.length!==32||typeof password!=='string'||password.length>256)return false;
+  if(algorithm!=='pbkdf2_sha256'||!Number.isInteger(iterations)||iterations<100000||iterations>1000000||saltBytes.length<16||expected.length!==32||typeof password!=='string'||password.length>256)return false;
   const key=await crypto.subtle.importKey('raw',utf8.encode(password),'PBKDF2',false,['deriveBits']);
   const result=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:saltBytes,iterations},key,256));
   let mismatch=0;for(let i=0;i<expected.length;i++)mismatch|=result[i]^expected[i];return mismatch===0;

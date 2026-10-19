@@ -14,8 +14,22 @@ console.log('Vérification cryptographique de la configuration active sur '+url.
 let response;
 try{response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(proof),redirect:'error',signal:AbortSignal.timeout(12_000)});}
 catch(err){console.error('✗ Endpoint inaccessible : '+err.message);process.exit(2)}
-if(response.status===404||response.status===405){console.error('✗ Correctif de diagnostic absent du déploiement : publiez la V12.3 sur la branche de production avant de réessayer.');process.exit(2)}
-if(response.status===503){console.error('✗ Secrets administrateur absents ou invalides dans le déploiement actif.');process.exit(2)}
-if(response.status===200){console.log('✓ EXACTEMENT LES MÊMES SECRETS : hash et clé de session correspondent au fichier .env.local.');console.log('Si la connexion échoue encore, vérifier la saisie du mot de passe (autoremplissage, clavier) et le déploiement utilisé.');process.exit(0)}
-if(response.status===409){console.error('✗ SECRETS DIFFÉRENTS : le déploiement actif n’utilise pas la même paire ADMIN_PASSWORD_HASH / ADMIN_SESSION_SECRET que .env.local.');console.error('Contrôlez Production dans Cloudflare Pages, resynchronisez si besoin, puis créez un NOUVEAU déploiement de la branche de production.');process.exit(1)}
-console.error(`✗ Diagnostic HTTP ${response.status}. Vérifiez les logs Cloudflare sans transmettre de secrets.`);process.exit(2);
+// Éviter process.exit() juste après fetch : sous Node/Windows/MINGW64,
+// l'arrêt forcé peut provoquer une assertion native dans src\win\async.c.
+if(response.status===404||response.status===405){
+ console.error('✗ Correctif de diagnostic absent du déploiement : publiez la V12.3 ou ultérieure.');
+ process.exitCode=2;
+}else if(response.status===503){
+ console.error('✗ Secrets absents/invalides ou hash PBKDF2 non pris en charge par le runtime.');
+ process.exitCode=2;
+}else if(response.status===200){
+ console.log('✓ EXACTEMENT LES MÊMES SECRETS : hash et clé de session correspondent au fichier .env.local.');
+ console.log('Important : cette preuve HMAC vérifie les SECRETS, pas la compatibilité PBKDF2 du runtime.');
+ process.exitCode=0;
+}else if(response.status===409){
+ console.error('✗ SECRETS DIFFÉRENTS : le déploiement actif n’utilise pas la même paire de secrets.');
+ process.exitCode=1;
+}else{
+ console.error(`✗ Diagnostic HTTP ${response.status}. Vérifiez les logs Cloudflare sans transmettre de secrets.`);
+ process.exitCode=2;
+}

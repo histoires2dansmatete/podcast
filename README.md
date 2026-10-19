@@ -1,3 +1,10 @@
+
+## Correctif d’authentification Cloudflare V12.4
+
+Si le mot de passe fonctionne en local et que `admin:verify-cloudflare` confirme les mêmes secrets, mais que la connexion distante répond encore « mot de passe incorrect », l’ancien hash PBKDF2 à 240 000 itérations est incompatible avec la limite de 100 000 de Cloudflare Workers. **Ne réinitialisez pas le mot de passe** : exécutez `npm run admin:rehash-cloudflare`, puis `npm run admin:sync-cloudflare -- --project podcast-7ck`, et redéployez la branche de production. Consultez [CORRECTIF-V12-4.md](CORRECTIF-V12-4.md).
+
+> **Correctif V12.2 :** les couvertures WebP optimisées s’affichent désormais dans la bibliothèque `/histoires.html`. Exécutez `npm run test:catalogue` ; voir [PATCH-V12-2.md](PATCH-V12-2.md).
+
 # Les histoires de Dans ma tête — version 12
 
 Site Web statique pour **https://histoires2dansmatete.fr**, développé en local avec Node.js 22+ et déployé depuis GitHub vers **Cloudflare Pages**. Il conserve les 13 textes intégraux importés du WordPress (avec comparaison XML à chaque build), les fiches podcasts et les contenus SEO.

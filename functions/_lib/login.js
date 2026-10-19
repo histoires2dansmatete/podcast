@@ -1,4 +1,4 @@
-import {isConfigured,verifyPassword,createSession,cookieHeader,clearCookie,noStore,privateResponse,sameOrigin,loginOriginAllowed} from './access.js';
+import {isConfigured,verifyPassword,createSession,cookieHeader,clearCookie,noStore,privateResponse,sameOrigin,loginOriginAllowed,cloudflareHashSupported} from './access.js';
 const windowSeconds=15*60;
 const attemptsMax=5;
 const localAttempts=new Map();
@@ -24,6 +24,10 @@ async function remember(env,key,successful,{local=false}={}){
 export async function login(context,{local=false}={}){
  const {request,env}=context;
  if(!isConfigured(env))return privateResponse('Administration non configurée.',503);
+ if(!local&&!cloudflareHashSupported(env.ADMIN_PASSWORD_HASH)){
+  console.error('[admin/login] Hash PBKDF2 incompatible avec la limite Cloudflare Workers de 100 000 itérations.');
+  return privateResponse('Configuration de l’authentification incompatible avec Cloudflare : hash à migrer avec npm run admin:rehash-cloudflare.',503);
+ }
  if(!/^application\/x-www-form-urlencoded(?:;|$)/i.test(request.headers.get('Content-Type')||''))return privateResponse('Formulaire requis.',415);
  if(Number(request.headers.get('content-length')||0)>1024)return privateResponse('Requête trop volumineuse.',413);
  let raw;try{raw=await request.text();}catch{return privateResponse('Requête invalide.',400)}

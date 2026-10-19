@@ -1,6 +1,6 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "12.0.3",
+  "version": "12.0.4",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
@@ -29,7 +29,8 @@
     "admin:sync-cloudflare": "node scripts/sync-admin-secrets.mjs",
     "test:catalogue": "node scripts/test-catalogue.mjs",
     "admin:verify-cloudflare": "node scripts/verify-cloudflare-admin.mjs",
-    "admin:check-password": "node scripts/check-admin-password.mjs"
+    "admin:check-password": "node scripts/check-admin-password.mjs",
+    "admin:rehash-cloudflare": "node scripts/rehash-cloudflare.mjs"
   },
   "engines": {
     "node": ">=22"

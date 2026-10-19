@@ -1,7 +1,7 @@
 /** Authentification admin serveur et protections contre la modification non autorisée. */
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
-import {passwordHash,verifyPassword,createSession,validSession,authorize,createLoginFormToken,validLoginFormToken,localLoginOriginAllowed,loginOriginAllowed} from '../functions/_lib/access.js';
+import {passwordHash,verifyPassword,cloudflareHashSupported,createSession,validSession,authorize,createLoginFormToken,validLoginFormToken,localLoginOriginAllowed,loginOriginAllowed} from '../functions/_lib/access.js';
 import {onRequestGet as admin} from '../functions/admin/index.js';
 import {onRequestPost as login} from '../functions/api/admin/login.js';
 import {onRequestPost as logout} from '../functions/api/admin/logout.js';
@@ -15,6 +15,10 @@ const secret=randomBytes(32).toString('base64url');
 const hash=await passwordHash(pass);
 assert.equal(await verifyPassword(pass,hash),true);
 assert.equal(await verifyPassword('incorrect',hash),false);
+assert.equal(cloudflareHashSupported(hash),true,'100 000 itérations Cloudflare');
+const legacyHash=await passwordHash(pass,{iterations:240000});
+assert.equal(cloudflareHashSupported(legacyHash),false,'Ancien hash rejeté en production');
+assert.equal(await verifyPassword(pass,legacyHash),true,'Ancien hash vérifiable localement pour migrer');
 const env={ADMIN_PASSWORD_HASH:hash,ADMIN_SESSION_SECRET:secret};
 // Test cryptographique de l'instance : aucune transmission du mot de passe ou du hash.
 const proof=await createProof(env);
@@ -58,6 +62,11 @@ function loginRequest(password,origin=base){return request('/api/admin/login',''
 const fakeLimits=new Map(),storyStates=new Map();
 const db={prepare(sql){let bound=[];return {bind(...args){bound=args;return this;},async first(){if(sql.includes('admin_login_limits')){const value=fakeLimits.get(bound[0]);return value||null;}return null;},async all(){return {results:[...storyStates].filter(([,enabled])=>enabled===0).map(([slug])=>({slug}))};},async run(){if(sql.includes('INSERT INTO admin_login_limits')){const [key,end]=bound;const old=fakeLimits.get(key);fakeLimits.set(key,{failures:old&&old.expires_at>Date.now()/1000?old.failures+1:1,expires_at:old&&old.expires_at>Date.now()/1000?old.expires_at:end});}else if(sql.includes('DELETE FROM admin_login_limits'))fakeLimits.delete(bound[0]);else if(sql.includes('INSERT INTO story_states'))storyStates.set(bound[0],bound[1]);return {success:true};}}}};
 const config={...env,ANALYTICS_DB:db,ASSETS:{fetch:async()=>Response.json([{slug:'bas-les-masques',title:'Bas les masques'}])}};
+// Une erreur Cloudflare PBKDF2 (> 100k) doit être explicite et ne pas compter comme tentative ratée.
+const incompatible=await login({env:{...config,ADMIN_PASSWORD_HASH:legacyHash},request:loginRequest(pass)});
+assert.equal(incompatible.status,503);
+assert.match(await incompatible.text(),/hash à migrer/);
+assert.equal(fakeLimits.size,0);
 const wrongLogin=await login({env:config,request:loginRequest('wrong')});
 assert.equal(wrongLogin.status,303);
 assert.equal(wrongLogin.headers.get('location'),'/admin/?erreur=1');
