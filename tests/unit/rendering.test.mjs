@@ -17,7 +17,7 @@ test('Sans MP3 le récit reste lisible, lecteur désactivé',()=>{
 });
 test('Le MP3 local déclenche le lecteur HTML5 sur la bonne URL',()=>{
  const html=renderStory({...story,audioUrl:'assets/audio/test-depisode.mp3'},0,[story]);
- assert.match(html,/<audio controls preload="none" src="\.\.\/\.\.\/assets\/audio\/test-depisode\.mp3"/);
+ assert.match(html,/<audio controls preload="metadata" src="\.\.\/\.\.\/assets\/audio\/test-depisode\.mp3"/);
  assert.match(html,/Lire cette histoire/);
 });
 test('L’URL R2 HTTPS et les liens épisode sont intégrés sans créer de faux liens',()=>{

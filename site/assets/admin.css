@@ -29,3 +29,14 @@
 .login-card small{color:#8b7e88;font-size:12px}
 .login-card .login-error{color:#933c4f;background:#fff0f3;padding:10px 12px;border-radius:10px}
 .admin-logout{position:fixed;bottom:14px;right:18px;z-index:9}
+/* V14 — édition de podcasts et création de brouillons */
+.admin-audio-panel{margin-top:24px}
+.editor-form{display:grid;gap:18px;margin-top:22px}
+.editor-form label{display:grid;gap:7px;color:#4c3651;font-size:13px;font-weight:750}
+.editor-form input,.editor-form select,.editor-form textarea{min-width:0;width:100%;margin:0;border:1px solid #d8cbd7;border-radius:10px;background:#fffefa;color:#302837;font:inherit;font-size:15px;padding:12px;line-height:1.45}
+.editor-form input:focus-visible,.editor-form textarea:focus-visible,.editor-form select:focus-visible{outline:3px solid #c97b53;outline-offset:2px}
+.editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.editor-actions{display:flex;gap:12px;flex-wrap:wrap}
+.editor-form button{cursor:pointer;min-height:44px}
+.editor-form code{font-size:13px}
+@media(max-width:650px){.editor-grid{grid-template-columns:1fr}.admin-audio-panel{margin-top:20px}.editor-actions button{width:100%}}

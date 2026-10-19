@@ -3,6 +3,7 @@ import { writeFile,readFile } from 'node:fs/promises';
 import {configuredImages,globalImageFor} from './images.mjs';
 import {applySocialLayout} from './layout.mjs';
 import {generateCarousel} from './carousel.mjs';
+import {applyPodcastCopy} from './podcast-copy.mjs';
 const stories = await data();
 await writePublicStories(stories);
 await writeFile('site/data/histoires.json', JSON.stringify(stories,null,2)+'\n');
@@ -29,6 +30,7 @@ for(const page of pages){
  if(page==='index.html'){html=imageInBlock(html,'about-visual',aboutImage);html=await generateCarousel(html,stories);}
  if(page==='qui-suis-je.html')html=imageInBlock(html,'bio-image',bioImage);
  if(page==='ecouter.html')html=imageInBlock(html,'listen-reading-art',listenImage);
+ html=applyPodcastCopy(html,stories,page);
  html=applySocialLayout(html,'');
  await writeFile('site/'+page,html);
 }

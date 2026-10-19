@@ -20,7 +20,7 @@ const stories=[
   {slug:'non-valide',title:'Chemin invalide',image:'assets/images/optimized/../secret.png',tags:['Attention']},
 ];
 const context={
-  document:{getElementById:id=>nodes[id],createElement:tag=>new Element(tag)},
+  document:{getElementById:id=>nodes[id],createElement:tag=>new Element(tag),querySelectorAll:()=>[]},
   fetch:async()=>({ok:true,json:async()=>stories}),
 };
 vm.runInNewContext(await readFile('site/assets/catalogue.js','utf8'),context,{filename:'site/assets/catalogue.js'});

@@ -123,6 +123,9 @@
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));
     document.querySelector('.cover-next')?.addEventListener('click',()=>show(active+1));
     coverArea.addEventListener('covers:updated',()=>show(0));
+    let swipeX=null,swipeY=null;
+    coverArea.addEventListener('touchstart',e=>{const touch=e.changedTouches?.[0];if(touch){swipeX=touch.clientX;swipeY=touch.clientY;}},{passive:true});
+    coverArea.addEventListener('touchend',e=>{const touch=e.changedTouches?.[0];if(!touch||swipeX===null)return;const dx=touch.clientX-swipeX,dy=touch.clientY-swipeY;swipeX=null;swipeY=null;if(Math.abs(dx)>48 && Math.abs(dx)>Math.abs(dy)*1.3)show(active+(dx<0?1:-1));},{passive:true});
     coverArea.addEventListener('mouseenter',()=>{paused=true;});
     coverArea.addEventListener('mouseleave',()=>{paused=false;});
     coverArea.addEventListener('focusin',()=>{paused=true;});
@@ -132,4 +135,84 @@
     const rotationMs=Math.max(2000,Math.min(30000,Number(document.querySelector('.cover-controls')?.dataset.rotationMs)||4600));
     window.setInterval(()=>{if(!paused && !document.hidden && !reduce.matches) show(active+1);},rotationMs);
   }
+})();
+
+// Fonctionnalités légères des pages récit : partage natif et lecture améliorée.
+(() => {
+ 'use strict';
+ const share=document.querySelector('[data-story-share]');
+ if(share){
+  const feedback=document.querySelector('[data-share-feedback]');
+  share.addEventListener('click',async()=>{
+   const url=new URL(share.dataset.sharePath||location.pathname,location.origin).href;
+   const title=share.dataset.shareTitle||document.title;
+   try{
+    if(navigator.share){await navigator.share({title,url,text:`Découvrez « ${title} »`});if(feedback)feedback.textContent='Histoire partagée !';}
+    else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);if(feedback)feedback.textContent='Lien de l’histoire copié !';}
+    else {if(feedback){feedback.replaceChildren();const a=document.createElement('a');a.href=url;a.textContent='Ouvrir le lien de cette histoire';feedback.append(a);}}
+   }catch(e){if(e?.name!=='AbortError'&&feedback)feedback.textContent='Le partage est indisponible sur ce navigateur.';}
+  });
+ }
+ const formatTime=s=>Number.isFinite(s)?`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`:'—';
+ function setupPlayer(root){
+  let audio=root.querySelector('audio');
+  const time=root.querySelector('[data-audio-time]');
+  const back=root.querySelector('[data-audio-back]');
+  const next=root.querySelector('[data-audio-forward]');
+  const rate=root.querySelector('[data-audio-rate]');
+  if(!audio)return;
+  const render=()=>{if(time)time.textContent=`${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;};
+  if(back)back.addEventListener('click',()=>{audio.currentTime=Math.max(0,audio.currentTime-15);});
+  if(next)next.addEventListener('click',()=>{audio.currentTime=Math.min(Number.isFinite(audio.duration)?audio.duration:Infinity,audio.currentTime+15);});
+  if(rate)rate.addEventListener('change',()=>{audio.playbackRate=Number(rate.value)||1;});
+  audio.addEventListener('loadedmetadata',render);audio.addEventListener('timeupdate',render);audio.addEventListener('durationchange',render);render();
+  if('mediaSession' in navigator && typeof MediaMetadata!=='undefined'){
+   try{
+    const art=document.querySelector('.episode-visual img')?.src;
+    navigator.mediaSession.metadata=new MediaMetadata({title:document.querySelector('.episode-hero h1')?.textContent||document.title,artist:'Les histoires de Dans ma tête',...(art?{artwork:[{src:art}]}:{})});
+    navigator.mediaSession.setActionHandler('seekbackward',e=>{audio.currentTime=Math.max(0,audio.currentTime-(e.seekOffset||15));});
+    navigator.mediaSession.setActionHandler('seekforward',e=>{audio.currentTime=Math.min(Number.isFinite(audio.duration)?audio.duration:Infinity,audio.currentTime+(e.seekOffset||15));});
+   }catch{/* Media Session facultative selon le navigateur */}
+  }
+ }
+ // L'admin peut publier un lien audio dans D1 après le build. Le catalogue
+ // public reflète cet état et active le lecteur de la fiche sans redéploiement.
+ const slug=location.pathname.match(/^\/histoires\/([a-z0-9-]+)\/?(?:index\.html)?$/)?.[1];
+ if(slug){
+  fetch('/data/histoires.json',{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(stories=>{
+   const s=stories.find(s=>s.slug===slug);if(!s)return;
+   const player=document.querySelector('[data-audio-player]');
+   const source=s.audioUrl||'';
+   const allowed=/^assets\/audio\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:mp3|m4a|ogg)$/i.test(source)||(/^https:\/\//i.test(source)&&!/[\s"<>]/.test(source));
+   const nextSrc=allowed?new URL(source.startsWith('assets/')?'/'+source:source,location.origin).href:'';
+   if(player){
+    const existing=player.querySelector('audio');
+    if(nextSrc && existing && existing.src===nextSrc){ /* Conserver l'état du lecteur en cours */ }
+    else if(nextSrc){
+     existing?.pause();player.replaceChildren();player.classList.remove('episode-player-waiting');
+     const illustration=document.querySelector('.episode-visual img');if(illustration){const thumb=illustration.cloneNode(false);thumb.className='player-cover';thumb.alt='';thumb.loading='lazy';thumb.width=72;thumb.height=96;player.append(thumb);}
+     const copy=document.createElement('div');copy.className='player-copy';const b=document.createElement('strong');b.textContent='L’épisode à écouter';const desc=document.createElement('span');desc.textContent=s.title;copy.append(b,desc);player.append(copy);
+     const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=nextSrc;audio.setAttribute('aria-label','Écouter '+s.title);player.append(audio);
+     const tools=document.createElement('div');tools.className='audio-tools';
+     tools.innerHTML='<button type="button" data-audio-back aria-label="Reculer de 15 secondes">↶ 15 s</button><button type="button" data-audio-forward aria-label="Avancer de 15 secondes">15 s ↷</button><label for="playback-rate">Vitesse</label><select id="playback-rate" data-audio-rate aria-label="Vitesse de lecture"><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select><span data-audio-time aria-live="off">0:00 / —</span>';
+     player.append(tools);setupPlayer(player);
+    }else if(existing){
+     existing.pause();player.replaceChildren();player.classList.add('episode-player-waiting');
+     const illustration=document.querySelector('.episode-visual img');if(illustration){const thumb=illustration.cloneNode(false);thumb.className='player-cover';thumb.alt='';thumb.loading='lazy';thumb.width=72;thumb.height=96;player.append(thumb);}
+     const copy=document.createElement('div');copy.className='player-copy';const title=document.createElement('strong');title.textContent='Un épisode à découvrir';const desc=document.createElement('span');desc.textContent='Retrouvez les liens d’écoute disponibles ci-dessous, ou lisez le récit.';copy.append(title,desc);player.append(copy);
+    }
+   }
+   const ready=Boolean(nextSrc||Object.values(s.platforms||{}).some(Boolean));
+   const episodeCta=document.querySelector('.episode-cta a[href="#audio"]');
+   if(episodeCta)episodeCta.textContent=ready?'Écouter l’épisode ♫':'Le podcast arrive ♫';
+   for(const link of document.querySelectorAll('.episode-platform[data-platform]')){
+    const u=s.platforms?.[link.dataset.platform];let validURL='';
+    if(typeof u==='string'&&/^https:\/\//.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:')validURL=parsed.href;}catch{}}
+    const status=link.querySelector('.platform-status');
+    if(validURL){link.href=validURL;link.target='_blank';link.rel='noopener noreferrer';link.removeAttribute('aria-disabled');link.classList.add('episode-platform-ready');if(status)status.textContent='Écouter ↗';}
+    else {link.removeAttribute('href');link.setAttribute('aria-disabled','true');link.classList.remove('episode-platform-ready');if(status)status.textContent='À venir';}
+   }
+  }).catch(()=>{});
+ }
+ document.querySelectorAll('[data-audio-player]').forEach(setupPlayer);
 })();

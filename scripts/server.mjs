@@ -42,7 +42,7 @@ try {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (!['GET','HEAD','POST'].includes(req.method)) {
+  if (!['GET','HEAD','POST','DELETE'].includes(req.method)) {
     res.writeHead(405, { Allow: 'GET, HEAD' });
     res.end();
     return;

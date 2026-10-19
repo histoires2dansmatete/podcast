@@ -68,7 +68,7 @@ test('Le filtre du catalogue conserve les cartes et les images en mémoire',asyn
   {slug:'amis',title:'Deux amis',description:'Une amitié fidèle',tags:['Amitié'],image:'assets/images/optimized/amis.webp'}
  ];
  runInNewContext(source,{
-  document:{getElementById:id=>dom[id],createElement:tag=>new Element(tag)},
+  document:{getElementById:id=>dom[id],createElement:tag=>new Element(tag),querySelectorAll:()=>[]},
   fetch:async()=>({ok:true,json:async()=>stories}),
   console
  });

@@ -1,4 +1,5 @@
 import {disabledStories,publicStories,removeXmlItems,isStoryPath,statesHeaders} from './_lib/story-state.js';
+import {loadAudioOverrides,mergeAudio} from './_lib/audio-overrides.js';
 const unavailable=()=>new Response('Bibliothèque temporairement indisponible : base de données non configurée.',{status:503,headers:{...statesHeaders,'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex'}});
 /** Cloudflare Pages : toute publication est filtrée côté serveur, même si on connaît l'URL. */
 export async function onRequest(context){
@@ -15,7 +16,12 @@ export async function onRequest(context){
  if(!resource.ok)return resource;
  if(path==='/data/histoires.json'){
    const all=await resource.json();
-   return Response.json(publicStories(all,disabled),{headers:statesHeaders});
+   let active=all;
+   try { active=mergeAudio(all,await loadAudioOverrides(context.env)); }catch(error){
+     // Anciennes bases non migrées : le catalogue et le site existants restent utilisables.
+     console.warn('Audio D1 :',error.message);
+   }
+   return Response.json(publicStories(active,disabled),{headers:statesHeaders});
  }
  const xml=await resource.text();
  return new Response(removeXmlItems(xml,disabled,path==='/sitemap.xml'?'url':'item'),{headers:{...statesHeaders,'Content-Type':path==='/sitemap.xml'?'application/xml; charset=utf-8':'application/rss+xml; charset=utf-8'}});

@@ -5,12 +5,16 @@ import {adminHTML} from '../functions/_lib/admin-page.js';
 import {authorize,loginHTML,htmlHeaders,noStore,createLoginFormToken} from '../functions/_lib/access.js';
 import {login,logout} from '../functions/_lib/login.js';
 import {publicStories,isStoryPath,removeXmlItems} from '../functions/_lib/story-state.js';
+import {mergeAudio,validateAudioUpdate} from '../functions/_lib/audio-overrides.js';
 const statesFile=resolve(process.env.LOCAL_STATE_FILE||'.local/story-states.json');
 const readStates=async()=>{try{return JSON.parse(await readFile(statesFile,'utf8'))}catch(e){if(e.code==='ENOENT')return {};throw e}};
 async function writeStates(obj){await mkdir(dirname(statesFile),{recursive:true});await writeFile(statesFile,JSON.stringify(obj,null,2)+'\n');}
 const json=(res,data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8',...noStore});res.end(JSON.stringify(data));};
 const plain=(res,message,status=200)=>{res.writeHead(status,{'Content-Type':'text/plain; charset=utf-8',...noStore});res.end(message);};
 const allStories=async()=>JSON.parse(await readFile('site/data/histoires.json','utf8'));
+const audioFile=resolve(process.env.LOCAL_AUDIO_FILE||'.local/audio-overrides.json');
+const readAudio=async()=>{try{return new Map(Object.entries(JSON.parse(await readFile(audioFile,'utf8'))));}catch(e){if(e.code==='ENOENT')return new Map();throw e}};
+const writeAudio=async(map)=>{await mkdir(dirname(audioFile),{recursive:true});await writeFile(audioFile,JSON.stringify(Object.fromEntries(map),null,2)+'\n');};
 const denied=states=>new Set(Object.entries(states).filter(([,enabled])=>enabled===false).map(([slug])=>slug));
 async function respond(res,response){res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}
 async function toWebRequest(req,port){
@@ -20,7 +24,7 @@ async function toWebRequest(req,port){
  const url='http://'+req.headers.host+req.url;
  const headers=new Headers();for(const [k,v] of Object.entries(req.headers))if(typeof v==='string')headers.set(k,v);
  let body;
- if(req.method==='POST'){const chunks=[];let count=0;for await(const chunk of req){count+=chunk.length;if(count>2048)throw Error('Corps trop volumineux');chunks.push(chunk);}body=Buffer.concat(chunks);}
+ if(['POST','DELETE'].includes(req.method)){const chunks=[];let count=0;for await(const chunk of req){count+=chunk.length;if(count>9000)throw Error('Corps trop volumineux');chunks.push(chunk);}body=Buffer.concat(chunks);}
  return new Request(url,{method:req.method,headers,body});
 }
 function stats(days){const now=new Date();return {days,from:new Date(now.getTime()-(days-1)*86400000).toISOString().slice(0,10),to:now.toISOString().slice(0,10),overview:{pageviews:0,sessions:0,audio_plays:0,platform_clicks:0},timeline:[],pages:[],referrers:[],countries:[],devices:[],browsers:[],interactions:[],note:'MODE LOCAL — aucun suivi de visites réelles. Les données Cloudflare ne sont pas disponibles ici.'};}
@@ -51,6 +55,25 @@ export async function handleLocalRoute(req,res,path,{preview=false,port=5173,roo
    const n=Number(new URL(request.url).searchParams.get('days'));
    json(res,stats([7,30,90].includes(n)?n:30));return true;
   }
+  if(path==='/api/admin/audio'){
+   if(req.method==='GET'){
+    const stories=await allStories(),overrides=await readAudio();
+    json(res,{stories:mergeAudio(stories,overrides).map(s=>({slug:s.slug,title:s.title,src:s.audioUrl||'',platforms:s.platforms||{},custom:overrides.has(s.slug)}))});return true;
+   }
+   if(!['POST','DELETE'].includes(req.method)){plain(res,'Méthode interdite',405);return true;}
+   if(!['http://127.0.0.1:'+port,'http://localhost:'+port].includes(req.headers.origin)||req.headers['x-requested-with']!=='PodcastAdmin'||req.headers['content-type']?.split(';')[0]!=='application/json'){
+    json(res,{error:'Origine non autorisée'},403);return true;
+   }
+   let input;try{input=JSON.parse(await request.text())}catch{json(res,{error:'JSON invalide'},400);return true;}
+   const stories=await allStories();
+   if(!stories.some(s=>s.slug===input?.slug)){json(res,{error:'Histoire inconnue'},404);return true;}
+   const map=await readAudio();
+   if(req.method==='POST'){
+    try{input=validateAudioUpdate(input);}catch(e){json(res,{error:e.message},400);return true;}
+    map.set(input.slug,{src:input.src,platforms:input.platforms});
+   }else map.delete(input.slug);
+   await writeAudio(map);json(res,{ok:true});return true;
+  }
   if(path==='/api/admin/stories'){
    if(req.method==='GET'){
     const [stories,states]=await Promise.all([allStories(),readStates()]);
@@ -74,7 +97,7 @@ export async function handleLocalRoute(req,res,path,{preview=false,port=5173,roo
  if(!['GET','HEAD'].includes(req.method)){plain(res,'Méthode non autorisée',405);return true;}
  const disabled=denied(await readStates());
  if(slug&&disabled.has(slug)){plain(res,'Histoire non publiée',404);return true;}
- if(isData){json(res,publicStories(await allStories(),disabled));return true;}
+ if(isData){json(res,publicStories(mergeAudio(await allStories(),await readAudio()),disabled));return true;}
  if(isXml){const xml=await readFile(resolve(root,path.slice(1)),'utf8');res.writeHead(200,{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'no-store'});res.end(removeXmlItems(xml,disabled,path==='/sitemap.xml'?'url':'item'));return true;}
  return false;
 }

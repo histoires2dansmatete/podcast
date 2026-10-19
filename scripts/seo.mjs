@@ -10,10 +10,12 @@ const site = u.origin;
 const h=escapeHtml;
 const stories=await data();
 const globalLogo=await globalImageFor('logo',await configuredImages());
+const audioCount=stories.filter(s=>Boolean(s.audioUrl||Object.values(s.platforms||{}).some(Boolean))).length;
+const hasAudio=audioCount>0;
 const general = {
- 'index.html': {url:'/',title:'Histoires pour enfants à lire et bientôt à écouter | Dans ma tête',description:`Découvrez les histoires pour enfants de Dans ma tête : ${stories.length} aventures illustrées à lire en famille et bientôt à écouter en podcast.`,type:'WebPage'},
- 'histoires.html': {url:'/histoires.html',title:'Toutes les histoires pour enfants | Dans ma tête',description:`Une bibliothèque de ${stories.length} histoires illustrées à lire : animaux, amitié, confiance, courage et émotions. Les futurs épisodes audio de Dans ma tête.`,type:'CollectionPage'},
- 'ecouter.html': {url:'/ecouter.html',title:'Où écouter les podcasts pour enfants ? | Dans ma tête',description:'Retrouvez les prochaines histoires audio de Dans ma tête sur Spotify, Apple Podcasts, Deezer et Amazon Music. Histoires disponibles à lire dès maintenant.',type:'WebPage'},
+ 'index.html': {url:'/',title:hasAudio?'Histoires pour enfants à lire et à écouter | Dans ma tête':'Histoires pour enfants à lire et bientôt à écouter | Dans ma tête',description:hasAudio?`Découvrez ${stories.length} histoires illustrées pour enfants, dont ${audioCount} podcast(s) à écouter en famille.`:`Découvrez les histoires pour enfants de Dans ma tête : ${stories.length} aventures illustrées à lire en famille et bientôt à écouter en podcast.`,type:'WebPage'},
+ 'histoires.html': {url:'/histoires.html',title:'Toutes les histoires pour enfants | Dans ma tête',description:`Une bibliothèque de ${stories.length} histoires illustrées à lire : animaux, amitié, confiance, courage et émotions. ${hasAudio?`${audioCount} épisode(s) audio déjà disponible(s).`:'Les futurs épisodes audio de Dans ma tête.'}`,type:'CollectionPage'},
+ 'ecouter.html': {url:'/ecouter.html',title:'Où écouter les podcasts pour enfants ? | Dans ma tête',description:hasAudio?'Écoutez les épisodes disponibles des histoires de Dans ma tête et retrouvez les plateformes de podcast.':'Retrouvez les prochaines histoires audio de Dans ma tête sur Spotify, Apple Podcasts, Deezer et Amazon Music. Histoires disponibles à lire dès maintenant.',type:'WebPage'},
  'qui-suis-je.html': {url:'/qui-suis-je.html',title:'Qui suis-je ? L’autrice des histoires de Dans ma tête',description:'Découvrez Griotte Lapone et l’univers des histoires inventées pour ses enfants, à lire ensemble et bientôt disponibles à écouter.',type:'AboutPage'},
  'confidentialite.html': {url:'/confidentialite.html',title:'Confidentialité | Les histoires de Dans ma tête',description:'Données et statistiques respectueuses de la vie privée sur le site des histoires de Dans ma tête.',type:'WebPage',noindex:true},
  '404.html': {url:'/404.html',title:'Page introuvable | Dans ma tête',description:'Cette page n’existe pas.',type:'WebPage',noindex:true}

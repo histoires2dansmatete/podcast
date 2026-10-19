@@ -78,3 +78,91 @@ async function loadStories(){
 $('refresh-stories').addEventListener('click',loadStories);
 $('days').addEventListener('change',load);load();loadStories();
 })();
+
+// V14 : liens audio persistés (Cloudflare D1 / .local sur le PC), sans upload MP3.
+(()=>{
+ 'use strict';
+ const byId=id=>document.getElementById(id);
+ const form=byId('admin-audio-form');if(!form)return;
+ const status=byId('audio-status');let stories=[];
+ const providers=['spotify','apple','deezer','amazon'];
+ const selected=()=>stories.find(s=>s.slug===byId('audio-story').value);
+ function fill(){
+  const s=selected();byId('audio-src').value=s?.src?.startsWith('https://')?s.src:'';
+  for(const p of providers)byId('audio-'+p).value=s?.platforms?.[p]||'';
+  status.textContent=s?.src?.startsWith('assets/')?'Ce MP3 est intégré au dépôt Git. Pour le remplacer ici, renseignez une URL HTTPS.':s?.custom?'Configuration audio personnalisée enregistrée dans D1.':'Configuration audio issue du dépôt Git.';
+ }
+ async function refresh(){
+  status.textContent='Chargement des épisodes…';
+  try{
+   const r=await fetch('/api/admin/audio',{credentials:'same-origin',cache:'no-store'});
+   if(!r.ok)throw Error((await r.json().catch(()=>({}))).error||'Erreur HTTP '+r.status);
+   const data=await r.json();stories=data.stories;
+   const old=byId('audio-story').value;const select=byId('audio-story');select.replaceChildren();
+   const first=document.createElement('option');first.value='';first.textContent='Choisir une histoire…';select.append(first);
+   for(const s of stories){const opt=document.createElement('option');opt.value=s.slug;opt.textContent=s.title;select.append(opt)}
+   if(stories.some(s=>s.slug===old))select.value=old;
+   fill();
+  }catch(e){status.textContent='Impossible de charger l’édition audio : '+e.message;}
+ }
+ byId('audio-story').addEventListener('change',fill);byId('refresh-audio').addEventListener('click',refresh);
+ async function write(method,payload){
+  const r=await fetch('/api/admin/audio',{method,credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Requested-With':'PodcastAdmin'},body:JSON.stringify(payload)});
+  const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||`Erreur HTTP ${r.status}`);
+ }
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();const slug=byId('audio-story').value;if(!slug){status.textContent='Choisissez une histoire.';return;}
+  const payload={slug,src:byId('audio-src').value.trim(),platforms:Object.fromEntries(providers.map(p=>[p,byId('audio-'+p).value.trim()]))};
+  if(Object.values(payload.platforms).some(value=>value&&!value.startsWith('https://'))||(payload.src&&!payload.src.startsWith('https://'))){status.textContent='Utilisez uniquement des URLs HTTPS ou laissez le champ vide.';return;}
+  status.textContent='Enregistrement…';
+  try{await write('POST',payload);const s=selected();if(s){s.src=payload.src;s.platforms=payload.platforms;s.custom=true}status.textContent='✓ Podcast enregistré. La bibliothèque sera actualisée immédiatement.';}
+  catch(e){status.textContent='Erreur : '+e.message;}
+ });
+ byId('audio-reset').addEventListener('click',async()=>{
+  const slug=byId('audio-story').value;if(!slug){status.textContent='Choisissez une histoire.';return;}
+  status.textContent='Restauration de la configuration Git…';
+  try{await write('DELETE',{slug});await refresh();status.textContent='✓ Configuration Git restaurée.';}catch(e){status.textContent='Erreur : '+e.message;}
+ });
+ refresh();
+})();
+
+// Assistant hors ligne de création de contenus éditoriaux, aucune publication directe.
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id),form=$('admin-new-story-form');if(!form)return;
+ const htmlEscape=value=>value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+ function makeZip(files){
+  const encoder=new TextEncoder(),parts=[],directory=[];let offset=0;
+  const crc32=bytes=>{let value=0xffffffff;for(const byte of bytes){value^=byte;for(let i=0;i<8;i++)value=(value>>>1)^((value&1)?0xedb88320:0);}return (value^0xffffffff)>>>0;};
+  const header=(size,fill)=>{const b=new Uint8Array(size),v=new DataView(b.buffer);fill(v);return b;};
+  const now=new Date(),dosDate=((Math.max(1980,now.getFullYear())-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate(),dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+  for(const [filename,content] of files){
+   const name=encoder.encode(filename),data=encoder.encode(content),crc=crc32(data);
+   const local=header(30,v=>{v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);v.setUint16(10,dosTime,true);v.setUint16(12,dosDate,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);});
+   parts.push(local,name,data);
+   const central=header(46,v=>{v.setUint32(0,0x02014b50,true);v.setUint16(4,20,true);v.setUint16(6,20,true);v.setUint16(8,0x800,true);v.setUint16(12,dosTime,true);v.setUint16(14,dosDate,true);v.setUint32(16,crc,true);v.setUint32(20,data.length,true);v.setUint32(24,data.length,true);v.setUint16(28,name.length,true);v.setUint32(42,offset,true);});
+   directory.push(central,name);offset+=local.length+name.length+data.length;
+  }
+  const directoryLength=directory.reduce((n,b)=>n+b.length,0);
+  const end=header(22,v=>{v.setUint32(0,0x06054b50,true);v.setUint16(8,files.length,true);v.setUint16(10,files.length,true);v.setUint32(12,directoryLength,true);v.setUint32(16,offset,true);});
+  return new Blob([...parts,...directory,end],{type:'application/zip'});
+ }
+ function downloadZip(name,files){
+  const url=URL.createObjectURL(makeZip(files));
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+ }
+ form.addEventListener('submit',e=>{
+  e.preventDefault();const title=$('new-title').value.trim(),description=$('new-description').value.trim(),body=$('new-body').value.trim();
+  const tags=$('new-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const slug=title.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  if(!slug||!title||!description||!tags.length||body.length<100){$('new-story-status').textContent='Complétez les champs et prévoyez au moins 100 caractères de récit.';return;}
+  const metadata={slug,title,subtitle:'',description,tags,theme:tags[0],emoji:'📖',minutes:'',date:new Date().toISOString().slice(0,10),author:'Griotte Lapone',image:`assets/stories/${slug}.svg`,published:false};
+  const paragraphs=body.split(/\n\s*\n/).map(p=>`<p>${htmlEscape(p.trim()).replaceAll('\n','<br>')}</p>`).join('\n');
+  downloadZip(`${slug}-brouillon.zip`,[
+   [`content/stories/${slug}.json`,JSON.stringify(metadata,null,2)+'\n'],
+   [`content/stories/${slug}.html`,paragraphs+'\n']
+  ]);
+  $('new-story-status').textContent=`Brouillon ${slug} préparé. Dans Git : lancez npm run story:new -- --title "${title}", puis remplacez les fichiers créés par ceux téléchargés et passez published à true pour publier.`;
+ });
+})();

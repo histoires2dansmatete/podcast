@@ -20,7 +20,19 @@ export function normalizeRegressionContent(path, source) {
     html=html.replace(/(<div aria-label="__STATUT_PODCAST__" class="floating-sticker"[^>]*><span>)[^<]*(<\/span><strong>)[^<]*(<\/strong>)/, '$1__TEXTE__$2__TEXTE__$3');
     html=html.replace(/(<div aria-label="Faire défiler les couvertures" class="cover-controls")[^>]*>/, '$1 data-rotation-ms="__ROTATION__">');
     html=html.replace(/(<span aria-live="polite" class="cover-index">)[^<]*(<\/span>)/, '$1__INDEX__$2');
+    // Seuls ces libellés et compteurs sont pilotés par audio.config.json/D1.
+    html=html.replace(/(<em id="home-hero-audio-verb">)[^<]*(<\/em>)/, '$1__STATUT__$2');
+    html=html.replace(/(<p class="hero-description">)[\s\S]*?(<\/p>)/, '$1__PRESENTATION_AUDIO__$2');
+    for(const id of ['home-audio-kicker','home-audio-emphasis','home-audio-description','home-audio-pill','home-closing-kicker']){
+      const re=new RegExp(`(<(?:div|em|p)[^>]*\\bid="${id}"[^>]*>)[\\s\\S]*?(<\\/(?:div|em|p)>)`,'g');
+      html=html.replace(re,(_full,start,end)=>start+'__AUDIO_DYNAMIQUE__'+end);
+    }
+
   }
+  html=html.replace(/<body data-podcast-count="\d+">/,'<body data-podcast-count="__COUNT__">');
+  html=html.replace(/Des histoires à lire(?:… et bientôt| et) à écouter/g,'__ANNONCE_AUDIO__');
+  html=html.replace(/(<p>Des histoires inventées avec le cœur,<br\s*\/?>)[^<]*(<\/p>)/g,'$1__FOOTER_AUDIO__$2');
+  if(path.endsWith('histoires.html')) html=html.replace(/Des rencontres, des émotions et de jolies leçons de vie\.[^<]*(?=<\/p>)/g,'__PRESENTATION_CATALOGUE_AUDIO__');
   html = html
     .replace(/<!-- SEO-START -->[\s\S]*?<!-- SEO-END -->/g, '<!-- SEO -->')
     .replace(/<meta\s+(?:[^>]*?)(?:name|property)=["'](?:description|robots|og:[^"']+|twitter:[^"']+)["'][^>]*>/gi, '')

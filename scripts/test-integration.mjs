@@ -10,8 +10,10 @@ import {onRequestGet as adminStories} from '../functions/api/admin/stories.js';
 import {passwordHash} from '../functions/_lib/access.js';
 const catalogue=JSON.parse(await readFile('site/data/histoires.json','utf8'));
 const slug=catalogue[0].slug;
-function mockEnv(disabled){return {
- ANALYTICS_DB:{prepare(query){return {async all(){assert.match(query,/story_states/);return {results:[...disabled].map(slug=>({slug}))};}}}},
+function mockEnv(disabled,audio=new Map()){return {
+ ANALYTICS_DB:{prepare(query){return {async all(){
+  if(query.includes('story_audio_overrides'))return {results:[...audio].map(([slug,v])=>({slug,audio_url:v.src,platforms_json:JSON.stringify(v.platforms)}))};
+  assert.match(query,/story_states/);return {results:[...disabled].map(slug=>({slug}))};}}}},
  ASSETS:{async fetch(request){const pathname=new URL(request.url).pathname;const name=pathname==='/data/histoires.json'?'site/data/histoires.json':pathname==='/sitemap.xml'?'site/sitemap.xml':'site/histoires.xml';return new Response(await readFile(name),{status:200});}}
 };}
 async function cloud(path,disabled,env=mockEnv(disabled)){return onRequest({request:new Request('https://histoires2dansmatete.fr'+path),env,next:async()=>new Response('STATIC',{status:200})});}
@@ -20,15 +22,19 @@ assert.equal((await cloud(`/histoires/${slug}/`,off)).status,404);
 assert.equal((await cloud(`/histoires/${slug}/index.html`,off)).status,404);
 assert.equal((await cloud(`/histoires/${slug}/`,new Set())).status,200);
 assert.equal((await (await cloud('/data/histoires.json',off)).json()).length,catalogue.length-1);
+const publishedWithAudio=mockEnv(new Set(),new Map([[slug,{src:'https://cdn.example.org/episode.mp3',platforms:{spotify:'https://open.spotify.com/episode/123'}}]]));
+const liveStories=await (await cloud('/data/histoires.json',new Set(),publishedWithAudio)).json();
+assert.equal(liveStories.find(s=>s.slug===slug).audioUrl,'https://cdn.example.org/episode.mp3','Une mise à jour D1 rend le MP3 disponible sans build');
+
 assert.ok(!(await (await cloud('/sitemap.xml',off)).text()).includes(`/histoires/${slug}/`));
 assert.ok(!(await (await cloud('/histoires.xml',off)).text()).includes(`/histoires/${slug}/`));
 assert.equal((await cloud(`/histoires/${slug}/`,new Set(),{})).status,503);
 assert.equal((await adminStories({env:mockEnv(off),request:new Request('https://histoires2dansmatete.fr/api/admin/stories')})).status,503);
 console.log('✓ Cloudflare : pages masquées protégées, sitemap/flux/catalogue filtrés, D1 obligatoire.');
-const stateFile='.local/test-story-states.json';await rm(stateFile,{force:true});
+const stateFile='.local/test-story-states.json',audioFile='.local/test-audio-overrides.json';await rm(stateFile,{force:true});await rm(audioFile,{force:true});
 const temporary=createServer();await new Promise(r=>temporary.listen(0,'127.0.0.1',r));const port=temporary.address().port;await new Promise(r=>temporary.close(r));
 const password='unMotDePasseFort!2026';
-const server=spawn(process.execPath,['scripts/server.mjs'],{env:{...process.env,PORT:String(port),LOCAL_STATE_FILE:stateFile,ADMIN_PASSWORD_HASH:await passwordHash(password),ADMIN_SESSION_SECRET:randomBytes(32).toString('base64url')},stdio:['ignore','pipe','pipe']});
+const server=spawn(process.execPath,['scripts/server.mjs'],{env:{...process.env,PORT:String(port),LOCAL_STATE_FILE:stateFile,LOCAL_AUDIO_FILE:audioFile,ADMIN_PASSWORD_HASH:await passwordHash(password),ADMIN_SESSION_SECRET:randomBytes(32).toString('base64url')},stdio:['ignore','pipe','pipe']});
 let error='';server.stderr.on('data',d=>error+=d.toString());const url='http://127.0.0.1:'+port;
 try{
  let started=false;
@@ -76,6 +82,18 @@ try{
  assert.match(await (await fetch(url+'/admin/',options)).text(),/Gérer la bibliothèque/);
  assert.equal((await (await fetch(url+'/api/admin/stats',options)).json()).overview.pageviews,0);
  assert.equal((await (await fetch(url+'/api/admin/stories',options)).json()).stories.length,catalogue.length);
+ assert.equal((await fetch(url+'/api/admin/audio')).status,401);
+ const audioBody={slug,src:'https://cdn.example.org/episode.mp3',platforms:{spotify:'https://open.spotify.com/episode/123'}};
+ const audioWrite=(method,body,origin=url)=>fetch(url+'/api/admin/audio',{method,headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json','X-Requested-With':'PodcastAdmin'},body:JSON.stringify(body)});
+ assert.equal((await audioWrite('POST',audioBody,'https://evil.example')).status,403);
+ assert.equal((await audioWrite('POST',audioBody)).status,200);
+ const audioCatalog=await (await fetch(url+'/data/histoires.json')).json();
+ assert.equal(audioCatalog.find(s=>s.slug===slug).audioUrl,audioBody.src);
+ assert.equal((await (await fetch(url+'/api/admin/audio',options)).json()).stories.find(s=>s.slug===slug).custom,true);
+ assert.equal((await audioWrite('DELETE',{slug})).status,200);
+ const restored=await (await fetch(url+'/data/histoires.json')).json();
+ assert.equal(restored.find(s=>s.slug===slug).audioUrl,catalogue.find(s=>s.slug===slug).audioUrl);
+
  async function toggle(enabled,cookieValue=cookie,origin=url){return fetch(url+'/api/admin/stories',{method:'POST',headers:{Cookie:cookieValue,Origin:origin,'Content-Type':'application/json','X-Requested-With':'PodcastAdmin'},body:JSON.stringify({slug,enabled})});}
  assert.equal((await toggle(false,'')).status,401);
  assert.equal((await toggle(false,cookie,'https://evil.example')).status,403);
@@ -87,4 +105,4 @@ try{
  assert.equal((await fetch(url+'/histoires/'+slug+'/')).status,200);
  const signout=await fetch(url+'/api/admin/logout',{method:'POST',redirect:'manual',headers:{Cookie:cookie,Origin:url}});assert.equal(signout.status,303);assert.match(signout.headers.get('set-cookie'),/Max-Age=0/);
  console.log('✓ Local HTTP : connexion depuis localhost/127.0.0.1, repli CSRF signé, origines étrangères refusées, publication et déconnexion.');
-}finally{server.kill();await new Promise(r=>server.once('exit',r));await rm(stateFile,{force:true});}
+}finally{server.kill();await new Promise(r=>server.once('exit',r));await rm(stateFile,{force:true});await rm(audioFile,{force:true});}

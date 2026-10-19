@@ -52,4 +52,7 @@ jobs:
           test -f functions/api/track.js
           test -f functions/_middleware.js
           test -f functions/api/admin/stories.js
+          test -f functions/api/admin/audio.js
+          test -f functions/_lib/audio-overrides.js
+          test -f db/schema.sql
           test -f tests/fixtures/histoires-wordpress-public.xml

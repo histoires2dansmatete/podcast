@@ -30,3 +30,12 @@ CREATE TABLE IF NOT EXISTS admin_login_limits (
   failures INTEGER NOT NULL DEFAULT 0,
   expires_at INTEGER NOT NULL
 );
+
+-- V14 : liens MP3/épisodes administrés sans redéployer le site statique.
+-- Les MP3 eux-mêmes restent hébergés sur R2 ou un service HTTPS public.
+CREATE TABLE IF NOT EXISTS story_audio_overrides (
+ slug TEXT PRIMARY KEY,
+ audio_url TEXT NOT NULL DEFAULT '',
+ platforms_json TEXT NOT NULL DEFAULT '{}',
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
