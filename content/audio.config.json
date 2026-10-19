@@ -1,0 +1,58 @@
+{
+  "$schema": "./audio.config.schema.json",
+  "description": "Associer un MP3 local (assets/audio/nom.mp3) ou une URL HTTPS a chaque histoire. Laisser src vide pour À venir. Les liens platforms sont optionnels.",
+  "stories": {
+    "bas-les-masques": {
+      "src": "",
+      "platforms": {}
+    },
+    "les-aventures-de-perly-et-popette-4": {
+      "src": "",
+      "platforms": {}
+    },
+    "les-mysteres-de-la-rue-station": {
+      "src": "",
+      "platforms": {}
+    },
+    "salade-de-trefles": {
+      "src": "",
+      "platforms": {}
+    },
+    "les-aventures-de-perly-et-popette-3": {
+      "src": "",
+      "platforms": {}
+    },
+    "libres": {
+      "src": "",
+      "platforms": {}
+    },
+    "petit-ourson-deviendra-grand": {
+      "src": "",
+      "platforms": {}
+    },
+    "les-aventures-de-perly-et-popette-2": {
+      "src": "",
+      "platforms": {}
+    },
+    "herissonne-de-paques": {
+      "src": "",
+      "platforms": {}
+    },
+    "flemme": {
+      "src": "",
+      "platforms": {}
+    },
+    "les-aventures-de-perly-et-popette": {
+      "src": "",
+      "platforms": {}
+    },
+    "la-disparition": {
+      "src": "",
+      "platforms": {}
+    },
+    "lamitie-comme-sur-des-roulettes": {
+      "src": "",
+      "platforms": {}
+    }
+  }
+}

@@ -11,7 +11,7 @@ const xml=await readFile(file,'utf8');
 const decode=s=>String(s||'').replace(/^<!\[CDATA\[/,'').replace(/\]\]>$/,'').replace(/&(?:amp|lt|gt|quot|apos|#(\d+));/gi,(v,n)=>n?String.fromCodePoint(Number(n)):({ '&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'" }[v.toLowerCase()]||v));
 const get=(text,tag)=>{const name=tag.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return decode(text.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`,'i'))?.[1]||'');};
 const text=s=>decode(s).replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
-const result=new Map((await data()).map(s=>[s.slug,s]));
+const result=new Map(JSON.parse(await readFile('content/wordpress-stories.json','utf8')).map(s=>[s.slug,s]));
 let count=0;
 for(const m of xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)){
  const block=m[1];
@@ -35,6 +35,6 @@ for(const m of xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)){
 }
 if(!count){console.error('Aucun article publié détecté : exporter « Articles » depuis WordPress.');process.exit(1);}
 const all=[...result.values()];
-await writeFile('site/data/histoires.json',JSON.stringify(all,null,2)+'\n');
-await writePublicStories(all);
+await writeFile('content/wordpress-stories.json',JSON.stringify(all,null,2)+'\n');
+await import('./generate.mjs');
 console.log(`✓ ${count} articles importés depuis votre WordPress ; ${all.length} histoires dans le catalogue.`);

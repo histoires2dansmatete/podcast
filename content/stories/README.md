@@ -1,0 +1,1 @@
+Nouvelles histoires : `npm run story:new -- --title "Titre"`. Compléter le JSON + le fichier .html, puis définir `published: true` avant de lancer `npm run build`. Ces sources sont privées tant que non publiées.

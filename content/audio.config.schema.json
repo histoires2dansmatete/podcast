@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "stories"
+  ],
+  "properties": {
+    "stories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "src": {
+            "type": "string"
+          },
+          "platforms": {
+            "type": "object",
+            "properties": {
+              "spotify": {
+                "type": "string"
+              },
+              "apple": {
+                "type": "string"
+              },
+              "deezer": {
+                "type": "string"
+              },
+              "amazon": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "src"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

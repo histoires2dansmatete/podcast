@@ -2,9 +2,9 @@ name: Vérification du site
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 permissions:
   contents: read
@@ -25,19 +25,8 @@ jobs:
       - name: Vérifier l'installation
         run: npm ci
 
-      - name: Vérifier le site
-        run: npm run check
-
-      - name: Tester la sécurité des fonctions
-        run: npm run test:security
-
-      - name: Construire le site
-        run: npm run build
-
-      - name: Vérifier la performance statique et la confidentialité
-        run: |
-          npm run test:performance
-          npm run test:privacy
+      - name: Tests unitaires, sécurité, XML, régression et construction complète
+        run: npm test
 
       - name: Vérifier les fichiers destinés à Cloudflare
         run: |

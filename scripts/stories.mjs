@@ -3,17 +3,17 @@ import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { configuredImages, imageFor, globalImageFor } from './images.mjs';
 import { isLocalImagePath } from './local-image-path.mjs';
+import { readAllStories, configureAudio, validateAudioSrc, localAudio } from './story-content.mjs';
 
 export const escapeHtml = (value='') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const safeSlug = slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 const safeURL = url => {try{const x=new URL(url);return x.protocol==='https:'?x.href:'';}catch{return '';}};
 const safeMedia = value => {
-  const url = String(value || '').trim();
-  if (url.startsWith('assets/audio/') && /^assets\/audio\/[a-zA-Z0-9_-]+\.(mp3|m4a|ogg)$/i.test(url)) return `../../${url}`;
-  return safeURL(url);
+  const url = validateAudioSrc(String(value || '').trim());
+  return localAudio(url) ? `../../${url}` : safeURL(url);
 };
 export async function data(){
- const stories=JSON.parse(await readFile(resolve('site/data/histoires.json'),'utf8'));
+ const stories=await configureAudio(await readAllStories());
  if(!Array.isArray(stories))throw Error('Catalogue invalide');
  if(stories.some(s=>!safeSlug(s.slug)))throw Error('Un identifiant d’histoire contient un caractère invalide');
  if(new Set(stories.map(s=>s.slug)).size!==stories.length)throw Error('Identifiants en double');

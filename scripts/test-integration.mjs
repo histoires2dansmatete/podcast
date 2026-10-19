@@ -75,7 +75,7 @@ try{
  const options={headers:{Cookie:cookie}};
  assert.match(await (await fetch(url+'/admin/',options)).text(),/Gérer la bibliothèque/);
  assert.equal((await (await fetch(url+'/api/admin/stats',options)).json()).overview.pageviews,0);
- assert.equal((await (await fetch(url+'/api/admin/stories',options)).json()).stories.length,13);
+ assert.equal((await (await fetch(url+'/api/admin/stories',options)).json()).stories.length,catalogue.length);
  async function toggle(enabled,cookieValue=cookie,origin=url){return fetch(url+'/api/admin/stories',{method:'POST',headers:{Cookie:cookieValue,Origin:origin,'Content-Type':'application/json','X-Requested-With':'PodcastAdmin'},body:JSON.stringify({slug,enabled})});}
  assert.equal((await toggle(false,'')).status,401);
  assert.equal((await toggle(false,cookie,'https://evil.example')).status,403);

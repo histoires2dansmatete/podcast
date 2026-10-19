@@ -1,0 +1,1 @@
+Fichiers MP3 locaux (25 Mio maximum par fichier sur Cloudflare Pages). Pour des fichiers plus grands, utilisez Cloudflare R2 et une URL HTTPS dans content/audio.config.json. Ne jamais publier les fichiers audio sous forme de données encodées en base64.

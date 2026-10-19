@@ -1,13 +1,13 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "12.0.4",
+  "version": "13.1.0",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
   "scripts": {
     "dev": "node scripts/server.mjs",
-    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/test-image-paths.mjs && node scripts/test-catalogue.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-integration.mjs",
-    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/test-image-paths.mjs && node scripts/test-catalogue.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/build.mjs",
+    "check": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/test-image-paths.mjs && node scripts/test-catalogue.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-regression.mjs && node scripts/test-integration.mjs",
+    "build": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-layout.mjs && node scripts/test-image-paths.mjs && node scripts/test-catalogue.mjs && node scripts/check.mjs && node scripts/test-wordpress.mjs && node scripts/test-regression.mjs && node scripts/build.mjs",
     "preview": "node scripts/server.mjs --preview",
     "drafts": "node scripts/generate.mjs",
     "import:wordpress": "node scripts/import-wordpress.mjs",
@@ -30,7 +30,14 @@
     "test:catalogue": "node scripts/test-catalogue.mjs",
     "admin:verify-cloudflare": "node scripts/verify-cloudflare-admin.mjs",
     "admin:check-password": "node scripts/check-admin-password.mjs",
-    "admin:rehash-cloudflare": "node scripts/rehash-cloudflare.mjs"
+    "admin:rehash-cloudflare": "node scripts/rehash-cloudflare.mjs",
+    "story:new": "node scripts/new-story.mjs",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:regression": "node scripts/test-regression.mjs",
+    "test": "npm run test:unit && npm run check && npm run test:regression && npm run test:security && npm run test:integration && npm run test:editorial && npm run build && npm run test:dist && npm run test:audit && npm run test:privacy && npm run test:performance",
+    "test:regression:update": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-regression.mjs --update",
+    "test:audit": "node scripts/test-site-audit.mjs",
+    "test:editorial": "node scripts/test-editorial-workflow.mjs"
   },
   "engines": {
     "node": ">=22"

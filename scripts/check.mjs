@@ -64,8 +64,8 @@ console.log('✓ Fichiers, liens locaux, ancres et plateformes vérifiés.');
 
 // V4 : SEO et corpus complet ; empêchons le retour accidentel à des fiches vides.
 const sitemap = await readFile(resolve(root,'sitemap.xml'),'utf8');
-assert.equal(stories.length,13,'Les 13 articles publiés du WordPress doivent être dans le catalogue.');
-assert.equal((sitemap.match(/<url>/g)||[]).length,17,'Le sitemap doit comprendre 13 histoires et 4 pages principales.');
+assert.ok(stories.length>=13,'Les 13 articles publiés du WordPress doivent rester dans le catalogue.');
+assert.equal((sitemap.match(/<url>/g)||[]).length,stories.length+4,'Le sitemap doit comprendre toutes les histoires et 4 pages principales.');
 for(const story of stories){
  assert.ok(story.bodyHtml?.length>350,`${story.slug} : texte intégral absent`);
  const html=await readFile(resolve(root,'histoires',story.slug,'index.html'),'utf8');
@@ -74,7 +74,7 @@ for(const story of stories){
  assert.match(html,/<script type="application\/ld\+json">/,`${story.slug} : données structurées manquantes`);
  assert.ok(sitemap.includes(`/histoires/${story.slug}/`),`${story.slug} : absent du sitemap`);
 }
-console.log('✓ Corpus complet : 13 récits, 17 URLs sitemap, métadonnées et données structurées contrôlées.');
+console.log(`✓ Corpus complet : ${stories.length} récits, ${stories.length+4} URLs sitemap contrôlées.`);
 
 // V5 : vérifie l'autonomie des illustrations, le domaine, et l'index épuré.
 const home=await readFile(resolve(root,'index.html'),'utf8');
@@ -93,11 +93,11 @@ for (const file of ['index.html','histoires.html','ecouter.html','qui-suis-je.ht
  assert.ok(!/ancien blog|blog d.origine|sur le blog|Le blog ↗/i.test(content),`${file}: ancien blog encore évoqué`);
 }
 assert.match(sitemap,/https:\/\/histoires2dansmatete\.fr\/histoires\//);
-console.log('✓ V5 : domaine final, 13 couvertures locales, absence de liens WordPress, accueil sans grille.');
+console.log('✓ V5 : domaine final, couvertures locales, absence de liens WordPress, accueil sans grille.');
 
 // V6 : intégrité des assets configurés et présence des liens officiels
 const imgConf=JSON.parse(await readFile(resolve(root,'assets/images.config.json'),'utf8'));
-assert.equal(Object.keys(imgConf.stories).length,stories.length,'Toutes les histoires doivent avoir une image configurée');
+assert.ok(stories.every(s=>imgConf.stories[s.slug]),'Toutes les histoires publiées doivent avoir une image configurée');
 for(const key of ['logo','aboutVisual','bioImage','listenArt'])assert.ok(imgConf.globals[key],`Image globale ${key} non configurée`);
 for(const s of stories)assert.ok(imgConf.stories[s.slug],`Image non configurée pour ${s.slug}`);
 for(const icon of ['instagram','facebook','spotify','apple-podcasts','deezer','amazon'])assert.ok((await stat(resolve(root,`assets/icons/${icon}.svg`))).isFile(),`Icône ${icon} manquante`);
