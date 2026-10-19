@@ -3,6 +3,7 @@ import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { configuredImages, imageFor, globalImageFor } from './images.mjs';
 import { isLocalImagePath } from './local-image-path.mjs';
+import { configuredInlineImages, inlineImagesFor,validateInlineImage } from './inline-images.mjs';
 import { readAllStories, configureAudio, validateAudioSrc, localAudio } from './story-content.mjs';
 
 export const escapeHtml = (value='') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
@@ -33,6 +34,24 @@ export function sanitizeStoryHTML(raw){
  .trim();
  return cleaned;
 }
+/** Ajoute les illustrations après le paragraphe choisi ; aucune modification du texte WordPress. */
+export function renderReadingWithImages(cleanBody,images=[]){
+ if(!images.length)return cleanBody;
+ const groups=new Map();
+ for(const item of images){
+  validateInlineImage(item);
+  const list=groups.get(item.afterParagraph)||[];
+  list.push(`<figure class="reading-illustration"><img src="../../${escapeHtml(item.src)}" alt="${escapeHtml(item.alt)}" loading="lazy" decoding="async"></figure>`);
+  groups.set(item.afterParagraph,list);
+ }
+ let index=0;
+ const result=cleanBody.replace(/<\/p\s*>/gi,close=>{
+  index++;
+  return close+(groups.get(index)||[]).join('');
+ });
+ if(Math.max(...groups.keys())>index)throw Error('Illustration placée après un paragraphe inexistant');
+ return result;
+}
 const platformNames = {spotify:'Spotify',apple:'Apple Podcasts',deezer:'Deezer',amazon:'Amazon Music'};
 const platformIcons = {spotify:'spotify.svg',apple:'apple-podcasts.svg',deezer:'deezer.svg',amazon:'amazon.svg'};
 const plural = (n, one, many) => `${n} ${n>1?many:one}`;
@@ -42,7 +61,7 @@ export function renderStory(story,index,all){
  const title=h(story.title||'Histoire');
  const subtitle=story.subtitle ? `<p class="episode-subtitle">${h(story.subtitle)}</p>`:'';
  const image= isLocalImagePath(story.image) ? '../../'+story.image : safeURL(story.image);
- const body= sanitizeStoryHTML(story.bodyHtml);
+ const body= renderReadingWithImages(sanitizeStoryHTML(story.bodyHtml),story.inlineImages||[]);
  const audio=safeMedia(story.audioUrl);
  const showReady= Boolean(audio);
  const minutes=story.minutes ? `<span>◷ ${h(story.minutes)}</span>`:'';
@@ -72,10 +91,11 @@ export function renderStory(story,index,all){
 }
 export async function writePublicStories(stories){
  const cfg=await configuredImages();const globalLogo=await globalImageFor('logo',cfg);
+ const inlineConfig=await configuredInlineImages();
  const target=resolve('site/histoires');
  await rm(target,{recursive:true,force:true});
  for(const [i,story] of stories.entries()){
-  const dir=join(target,story.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory(story,i,stories).replaceAll('../../assets/logo.webp','../../'+globalLogo));
+  const dir=join(target,story.slug);await mkdir(dir,{recursive:true});await writeFile(join(dir,'index.html'),renderStory({...story,inlineImages:await inlineImagesFor(story.slug,inlineConfig)},i,stories).replaceAll('../../assets/logo.webp','../../'+globalLogo));
  }
  console.log(`✓ ${plural(stories.length,'fiche podcast publique','fiches podcast publiques')} générées dans site/histoires/.`);
 }

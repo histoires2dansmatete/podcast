@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "stories"
+  ],
+  "properties": {
+    "stories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "afterParagraph",
+            "src",
+            "alt"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "afterParagraph": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "src": {
+              "type": "string",
+              "pattern": "^assets/images/[A-Za-z0-9_./-]+\\.(png|jpg|jpeg|webp|avif)$"
+            },
+            "alt": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

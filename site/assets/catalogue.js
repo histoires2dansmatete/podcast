@@ -28,11 +28,21 @@
     if(!Array.isArray(stories))throw Error('Catalogue invalide');
     const themes=[...new Set(stories.flatMap(tagsOf).map(t=>t.trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
     themes.forEach(t=>{const opt=document.createElement('option');opt.value=t;opt.textContent=t;theme.append(opt)});
+    // Construire chaque carte une seule fois : changer un filtre ne doit jamais
+    // retirer/recréer les balises <img> (source des flashes observés).
+    const rendered=stories.map(s=>({story:s,node:card(s)}));
+    grid.replaceChildren(...rendered.map(item=>item.node));
     function update(){
       const key=normalize(search.value.trim()),selected=theme.value;
-      const filtered=stories.filter(s=>(!selected||tagsOf(s).includes(selected))&&normalize([s.title,s.subtitle,s.description,...tagsOf(s)].join(' ')).includes(key));
-      grid.replaceChildren(...filtered.map(card));count.textContent=`${filtered.length} histoire${filtered.length>1?'s':''} à découvrir`;
-      empty.hidden=filtered.length>0;
+      let visible=0;
+      for(const {story,node} of rendered){
+        const matches=(!selected||tagsOf(story).includes(selected))
+          &&normalize([story.title,story.subtitle,story.description,...tagsOf(story)].join(' ')).includes(key);
+        node.hidden=!matches;
+        if(matches)visible++;
+      }
+      count.textContent=`${visible} histoire${visible>1?'s':''} à découvrir`;
+      empty.hidden=visible>0;
     }
     search.addEventListener('input',update);theme.addEventListener('change',update);update();
   }).catch(()=>{count.textContent='Le catalogue est temporairement indisponible.';empty.textContent='Veuillez réessayer plus tard.';empty.hidden=false;});

@@ -1,0 +1,13 @@
+{
+  "$schema": "./inline-images.config.schema.json",
+  "description": "Images facultatives à placer dans le récit sans modifier les textes WordPress. afterParagraph est compté à partir de 1. Les images doivent être copiées localement dans site/assets/images/.",
+  "stories": {
+    "petit-ourson-deviendra-grand": [
+      {
+        "afterParagraph": 2,
+        "src": "assets/images/flash_2.jpg",
+        "alt": "Le mot que les parents de Flash lui ont laissé pendant leur absence"
+      }
+    ]
+  }
+}

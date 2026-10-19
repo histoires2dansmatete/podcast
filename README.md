@@ -70,6 +70,7 @@ L’aperçu du dossier `dist/` se trouve sur <http://localhost:4173/>. **N’env
 | `site/assets/audio/` | MP3 locaux de petite taille |
 | `site/config.js` | URLs **générales** du podcast (Spotify, Apple Podcasts, Deezer, Amazon Music) |
 | `content/audio.config.json` | MP3 et liens **par histoire** |
+| `content/inline-images.config.json` | Images intégrées **dans le corps d’un récit**, indépendamment de sa couverture |
 | `content/wordpress-stories.json` | Les 13 histoires historiques, conservées à l’identique |
 | `content/stories/<slug>.json` | Métadonnées et statut des nouvelles histoires |
 | `content/stories/<slug>.html` | Texte complet des nouvelles histoires |
@@ -115,6 +116,28 @@ npm run check:images -- --strict
 ```
 
 Les versions optimisées sont placées dans `site/assets/images/optimized/` et choisies automatiquement lorsqu’elles existent et apportent un gain. **Commitez également ces fichiers** si vous souhaitez qu’ils apparaissent sur Cloudflare. Le script ne peut pas récupérer les images qui n’existent que sur un autre ordinateur.
+
+### Insérer une illustration au milieu d'une histoire
+
+Ne modifiez pas les textes de `content/wordpress-stories.json` : ils sont vérifiés mot pour mot contre le XML. Pour insérer une image **entre deux paragraphes**, modifiez `content/inline-images.config.json` :
+
+```json
+{
+  "stories": {
+    "petit-ourson-deviendra-grand": [
+      {
+        "afterParagraph": 2,
+        "src": "assets/images/04-Flash-2.jpg",
+        "alt": "Le mot que les parents de Flash lui ont laissé"
+      }
+    ]
+  }
+}
+```
+
+Cette entrée est déjà présente. Elle correspond à l'illustration du mot laissé par les parents de Flash dans le WordPress d'origine, **après le 2ᵉ paragraphe**. Il vous reste à déposer l'image `04-Flash-2.jpg` dans `site/assets/images/` en respectant son nom, puis à lancer `npm run build`. Le fichier optimisé `assets/images/optimized/04-Flash-2.webp` sera automatiquement privilégié s'il existe. L'image conserve sa proportion naturelle.
+
+La génération ignore les images absentes sans créer d'image cassée et affiche un avertissement. Ajoutez autant d'entrées que nécessaire dans la liste d'une histoire, avec un numéro de paragraphe (à partir de 1), un chemin local autorisé et une description alternative. **Les URL externes et chemins sortant du dossier images sont refusés**. Les fichiers locaux doivent aussi être envoyés sur GitHub pour apparaître sur Cloudflare.
 
 ## 4. Ajouter un MP3 et des liens d’écoute
 
