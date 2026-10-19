@@ -52,7 +52,7 @@ test('Une seule couverture désactive les commandes, la génération est idempot
  const source=`<div class="hero-art" aria-label="Couvertures"><div class="art-backdrop"><!-- CAROUSEL-START -->\n<!-- CAROUSEL-END --></div><div aria-label="Le podcast arrive bientôt" class="floating-sticker"><span>Le podcast</span><strong>arrive !</strong></div><div aria-label="Faire défiler les couvertures" class="cover-controls"><span class="cover-index">1 / 6</span></div></div>`;
  const first=insertCarousel(source,config,stories);
  assert.match(first,/class="cover-controls" data-rotation-ms="5000" hidden/);
- assert.match(first,/maintenant !/);
+ assert.match(first,/<span>À écouter<\/span><strong>ici !<\/strong>/);
  assert.equal(first,insertCarousel(first,config,stories));
 });
 
@@ -95,4 +95,15 @@ test('Changer le statut du premier épisode ou la cadence ne casse pas la non-r�
  assert.match(b,/data-rotation-ms="4000" hidden/);
  assert.match(b,/1 \/ 1/);
  assert.equal(normalizeRegressionContent('site/index.html',a),normalizeRegressionContent('site/index.html',b));
+});
+
+test('L’autocollant du podcast disponible tient dans son cercle, y compris sur mobile',async()=>{
+ const ready=insertCarousel(`<div class="art-backdrop"><!-- CAROUSEL-START --><!-- CAROUSEL-END --></div><div aria-label="Le podcast arrive bientôt" class="floating-sticker"><span>Le podcast</span><strong>arrive !</strong></div>`,{rotationSeconds:5,stories:[{slug:'une-autre-histoire'}]},stories);
+ assert.match(ready,/<span>À écouter<\/span><strong>ici !<\/strong>/);
+ assert.doesNotMatch(ready,/maintenant !/);
+ const js=await readFile('site/assets/main.js','utf8');
+ const css=await readFile('site/assets/style.css','utf8');
+ assert.match(js,/ready\?'ici !':'arrive !'/);
+ assert.match(css,/\.floating-sticker strong\{[^}]*max-width:100%;overflow-wrap:break-word/);
+ assert.match(css,/@media\(max-width:480px\)[^\n]*\.floating-sticker\{[^}]*padding:8px/);
 });

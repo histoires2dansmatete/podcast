@@ -58,7 +58,7 @@ export function insertCarousel(html,config,stories){
  const markup=renderCarousel(config,stories);
  let result=html.slice(0,a+start.length)+'\n'+markup+'\n'+html.slice(b);
  result=result.replace(/(<div\s+aria-label=")[^"]*("\s+class="floating-sticker")/g,`$1${first?'Un podcast est disponible':'Le podcast arrive bientôt'}$2`);
- result=result.replace(/(<div[^>]*class="floating-sticker"[^>]*>\s*<span>)[^<]*(<\/span>\s*<strong>)[^<]*(<\/strong>)/,`$1${first?'À écouter':'Le podcast'}$2${first?'maintenant !':'arrive !'}$3`);
+ result=result.replace(/(<div[^>]*class="floating-sticker"[^>]*>\s*<span>)[^<]*(<\/span>\s*<strong>)[^<]*(<\/strong>)/,`$1${first?'À écouter':'Le podcast'}$2${first?'ici !':'arrive !'}$3`);
  result=result.replace(/(<div aria-label="Faire défiler les couvertures" class="cover-controls"[^>]*>)/,`<div aria-label="Faire défiler les couvertures" class="cover-controls" data-rotation-ms="${Math.round(config.rotationSeconds*1000)}"${config.stories.length===1?' hidden':''}>`);
  result=result.replace(/(<span aria-live="polite" class="cover-index">)[^<]*(<\/span>)/,`$1${config.stories.length?'1 / '+config.stories.length:'0 / 0'}$2`);
  return result;

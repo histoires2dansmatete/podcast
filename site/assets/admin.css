@@ -79,7 +79,7 @@ html{scroll-behavior:smooth;scroll-padding-top:95px}
 .admin-section-top h2{font-size:21px;margin:2px 0 7px}
 .admin-section-top p:not(.eyebrow){font-size:13px;color:#786a77;line-height:1.6;margin:0}
 .admin-period{font-size:13px;font-weight:750;white-space:nowrap}
-.admin-area .dashboard-grid{margin-top:0}
+.admin-area .dashboard-grid{margin-top:20px}
 .admin-area .kpis{margin-top:14px}
 .admin-metrics-details .panel{min-width:0}
 .admin-logout{position:static;max-width:1100px;margin:0 auto 28px;padding:0 24px;display:flex;justify-content:flex-end}

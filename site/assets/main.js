@@ -117,7 +117,7 @@
       });
       if(indexLabel) indexLabel.textContent = `${active + 1} / ${visible.length}`;
       const sticker=coverArea.querySelector('.floating-sticker');
-      if(sticker){const ready=visible[active].dataset.podcastStatus==='available';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'maintenant !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
+      if(sticker){const ready=visible[active].dataset.podcastStatus==='available';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'ici !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
       const controls=document.querySelector('.cover-controls');if(controls)controls.hidden=visible.length<2;
     };
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));
