@@ -104,6 +104,10 @@ test('L’autocollant du podcast disponible tient dans son cercle, y compris sur
  const js=await readFile('site/assets/main.js','utf8');
  const css=await readFile('site/assets/style.css','utf8');
  assert.match(js,/ready\?'ici !':'arrive !'/);
- assert.match(css,/\.floating-sticker strong\{[^}]*max-width:100%;overflow-wrap:break-word/);
- assert.match(css,/@media\(max-width:480px\)[^\n]*\.floating-sticker\{[^}]*padding:8px/);
+ assert.match(css,/\.floating-sticker\{[^}]*display:grid;[^}]*place-content:center;justify-items:center/);
+ assert.match(css,/\.floating-sticker>span:not\(\.sticker-burst\),\.floating-sticker>strong\{[^}]*text-align:center;transform:rotate\(-13deg\)/);
+ assert.match(css,/\.floating-sticker>strong\{[^}]*font:700 27px/);
+ assert.match(css,/\.sticker-burst\{[^}]*top:-12px;right:9px;[^}]*background:#fff8e9/);
+ assert.match(css,/@media\(max-width:480px\)[^\n]*\.floating-sticker\{[^}]*width:86px;height:86px;padding:7px/);
+ assert.match(css,/@media\(max-width:480px\)[^\n]*\.sticker-burst\{[^}]*top:-8px;right:3px/);
 });
