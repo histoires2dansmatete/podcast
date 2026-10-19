@@ -10,6 +10,17 @@ export function normalizeRegressionContent(path, source) {
   let html = String(source).replace(/\r\n/g, '\n').trim();
   if (!path.endsWith('.html')) return html;
 
+  // Les couvertures (choix, ordre, titres, badges) viennent du catalogue
+  // éditorial et possèdent leurs propres tests de génération.
+  if(path.endsWith('index.html')) {
+    html=html.replace(/<!-- CAROUSEL-START -->[\s\S]*?<!-- CAROUSEL-END -->/g,'<!-- CAROUSEL-CONFIGURE -->');
+    // Le sticker et les commandes reflètent l'épisode actif et la configuration
+    // (vitesse et nombre de cartes) : neutraliser uniquement ces données.
+    html=html.replace(/(<div aria-label=")[^"]*(" class="floating-sticker")/, '$1__STATUT_PODCAST__$2');
+    html=html.replace(/(<div aria-label="__STATUT_PODCAST__" class="floating-sticker"[^>]*><span>)[^<]*(<\/span><strong>)[^<]*(<\/strong>)/, '$1__TEXTE__$2__TEXTE__$3');
+    html=html.replace(/(<div aria-label="Faire défiler les couvertures" class="cover-controls")[^>]*>/, '$1 data-rotation-ms="__ROTATION__">');
+    html=html.replace(/(<span aria-live="polite" class="cover-index">)[^<]*(<\/span>)/, '$1__INDEX__$2');
+  }
   html = html
     .replace(/<!-- SEO-START -->[\s\S]*?<!-- SEO-END -->/g, '<!-- SEO -->')
     .replace(/<meta\s+(?:[^>]*?)(?:name|property)=["'](?:description|robots|og:[^"']+|twitter:[^"']+)["'][^>]*>/gi, '')

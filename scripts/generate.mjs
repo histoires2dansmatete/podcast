@@ -2,6 +2,7 @@ import { data, writePublicStories } from './stories.mjs';
 import { writeFile,readFile } from 'node:fs/promises';
 import {configuredImages,globalImageFor} from './images.mjs';
 import {applySocialLayout} from './layout.mjs';
+import {generateCarousel} from './carousel.mjs';
 const stories = await data();
 await writePublicStories(stories);
 await writeFile('site/data/histoires.json', JSON.stringify(stories,null,2)+'\n');
@@ -25,7 +26,7 @@ const pages=['index.html','histoires.html','ecouter.html','qui-suis-je.html','co
 for(const page of pages){
  let html=await readFile('site/'+page,'utf8');
  html=html.replace(/<img\b[^>]*class="[^"]*\bbrand-logo\b[^"]*"[^>]*>/g,tag=>tag.replace(/\bsrc="[^"]*"/,`src="${globalLogo}"`));
- if(page==='index.html')html=imageInBlock(html,'about-visual',aboutImage);
+ if(page==='index.html'){html=imageInBlock(html,'about-visual',aboutImage);html=await generateCarousel(html,stories);}
  if(page==='qui-suis-je.html')html=imageInBlock(html,'bio-image',bioImage);
  if(page==='ecouter.html')html=imageInBlock(html,'listen-reading-art',listenImage);
  html=applySocialLayout(html,'');

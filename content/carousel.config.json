@@ -1,0 +1,36 @@
+{
+  "description": "Modifier la liste des slugs pour choisir les histoires du carrousel et leur ordre. Le statut audio est calculé depuis content/audio.config.json.",
+  "rotationSeconds": 4.6,
+  "stories": [
+    {
+      "slug": "bas-les-masques",
+      "label": "Dans ma tête",
+      "color": "#674871"
+    },
+    {
+      "slug": "les-aventures-de-perly-et-popette-4",
+      "label": "Perly & Popette",
+      "color": "#745d6a"
+    },
+    {
+      "slug": "les-mysteres-de-la-rue-station",
+      "label": "Rue station",
+      "color": "#526974"
+    },
+    {
+      "slug": "salade-de-trefles",
+      "label": "Salade de trèfles",
+      "color": "#6e8460"
+    },
+    {
+      "slug": "libres",
+      "label": "Libre(s)",
+      "color": "#745f49"
+    },
+    {
+      "slug": "petit-ourson-deviendra-grand",
+      "label": "Petit ourson",
+      "color": "#85704d"
+    }
+  ]
+}

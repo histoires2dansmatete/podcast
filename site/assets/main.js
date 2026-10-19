@@ -88,7 +88,9 @@
     fetch('/data/histoires.json',{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(stories=>{
       const active=new Set(stories.map(s=>s.slug));
       const bySlug=new Map(stories.map(s=>[s.slug,s]));
-      coverNodes.forEach(card=>{const s=bySlug.get(card.dataset.storySlug);const img=card.querySelector('img.cover-image');if(s&&img){img.dataset.fallback=`/assets/stories/${s.slug}.svg`;img.src=`/${s.image.replace(/^\//,'')}`;}});
+      coverNodes.forEach(card=>{const s=bySlug.get(card.dataset.storySlug);const img=card.querySelector('img.cover-image');if(s&&img){img.dataset.fallback=`/assets/stories/${s.slug}.svg`;img.src=`/${s.image.replace(/^\//,'')}`;}
+        if(s){const ready=Boolean(s.audioUrl || Object.values(s.platforms||{}).some(Boolean));const badge=card.querySelector('.cover-status');card.dataset.podcastStatus=ready?'available':'upcoming';if(badge){badge.className=`cover-status cover-status-${card.dataset.podcastStatus}`;badge.textContent=ready?'♫ Podcast disponible':'◷ Podcast à venir';}const footnote=card.querySelector('.cover-footnote');if(footnote)footnote.textContent=ready?'DÉJÀ À ÉCOUTER':'À LIRE, BIENTÔT À ÉCOUTER';}
+      });
       coverNodes.forEach(card=>{if(!active.has(card.dataset.storySlug)){card.remove();}});
       const cards=[...document.querySelectorAll('.cover-card[data-cover]')];
       cards.forEach((card,n)=>card.dataset.cover=String(n));
@@ -114,6 +116,9 @@
         card.setAttribute('aria-hidden',String(delta!==0));
       });
       if(indexLabel) indexLabel.textContent = `${active + 1} / ${visible.length}`;
+      const sticker=coverArea.querySelector('.floating-sticker');
+      if(sticker){const ready=visible[active].dataset.podcastStatus==='available';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'maintenant !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
+      const controls=document.querySelector('.cover-controls');if(controls)controls.hidden=visible.length<2;
     };
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));
     document.querySelector('.cover-next')?.addEventListener('click',()=>show(active+1));
@@ -124,6 +129,7 @@
     coverArea.addEventListener('focusout',()=>{paused=false;});
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     show(0);
-    window.setInterval(()=>{if(!paused && !document.hidden && !reduce.matches) show(active+1);},4600);
+    const rotationMs=Math.max(2000,Math.min(30000,Number(document.querySelector('.cover-controls')?.dataset.rotationMs)||4600));
+    window.setInterval(()=>{if(!paused && !document.hidden && !reduce.matches) show(active+1);},rotationMs);
   }
 })();
