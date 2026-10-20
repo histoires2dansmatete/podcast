@@ -7,7 +7,11 @@
     "/histoires/*",
     "/data/histoires.json",
     "/sitemap.xml",
-    "/histoires.xml"
+    "/histoires.xml",
+    "/noel",
+    "/noel/*",
+    "/noel.html",
+    "/assets/audio/noel/*"
   ],
   "exclude": []
 }

@@ -17,6 +17,7 @@ export function normalizeRegressionContent(path, source) {
     // Le sticker et les commandes reflètent l'épisode actif et la configuration
     // (vitesse et nombre de cartes) : neutraliser uniquement ces données.
     html=html.replace(/(<div aria-label=")[^"]*(" class="floating-sticker")/, '$1__STATUT_PODCAST__$2');
+    html=html.replace(/(<div aria-label="__STATUT_PODCAST__" class="floating-sticker") data-status="(?:available|upcoming)"/, '$1');
     html=html.replace(/(<div aria-label="__STATUT_PODCAST__" class="floating-sticker"[^>]*><span>)[^<]*(<\/span><strong>)[^<]*(<\/strong>)/, '$1__TEXTE__$2__TEXTE__$3');
     html=html.replace(/(<div aria-label="Faire défiler les couvertures" class="cover-controls")[^>]*>/, '$1 data-rotation-ms="__ROTATION__">');
     html=html.replace(/(<span aria-live="polite" class="cover-index">)[^<]*(<\/span>)/, '$1__INDEX__$2');

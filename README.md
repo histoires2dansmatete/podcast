@@ -359,3 +359,63 @@ Le site recueille des statistiques **après consentement** et les enregistre dan
 | Un test XML échoue | Comparer le texte avec l’export de référence : les 13 récits historiques ne doivent pas être modifiés par inadvertance. |
 
 Les autres documents historiques du dépôt (guides V12, correctifs, etc.) servent d’archives techniques. **Ce README est la documentation principale de la version actuelle**.
+
+## Nouveautés V14 — écouter, découvrir et publier
+
+La V14 ajoute les filtres **« Avec podcast » / « À lire »** à la bibliothèque, des messages d'accueil adaptés aux MP3 réellement publiés, un bouton de partage sur chaque récit, un lecteur audio enrichi (avance/retour de 15 s, vitesse, durée, Media Session) et des ajustements mobile/performance. Dans `/admin/`, les liens HTTPS de MP3 et de plateformes se mettent désormais à jour immédiatement via D1. Un assistant prépare un ZIP de brouillon pour l'ajout d'une histoire.
+
+**Migration de base indispensable** pour le nouveau panneau audio : exécutez une seule fois sur la base D1 de production :
+
+```bash
+npx wrangler d1 execute histoires-podcast-stats --remote --file=./db/schema.sql
+```
+
+Adaptez `histoires-podcast-stats` au nom de votre base si nécessaire ; vérifiez qu'elle est liée à `ANALYTICS_DB` du projet `podcast-7ck`. Les commandes SQL `CREATE TABLE IF NOT EXISTS` ne réinitialisent pas vos données. **Ne relancez pas `admin:setup` et ne recréez pas vos secrets.**
+
+Pour les étapes détaillées de migration, les MP3 R2, l'utilisation de l'administration, la création d'histoires et le dépannage, consultez [GUIDE-V14-ADMIN-ET-LECTEUR.md](GUIDE-V14-ADMIN-ET-LECTEUR.md).
+
+- **Ajouter un MP3 immédiatement depuis `/admin/` :** téléversez le fichier *au préalable* sur un hébergeur HTTPS (R2 ou équivalent), puis remplissez son URL et les liens d'épisode. Les fichiers `.mp3` locaux continuent à passer par `content/audio.config.json` et Git.
+- **Ajouter une histoire depuis `/admin/` :** le formulaire télécharge un ZIP de brouillon. Sur le PC, lancez d'abord `npm run story:new -- --title "Mon histoire"`, extrayez le ZIP pour remplacer les fichiers du récit, passez `published` à `true`, vérifiez `npm test` et poussez sur `master`. La nouvelle page n'est pas créée en direct par D1.
+- **Publication des histoires existantes :** les cases Masquée/Publiée fonctionnent toujours immédiatement en D1.
+- **Tests :** `npm test` exécute les vérifications unitaires, d'intégration, Cloudflare, éditoriales, SEO, confidentialité et performance.
+
+## Configurer le carrousel de l’accueil
+
+Modifier `content/carousel.config.json` pour choisir les couvertures et leur ordre :
+
+```json
+{
+  "rotationSeconds": 4.6,
+  "stories": [
+    {"slug":"bas-les-masques", "label":"Bas les masques", "color":"#674871"},
+    {"slug":"petit-ourson-deviendra-grand", "label":"Petit ourson", "color":"#85704d"}
+  ]
+}
+```
+
+- `slug` : identifiant de l’histoire publiée (présent dans `site/data/histoires.json` après `npm run generate:stories`). L’ordre dans le tableau est l’ordre de défilement.
+- `label` et `color` sont facultatifs : titre court et couleur de la carte. Une couleur doit être un hexadécimal `#RRGGBB`.
+- `rotationSeconds` : entre 2 et 30 secondes. Entre 1 et 12 histoires distinctes sont acceptées ; une seule carte masque les flèches.
+- Les histoires en brouillon ou inconnues ne sont pas acceptées dans la configuration, afin d’éviter les erreurs silencieuses.
+- **« Podcast disponible »** apparaît automatiquement si `content/audio.config.json` définit un MP3 (`src`) ou au moins un lien de plateforme valide pour l’épisode. Sinon : **« Podcast à venir »**. Ne pas modifier le statut à la main dans le HTML.
+- L’administration peut encore désactiver une histoire : elle disparaîtra alors du carrousel sur le site publié (après chargement du catalogue public filtré).
+
+Après un changement : `npm run build`, puis `npm test` et `git push origin master`.
+Le générateur remplit la section entre `<!-- CAROUSEL-START -->` et `<!-- CAROUSEL-END -->` de `site/index.html`. Ne modifiez pas les cartes directement dans le HTML : elles sont régénérées à chaque build.
+
+
+## V14.1 — Bibliothèque fluide et administration réorganisée
+
+- **Bibliothèque `/histoires.html`** : les cartes ne sont plus soumises à `content-visibility: auto` pendant le défilement. Leur taille et celle des couvertures sont stabilisées, et les effets de zoom/translation au survol sont désactivés sur cette page. Les six premières images sont chargées en priorité. Cette correction vise les apparitions brutales signalées à la descente de page.
+- **Administration `/admin/`** : ordre logique « Bibliothèque → Podcasts → Nouvelle histoire → Statistiques », navigation directe, liste de publication et statistiques détaillées dépliables. Les formulaires, identifiants HTML et API de la V14 restent inchangés.
+- **Contrôles** : nouveaux tests de structure HTML de l'administration et garde-fous CSS/JavaScript contre les flashs ; contrôle CSS de non-régression actualisé.
+
+Le correctif **n'altère ni les données D1 ni les secrets administrateur**. Consultez `CORRECTIF-V14-1.md` pour les vérifications et l'installation.
+
+
+## V14.4.2 — Calendrier audio de Noël et badges du carrousel
+
+La page saisonnière **`/noel/`** accueille une histoire de Noël en **25 parties audio**, déverrouillées chaque jour du 1er au 25 décembre. Elle n'est accessible que **du 25 novembre au 26 décembre inclus, heure de Paris**, grâce à une restriction côté Cloudflare Pages. Elle n'est pas incluse dans le sitemap. La configuration des 25 parties **et de la nouvelle introduction avec son MP3** est dans `content/noel.config.json` ; les MP3 ne sont pas inclus dans les archives. Après le petit correctif, lancer `npm run noel:intro:setup` (préserve les 25 MP3 déjà déclarés), puis renseigner `introduction.title`, `introduction.text` et `introduction.src` (nom local autorisé : `assets/audio/noel/introduction.mp3`, ou URL directe HTTPS). Si `src` est vide, la section affiche un message en attendant l’enregistrement. La mention du fuseau horaire a été retirée du bandeau, mais la restriction reste basée sur Europe/Paris.
+
+Pour prévisualiser hors saison en développement local : `npm run dev`, puis `http://localhost:5173/noel/?preview=1` (Git Bash ou PowerShell ; aucun réglage d’environnement nécessaire). Le lecteur d’introduction fonctionne aussi en mode aperçu. Voir [GUIDE-NOEL-V14-4.md](GUIDE-NOEL-V14-4.md). Les deux styles de badges du carrousel sont désormais distincts selon la disponibilité du podcast.
+

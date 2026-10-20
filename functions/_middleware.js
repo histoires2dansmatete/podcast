@@ -1,9 +1,15 @@
+import {christmasAccess,christmasDenied,christmasHeaders} from './_lib/christmas.js';
 import {disabledStories,publicStories,removeXmlItems,isStoryPath,statesHeaders} from './_lib/story-state.js';
 import {loadAudioOverrides,mergeAudio} from './_lib/audio-overrides.js';
 const unavailable=()=>new Response('Bibliothèque temporairement indisponible : base de données non configurée.',{status:503,headers:{...statesHeaders,'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex'}});
 /** Cloudflare Pages : toute publication est filtrée côté serveur, même si on connaît l'URL. */
 export async function onRequest(context){
  const path=new URL(context.request.url).pathname;
+ const seasonalAccess=christmasAccess(path);
+ if(seasonalAccess!==null){
+  if(!seasonalAccess)return christmasDenied();
+  return christmasHeaders(await context.next());
+ }
  const storySlug=isStoryPath(path);
  const gated=storySlug || ['/data/histoires.json','/sitemap.xml','/histoires.xml'].includes(path);
  if(!gated)return context.next();

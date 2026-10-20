@@ -117,7 +117,7 @@
       });
       if(indexLabel) indexLabel.textContent = `${active + 1} / ${visible.length}`;
       const sticker=coverArea.querySelector('.floating-sticker');
-      if(sticker){const ready=visible[active].dataset.podcastStatus==='available';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'ici !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
+      if(sticker){const ready=visible[active].dataset.podcastStatus==='available';sticker.dataset.status=ready?'available':'upcoming';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'ici !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
       const controls=document.querySelector('.cover-controls');if(controls)controls.hidden=visible.length<2;
     };
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));
@@ -216,3 +216,6 @@
  }
  document.querySelectorAll('[data-audio-player]').forEach(setupPlayer);
 })();
+
+// Lien de saison : l’accès réel à /noel/ est également contrôlé côté serveur.
+(()=>{const link=document.querySelector('.christmas-home-link');if(!link)return;const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const month=Number(parts.find(v=>v.type==='month')?.value),day=Number(parts.find(v=>v.type==='day')?.value);link.hidden=!((month===11&&day>=25)||(month===12&&day<=26)||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&new URLSearchParams(location.search).has('noel-preview')));})();

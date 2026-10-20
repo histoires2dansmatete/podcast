@@ -87,12 +87,18 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 .cover-headphones{color:#f8d3a5;font:400 48px/1 var(--serif);transform:rotate(-15deg)}
 .cover-footnote{font-size:9px;letter-spacing:.27em;color:#ead9e9;margin-top:12px;font-weight:700}
 .backdrop-star{position:absolute;color:#fff1de}.star-1{left:-13%;top:35%;font-size:29px}.star-2{right:9%;top:4%;font-size:22px}.star-3{bottom:6%;right:-3%;font-size:40px}
-/* Sticker : deux lignes centrées comme un seul bloc, quel que soit le statut audio. */
-.floating-sticker{position:absolute;z-index:5;right:0;top:16px;width:135px;height:135px;box-sizing:border-box;padding:14px;border-radius:50%;background:#ecc087;border:4px solid #fff8e9;display:grid;grid-template-rows:max-content max-content;place-content:center;justify-items:center;row-gap:2px;color:#6d4a4a;transform:rotate(13deg);box-shadow:0 12px 24px rgba(87,59,59,.12);font:500 13px/1.25 var(--serif);text-align:center}
-.floating-sticker>span:not(.sticker-burst),.floating-sticker>strong{display:block;grid-column:1;position:relative;z-index:1;max-width:100%;margin:0;white-space:nowrap;text-align:center;transform:rotate(-13deg)}
-.floating-sticker>strong{font:700 27px/1.08 var(--serif)}
-/* L'étoile est hors de la zone du texte, en bordure haute du cercle. */
-.sticker-burst{position:absolute;z-index:2;top:-12px;right:9px;display:grid;place-items:center;width:27px;height:27px;box-sizing:border-box;border:2px solid #ecc087;border-radius:50%;background:#fff8e9;color:#a87563;font:700 20px/1 var(--serif);transform:rotate(-13deg);pointer-events:none}
+/* V14.4 : deux badges clairement différents : fanion pour un épisode sorti, billet pour un récit à venir. */
+.floating-sticker{position:absolute;z-index:5;right:-16px;top:15px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;pointer-events:none;line-height:1.12;transition:background-color .2s,color .2s,transform .2s}
+.floating-sticker>span:not(.sticker-burst),.floating-sticker>strong{display:block;position:relative;z-index:2;text-align:center;max-width:100%;white-space:nowrap;transform:none;margin:0}
+.floating-sticker[data-status="available"]{width:154px;height:90px;padding:13px 16px 15px;background:#624666;color:#fff9ec;border:2px solid #faf0dc;border-radius:15px 15px 7px 7px;box-shadow:0 10px 0 #d7b99f,0 17px 25px rgba(51,36,59,.21);transform:rotate(6deg)}
+.floating-sticker[data-status="available"]::after{content:"";position:absolute;left:45%;bottom:-11px;width:19px;height:19px;background:#624666;border-right:2px solid #faf0dc;border-bottom:2px solid #faf0dc;transform:rotate(45deg);z-index:1}
+.floating-sticker[data-status="available"]>span:first-child{font:600 12px/1.25 var(--sans);letter-spacing:.035em}
+.floating-sticker[data-status="available"]>strong{font:700 24px/1.05 var(--serif)}
+.floating-sticker[data-status="available"] .sticker-burst{position:absolute;z-index:3;top:-15px;right:-13px;width:32px;height:32px;display:grid;place-items:center;border:3px solid #fff9ec;border-radius:50%;background:#e0a965;color:#674368;font:700 21px/1 var(--serif);transform:rotate(-6deg);pointer-events:none}
+.floating-sticker[data-status="upcoming"]{width:146px;height:76px;padding:12px 15px;background:#fff7e9;color:#76506a;border:2px dashed #c995ae;border-radius:14px 6px 14px 6px;box-shadow:0 10px 24px rgba(51,36,59,.15);transform:rotate(-5deg)}
+.floating-sticker[data-status="upcoming"]>span:first-child{font:600 11px/1.25 var(--sans);letter-spacing:.035em}
+.floating-sticker[data-status="upcoming"]>strong{font:700 22px/1.05 var(--serif)}
+.floating-sticker[data-status="upcoming"] .sticker-burst{display:none}
 .art-note{position:absolute;z-index:3;bottom:0;left:-20%;font:italic 18px/1.25 var(--serif);color:#5e4458;text-shadow:0 1px 0 rgba(255,249,245,.7);transform:rotate(-9deg);display:flex;align-items:flex-end;gap:6px}
 .art-note svg{width:82px;height:44px;margin:0 0 5px;transform:rotate(-5deg);filter:drop-shadow(0 1px 0 rgba(255,249,245,.55))}
 .doodle{position:absolute;pointer-events:none}.doodle-ring{left:0;top:60px;width:30px;height:30px;border:3px solid #e9ae79;border-radius:50%;border-right-color:transparent;transform:rotate(-25deg)}.doodle-sparkle{right:0;bottom:35px;color:#a57f9c;font-size:42px}
@@ -502,3 +508,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 .player-cover{width:72px;height:96px;flex:0 0 72px;object-fit:contain;border-radius:12px;background:#fffaf0;box-shadow:0 6px 16px rgba(54,30,44,.12)}
 @media(max-width:480px){.player-cover{width:58px;height:78px;flex-basis:58px}}
+
+/* V14.4 : les anciens formats ronds ne doivent pas reprendre la main sur téléphone. */
+@media(max-width:920px){.floating-sticker[data-status="available"]{width:132px;height:80px;padding:11px 13px 13px;right:-8px;top:12px}.floating-sticker[data-status="available"]>strong{font-size:20px}.floating-sticker[data-status="available"]>span:first-child{font-size:10px}.floating-sticker[data-status="upcoming"]{width:130px;height:70px;padding:10px 12px;right:0;top:13px}.floating-sticker[data-status="upcoming"]>strong{font-size:19px}.floating-sticker[data-status="upcoming"]>span:first-child{font-size:10px}}
+@media(max-width:750px){.floating-sticker[data-status="available"],.floating-sticker[data-status="upcoming"]{right:3%;top:10px}}
+@media(max-width:480px){.floating-sticker[data-status="available"]{width:103px;height:63px;padding:8px 6px 9px;border-width:2px;right:-1%;top:9px;gap:1px}.floating-sticker[data-status="available"]>strong{font-size:17px}.floating-sticker[data-status="available"]>span:first-child{font-size:8px}.floating-sticker[data-status="available"]::after{width:12px;height:12px;bottom:-7px}.floating-sticker[data-status="available"] .sticker-burst{width:23px;height:23px;top:-12px;right:-8px;border-width:2px;font-size:15px}.floating-sticker[data-status="upcoming"]{width:108px;height:59px;padding:7px 8px;right:-1%;top:8px;gap:1px}.floating-sticker[data-status="upcoming"]>strong{font-size:17px}.floating-sticker[data-status="upcoming"]>span:first-child{font-size:8px}}
+
+.christmas-home-link[hidden]{display:none!important}.christmas-home-link{display:inline-flex;align-items:center;margin-top:19px;padding:11px 17px;border:1px solid #c9afa2;border-radius:99px;background:#f7e8db;color:#694157;font-weight:700;font-size:12px;text-decoration:none;box-shadow:0 4px 0 #e2cbbd}.christmas-home-link:hover{background:#f0d7c7}

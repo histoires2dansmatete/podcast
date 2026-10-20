@@ -8,6 +8,8 @@ import {readFile as readSecrets} from 'node:fs/promises';
 // Variables locales uniquement ; jamais exposées dans le site ni dans dist/.
 try {const raw=await readSecrets('.env.local','utf8');for(const line of raw.split(/\r?\n/)){const m=line.match(/^([A-Z_]+)=(.*)$/);if(m&&!(m[1] in process.env))process.env[m[1]]=m[2];}}catch(e){if(e.code!=='ENOENT')throw e;}
 import {handleLocalRoute} from './local-admin.mjs';
+import {christmasAccess} from '../functions/_lib/christmas.js';
+import {localChristmasPreview} from './christmas-local-preview.mjs';
 import { watch } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
@@ -29,7 +31,8 @@ const types = {
   '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8',
-  '.woff2': 'font/woff2'
+  '.woff2': 'font/woff2',
+  '.mp3': 'audio/mpeg'
 };
 const clients = new Set();
 const reloadSnippet = `\n<script>\n  // Injecté uniquement par le serveur de développement, jamais dans dist/.\n  const source = new EventSource('/__dev/events');\n  source.onmessage = () => window.location.reload();\n</script>\n`;
@@ -48,13 +51,23 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  let pathname;
+  let pathname, requestUrl;
   try {
-    pathname = decodeURIComponent(new URL(req.url, `http://${host}`).pathname);
+    requestUrl = new URL(req.url, `http://${host}`);
+    pathname = decodeURIComponent(requestUrl.pathname);
   } catch {
     res.writeHead(400); res.end('Adresse invalide'); return;
   }
 
+  const christmasDecision=christmasAccess(pathname);
+  if(christmasDecision!==null){
+    const localPreview=localChristmasPreview(requestUrl,{hostname:host,enabled:process.env.CHRISTMAS_PREVIEW==='1'});
+    if(!localPreview&&!christmasDecision){
+      res.writeHead(404,{'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow','Content-Type':'text/plain; charset=utf-8'});
+      res.end('Calendrier fermé en dehors de la saison de Noël.');
+      return;
+    }
+  }
   if (!preview && pathname === '/__dev/events') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -133,6 +146,7 @@ server.on('error', error => {
 server.listen(port, host, () => {
   console.log(`${preview ? 'Aperçu du build' : 'Développement (rechargement automatique)'} : http://localhost:${port}`);
   console.log('Administration : http://localhost:'+port+'/admin/ (connexion par mot de passe)');
+  console.log('Aperçu Noël local : http://localhost:'+port+'/noel/?preview=1');
   if(!process.env.ADMIN_PASSWORD_HASH||!process.env.ADMIN_SESSION_SECRET) console.warn('⚠ Admin non configurée : lancez npm run admin:setup.');
   console.log('Pour arrêter : Ctrl + C');
 });

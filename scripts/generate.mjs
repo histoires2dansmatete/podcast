@@ -1,3 +1,4 @@
+import {writeChristmas} from './christmas.mjs';
 import { data, writePublicStories } from './stories.mjs';
 import { writeFile,readFile } from 'node:fs/promises';
 import {configuredImages,globalImageFor} from './images.mjs';
@@ -39,3 +40,6 @@ for(const story of stories){
  const file=`site/histoires/${story.slug}/index.html`;
  await writeFile(file,applySocialLayout(await readFile(file,'utf8'),'../../'));
 }
+
+await writeChristmas();
+console.log('✓ Calendrier de Noël : 25 cases et MP3 configurables.');

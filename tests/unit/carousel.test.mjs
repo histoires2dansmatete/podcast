@@ -104,10 +104,11 @@ test('L’autocollant du podcast disponible tient dans son cercle, y compris sur
  const js=await readFile('site/assets/main.js','utf8');
  const css=await readFile('site/assets/style.css','utf8');
  assert.match(js,/ready\?'ici !':'arrive !'/);
- assert.match(css,/\.floating-sticker\{[^}]*display:grid;[^}]*place-content:center;justify-items:center/);
- assert.match(css,/\.floating-sticker>span:not\(\.sticker-burst\),\.floating-sticker>strong\{[^}]*text-align:center;transform:rotate\(-13deg\)/);
- assert.match(css,/\.floating-sticker>strong\{[^}]*font:700 27px/);
- assert.match(css,/\.sticker-burst\{[^}]*top:-12px;right:9px;[^}]*background:#fff8e9/);
- assert.match(css,/@media\(max-width:480px\)[^\n]*\.floating-sticker\{[^}]*width:86px;height:86px;padding:7px/);
- assert.match(css,/@media\(max-width:480px\)[^\n]*\.sticker-burst\{[^}]*top:-8px;right:3px/);
+ assert.match(css,/\.floating-sticker\{[^}]*display:flex;flex-direction:column;align-items:center;justify-content:center/);
+ assert.match(css,/\.floating-sticker\[data-status="available"\]\{[^}]*background:#624666/);
+ assert.match(css,/\.floating-sticker\[data-status="upcoming"\]\{[^}]*background:#fff7e9/);
+ assert.match(css,/\.floating-sticker\[data-status="available"\] \.sticker-burst\{[^}]*top:-15px/);
+ assert.match(css,/\.floating-sticker\[data-status="upcoming"\] \.sticker-burst\{display:none/);
+ assert.match(css,/@media\(max-width:480px\)[^\n]*\.floating-sticker\[data-status="available"\]\{width:103px;height:63px/);
+ assert.match(css,/@media\(max-width:480px\)[^\n]*\.floating-sticker\[data-status="upcoming"\]\{width:108px;height:59px/);
 });

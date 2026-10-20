@@ -1,6 +1,6 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "14.3.0",
+  "version": "14.4.2",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
@@ -12,6 +12,7 @@
     "drafts": "node scripts/generate.mjs",
     "import:wordpress": "node scripts/import-wordpress.mjs",
     "generate:stories": "node scripts/generate.mjs",
+    "noel:intro:setup": "node scripts/setup-christmas-intro.mjs",
     "predev": "node scripts/generate.mjs && node scripts/seo.mjs",
     "generate:seo": "node scripts/generate.mjs && node scripts/seo.mjs",
     "test:security": "node scripts/test-functions.mjs",
