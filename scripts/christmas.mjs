@@ -27,6 +27,14 @@ function validatedHttpsOrLocal(source,local,error){
  try{u=new URL(source);}catch{throw Error(error);}
  if(u.protocol!=='https:'||u.username||u.password||!u.hostname||u.hash)throw Error(error);
 }
+/** Lien facultatif vers l'épisode sur une plateforme publique. */
+export function validateChristmasPlatformUrl(url){
+ if(url===undefined||url==='')return '';
+ if(typeof url!=='string'||url.length>2048||/[\u0000-\u001f\u007f<>"'\\]/.test(url))throw Error('Noël : lien plateforme invalide');
+ let parsed;try{parsed=new URL(url)}catch{throw Error('Noël : lien plateforme invalide')}
+ if(parsed.protocol!=='https:'||!parsed.hostname||parsed.username||parsed.password)throw Error('Noël : lien plateforme HTTPS requis');
+ return parsed.href;
+}
 async function validateLocalAudio(src){
  if(!src||!src.startsWith('assets/audio/noel/'))return;
  let file;
@@ -41,12 +49,14 @@ export function validateChristmasConfig(cfg){
  if(typeof intro.title!=='string'||!intro.title.trim()||intro.title.length>120)throw Error('Noël : titre introduction invalide');
  if(typeof intro.text!=='string'||!intro.text.trim()||intro.text.length>3000)throw Error('Noël : texte introduction invalide');
  validatedHttpsOrLocal(intro.src,localIntro,'Noël : MP3 introduction doit être local (assets/audio/noel/introduction.mp3) ou HTTPS');
+ validateChristmasPlatformUrl(intro.platformUrl);
  const days=new Set();
  for(const entry of cfg.episodes){
   if(!entry||!Number.isInteger(entry.day)||entry.day<1||entry.day>25||days.has(entry.day))throw Error('Noël : journées 1 à 25 uniques requises');
   days.add(entry.day);
   if(typeof entry.title!=='string'||!entry.title.trim()||entry.title.length>90)throw Error(`Noël : titre invalide au jour ${entry.day}`);
   if(typeof entry.src!=='string')throw Error(`Noël : source audio invalide au jour ${entry.day}`);
+  validateChristmasPlatformUrl(entry.platformUrl);
   if(entry.src){
    const local=`assets/audio/noel/${String(entry.day).padStart(2,'0')}.mp3`;
    if(entry.src!==local){
@@ -66,11 +76,12 @@ export async function christmasHtml(config,template){
  const doors=episodes.map(ep=>`<button class="christmas-door" type="button" data-day="${ep.day}" disabled aria-label="Case ${ep.day}, encore fermée"><span class="door-ornament" aria-hidden="true">${['✧','✦','❄','✳','★'][ep.day%5]}</span><span class="door-number">${ep.day}</span><span class="door-caption">À découvrir</span></button>`).join('\n');
  const intro=introFor(config);
  const introParagraphs=intro.text.split(/\n\s*\n/).filter(p=>p.trim()).map(p=>`<p>${escapeHtml(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+ const introPlatform=intro.platformUrl?`<a class="christmas-platform-link" href="${escapeHtml(validateChristmasPlatformUrl(intro.platformUrl))}" rel="noopener noreferrer" target="_blank">Écouter l’introduction sur la plateforme ↗</a>`:'';
  const introPlayer=intro.src
   ? `<audio id="christmas-intro-audio" controls preload="none" data-src="${escapeHtml(intro.src)}" aria-label="Écouter l’introduction de l’histoire de Noël">Votre navigateur ne prend pas en charge l’audio HTML5.</audio>`
-  : '<p class="christmas-prologue-placeholder">L’enregistrement d’introduction sera bientôt disponible.</p>';
+  : introPlatform?'':'<p class="christmas-prologue-placeholder">L’enregistrement d’introduction sera bientôt disponible.</p>';
  const clean={title:config.title,subtitle:config.subtitle,intro:config.intro,episodes};
- return template.replaceAll('__CHRISTMAS_INTRO_TITLE__',escapeHtml(intro.title)).replaceAll('__CHRISTMAS_INTRO_TEXT__',introParagraphs).replace('<!-- CHRISTMAS-INTRO-PLAYER -->',introPlayer).replaceAll('__CHRISTMAS_TITLE__',escapeHtml(config.title)).replaceAll('__CHRISTMAS_SUBTITLE__',escapeHtml(config.subtitle)).replaceAll('__CHRISTMAS_INTRO__',escapeHtml(config.intro)).replace('<!-- CHRISTMAS-DOORS -->',doors).replace('<!-- CHRISTMAS-CONFIG -->',`<script id="christmas-data" type="application/json">${escapeScript(clean)}</script>`);
+ return template.replaceAll('__CHRISTMAS_INTRO_TITLE__',escapeHtml(intro.title)).replaceAll('__CHRISTMAS_INTRO_TEXT__',introParagraphs).replace('<!-- CHRISTMAS-INTRO-PLAYER -->',introPlayer+introPlatform).replaceAll('__CHRISTMAS_TITLE__',escapeHtml(config.title)).replaceAll('__CHRISTMAS_SUBTITLE__',escapeHtml(config.subtitle)).replaceAll('__CHRISTMAS_INTRO__',escapeHtml(config.intro)).replace('<!-- CHRISTMAS-DOORS -->',doors).replace('<!-- CHRISTMAS-CONFIG -->',`<script id="christmas-data" type="application/json">${escapeScript(clean)}</script>`);
 }
 export async function writeChristmas(){
  const cfg=JSON.parse(await readFile('content/noel.config.json','utf8'));

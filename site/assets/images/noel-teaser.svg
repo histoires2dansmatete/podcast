@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900" role="img" aria-label="Une fenêtre de Noël illustrée, sapin et cadeaux dans un paysage enneigé">
+<defs><linearGradient id="night" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#183f3b"/><stop offset="1" stop-color="#43665c"/></linearGradient><linearGradient id="light" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#f4d8a8"/><stop offset="1" stop-color="#dfaa78"/></linearGradient></defs>
+<rect width="720" height="900" fill="#f4e9d6"/><rect x="18" y="18" width="684" height="864" rx="26" fill="url(#night)" stroke="#e8cba4" stroke-width="4"/>
+<rect x="45" y="48" width="630" height="804" rx="17" fill="none" stroke="#f0deb9" stroke-width="2" stroke-dasharray="5 9"/>
+<g fill="#f1d6a7"><circle cx="112" cy="132" r="3"/><circle cx="206" cy="168" r="2"/><circle cx="540" cy="130" r="3"/><circle cx="610" cy="204" r="3"/><circle cx="154" cy="402" r="3"/><circle cx="590" cy="380" r="2"/><circle cx="506" cy="474" r="3"/><circle cx="224" cy="580" r="3"/><circle cx="562" cy="680" r="3"/></g>
+<g stroke="#eecf9d" stroke-width="3" stroke-linecap="round"><path d="M97 251v30M82 266h30M87 256l20 20M107 256l-20 20"/><path d="M614 304v34M597 321h34M603 309l23 24M626 309l-23 24"/><path d="M540 520v26M527 533h26M531 524l18 18M549 524l-18 18"/></g>
+<path d="M80 720Q180 664 360 704T640 711V803H80Z" fill="#e9eee0"/><path d="M73 782Q230 745 380 779T647 774V821H73Z" fill="#f8f2df"/>
+<path d="M361 196L484 461H435L512 557H440L532 678H192L282 557H209L289 461H238Z" fill="#224d3c" stroke="#c2b886" stroke-width="7" stroke-linejoin="round"/>
+<path d="M361 262L442 446H398L466 541H402L477 641H245L320 541H259L326 446H280Z" fill="#3a6c4f"/>
+<rect x="345" y="654" width="33" height="64" rx="4" fill="#916b53"/>
+<g fill="#e5b47b"><circle cx="313" cy="457" r="10"/><circle cx="407" cy="482" r="11"/><circle cx="337" cy="565" r="10"/><circle cx="425" cy="621" r="10"/><circle cx="284" cy="606" r="9"/></g>
+<g fill="#f3e3c1"><circle cx="360" cy="345" r="8"/><circle cx="387" cy="553" r="8"/><circle cx="311" cy="638" r="8"/></g>
+<path d="M360 183l13 30 33 3-25 22 8 32-29-17-29 17 8-32-25-22 33-3Z" fill="#f3c77a"/>
+<g><rect x="153" y="676" width="107" height="104" rx="9" fill="#b66a70"/><path d="M200 676v104M153 712h107" stroke="#f0cf9c" stroke-width="12"/><path d="M206 676c-46-45-47 9-6 0 42-46 49 8 6 0" fill="none" stroke="#f0cf9c" stroke-width="8"/><rect x="469" y="705" width="95" height="77" rx="9" fill="#d4a76b"/><path d="M516 705v77M469 738h95" stroke="#f6e5cb" stroke-width="10"/></g>
+<rect x="116" y="82" width="488" height="110" rx="10" fill="#f7e7ca" opacity=".97"/><text x="360" y="128" fill="#294b42" font-size="28" text-anchor="middle" font-family="Georgia,serif" letter-spacing="3">LE RENDEZ-VOUS DE</text><text x="360" y="172" fill="#73485d" font-size="50" font-weight="bold" text-anchor="middle" font-family="Georgia,serif">NOËL</text>
+<rect x="127" y="810" width="466" height="44" rx="20" fill="#f7e7ca"/><text x="360" y="839" fill="#294b42" font-size="25" text-anchor="middle" font-family="Georgia,serif">25 petites portes, 25 surprises</text>
+</svg>

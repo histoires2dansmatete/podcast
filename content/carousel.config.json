@@ -32,5 +32,12 @@
       "label": "Petit ourson",
       "color": "#85704d"
     }
-  ]
+  ],
+  "christmasTeaser": {
+    "enabled": true,
+    "position": 2,
+    "image": "assets/images/noel-teaser.svg",
+    "label": "Le calendrier de Noël",
+    "color": "#285047"
+  }
 }

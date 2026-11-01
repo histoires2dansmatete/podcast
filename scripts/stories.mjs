@@ -5,6 +5,7 @@ import { configuredImages, imageFor, globalImageFor } from './images.mjs';
 import { isLocalImagePath } from './local-image-path.mjs';
 import { configuredInlineImages, inlineImagesFor,validateInlineImage } from './inline-images.mjs';
 import { readAllStories, configureAudio, validateAudioSrc, localAudio } from './story-content.mjs';
+import {configuredVisibility} from './visibility.mjs';
 
 export const escapeHtml = (value='') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const safeSlug = slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
@@ -14,7 +15,7 @@ const safeMedia = value => {
   return localAudio(url) ? `../../${url}` : safeURL(url);
 };
 export async function data(){
- const stories=await configureAudio(await readAllStories());
+ const stories=await configuredVisibility(await configureAudio(await readAllStories()));
  if(!Array.isArray(stories))throw Error('Catalogue invalide');
  if(stories.some(s=>!safeSlug(s.slug)))throw Error('Un identifiant d’histoire contient un caractère invalide');
  if(new Set(stories.map(s=>s.slug)).size!==stories.length)throw Error('Identifiants en double');

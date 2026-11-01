@@ -5,12 +5,13 @@ async function allSlugs(context){
  const res=await context.env.ASSETS.fetch(new URL('/data/histoires.json',context.request.url));
  if(!res.ok)throw Error('Catalogue inaccessible');
  const data=await res.json();
- return Array.isArray(data)?data.map(s=>({slug:s.slug,title:s.title,subtitle:s.subtitle||''})):[];
+ return Array.isArray(data)?data.map(s=>({slug:s.slug,title:s.title,subtitle:s.subtitle||'',visibleByDefault:s.visibleByDefault!==false})):[];
 }
 export async function onRequestGet(context){
  const denied=await authorize(context);if(denied)return denied;
  try{
-  const [stories,disabled]=await Promise.all([allSlugs(context),disabledStories(context.env)]);
+  const stories=await allSlugs(context);
+  const disabled=await disabledStories(context.env,stories);
   return respond({stories:stories.map(s=>({...s,enabled:!disabled.has(s.slug)}))});
  }catch(e){console.error(e);return respond({error:'Base D1 ou catalogue indisponible.'},503);}
 }

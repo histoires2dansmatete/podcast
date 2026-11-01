@@ -13,17 +13,22 @@ export async function onRequest(context){
  const storySlug=isStoryPath(path);
  const gated=storySlug || ['/data/histoires.json','/sitemap.xml','/histoires.xml'].includes(path);
  if(!gated)return context.next();
- let disabled;
- try {disabled=await disabledStories(context.env);}catch(e){console.error('Publication D1 :',e.message);return unavailable();}
+ let disabled,allStories;
+ try {
+  const catalogResponse=await context.env.ASSETS.fetch(new Request(new URL('/data/histoires.json',context.request.url)));
+  if(!catalogResponse.ok)throw Error('Catalogue brut indisponible');
+  allStories=await catalogResponse.json();
+  if(!Array.isArray(allStories))throw Error('Catalogue brut invalide');
+  disabled=await disabledStories(context.env,allStories);
+ }catch(e){console.error('Publication D1 :',e.message);return unavailable();}
  if(storySlug && disabled.has(storySlug))return new Response('Histoire non publiée.',{status:404,headers:{...statesHeaders,'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex,nofollow'}});
  if(storySlug){const res=await context.next();const headers=new Headers(res.headers);headers.set('Cache-Control','no-store');return new Response(res.body,{status:res.status,headers});}
  // Lecture de l'asset brut via ASSETS (évite la route publique, permet la modification runtime).
  const resource=await context.env.ASSETS.fetch(context.request);
  if(!resource.ok)return resource;
  if(path==='/data/histoires.json'){
-   const all=await resource.json();
-   let active=all;
-   try { active=mergeAudio(all,await loadAudioOverrides(context.env)); }catch(error){
+   let active=allStories;
+   try { active=mergeAudio(allStories,await loadAudioOverrides(context.env)); }catch(error){
      // Anciennes bases non migrées : le catalogue et le site existants restent utilisables.
      console.warn('Audio D1 :',error.message);
    }

@@ -13,7 +13,7 @@ const slug=catalogue[0].slug;
 function mockEnv(disabled,audio=new Map()){return {
  ANALYTICS_DB:{prepare(query){return {async all(){
   if(query.includes('story_audio_overrides'))return {results:[...audio].map(([slug,v])=>({slug,audio_url:v.src,platforms_json:JSON.stringify(v.platforms)}))};
-  assert.match(query,/story_states/);return {results:[...disabled].map(slug=>({slug}))};}}}},
+  assert.match(query,/story_states/);return {results:[...disabled].map(slug=>({slug,enabled:0}))};}}}},
  ASSETS:{async fetch(request){const pathname=new URL(request.url).pathname;const name=pathname==='/data/histoires.json'?'site/data/histoires.json':pathname==='/sitemap.xml'?'site/sitemap.xml':'site/histoires.xml';return new Response(await readFile(name),{status:200});}}
 };}
 async function cloud(path,disabled,env=mockEnv(disabled)){return onRequest({request:new Request('https://histoires2dansmatete.fr'+path),env,next:async()=>new Response('STATIC',{status:200})});}

@@ -1,6 +1,7 @@
 /** Construction déterministe du carrousel depuis son catalogue éditorial. */
 import {readFile} from 'node:fs/promises';
 import {escapeHtml} from './stories.mjs';
+import {isLocalImagePath} from './local-image-path.mjs';
 
 const slugPattern=/^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const colorPattern=/^#[0-9a-fA-F]{6}$/;
@@ -24,6 +25,16 @@ export function validateCarouselConfig(config,stories){
     if(entry.label!==undefined && (typeof entry.label!=='string'||!entry.label.trim()||entry.label.length>60))throw Error(`Carrousel : label incorrect pour ${entry.slug}`);
     if(entry.color!==undefined && (typeof entry.color!=='string'||!colorPattern.test(entry.color)))throw Error(`Carrousel : couleur incorrecte pour ${entry.slug}`);
   }
+  if(config.christmasTeaser!==undefined){
+    const teaser=config.christmasTeaser;
+    if(!teaser||typeof teaser!=='object'||typeof teaser.enabled!=='boolean')throw Error('Carrousel Noël : enabled doit être un booléen');
+    if(teaser.enabled){
+      if(!Number.isInteger(teaser.position)||teaser.position<1||teaser.position>config.stories.length+1)throw Error('Carrousel Noël : position invalide');
+      if(!isLocalImagePath(teaser.image||''))throw Error('Carrousel Noël : image locale invalide');
+      if(typeof teaser.label!=='string'||!teaser.label.trim()||teaser.label.length>60)throw Error('Carrousel Noël : libellé invalide');
+      if(!colorPattern.test(teaser.color||''))throw Error('Carrousel Noël : couleur invalide');
+    }
+  }
   return config;
 }
 
@@ -31,7 +42,7 @@ const text=v=>escapeHtml(v);
 export function renderCarousel(config,stories){
   validateCarouselConfig(config,stories);
   const bySlug=new Map(stories.map(s=>[s.slug,s]));
-  return config.stories.map((entry,index)=>{
+  const cards=config.stories.map((entry,index)=>{
     const s=bySlug.get(entry.slug);
     const available=isPodcastAvailable(s);
     const status=available?'available':'upcoming';
@@ -40,13 +51,20 @@ export function renderCarousel(config,stories){
     const coverTitle=entry.label||s.subtitle||s.title;
     const fallback=`assets/stories/${s.slug}.svg`;
     const image=s.image||fallback;
-    return `<div aria-label="${text(s.title)} — ${label}" class="cover-card ${index===0?'cover-card-active':'cover-card-stacked'}" data-cover="${index}" data-story-slug="${text(s.slug)}" data-podcast-status="${status}" style="--cover-color:${entry.color||'#674871'};">
+    return `<div aria-label="${text(s.title)} — ${label}" class="cover-card ${index===0?'cover-card-active':'cover-card-stacked'}" data-cover="${index}" data-story-slug="${text(s.slug)}" data-podcast-status="${status}" ${s.visibleByDefault===false?'hidden':''} style="--cover-color:${entry.color||'#674871'};">
 <div class="cover-top"><span>LES HISTOIRES DE</span>${sound}</div>
 <div class="cover-image-wrap"><img alt="Illustration de ${text(s.title)}" class="cover-image" data-fallback="${text(fallback)}" ${index===0?'fetchpriority="high"':'loading="lazy"'} src="${text(image)}"/><span class="cover-status cover-status-${status}">${available?'♫':'◷'} ${label}</span></div>
 <div class="cover-bottom"><span>${text(coverTitle)}</span><span aria-hidden="true" class="cover-headphones">♫</span></div>
 <div class="cover-footnote">${footnote}</div>
 </div>`;
-  }).join('\n');
+  });
+  if(config.christmasTeaser?.enabled){
+   const e=config.christmasTeaser;
+   const image=text(e.image),label=text(e.label);
+   const teaser=`<div class="cover-card cover-card-stacked cover-card-christmas" data-special="noel" data-cover="${e.position-1}" data-podcast-status="christmas" hidden style="--cover-color:${e.color};"><a class="christmas-cover-link" aria-disabled="true" aria-label="Découvrir le calendrier de Noël"><img class="christmas-cover-image" src="${image}" alt="${label}" loading="lazy" decoding="async" width="720" height="900"><span class="christmas-cover-cta">Ouverture le 25 novembre</span></a></div>`;
+   cards.splice(e.position-1,0,teaser);
+  }
+  return cards.map((card,index)=>card.replace(/data-cover="\d+"/,`data-cover="${index}"`)).join('\n');
 }
 
 /** Entre deux marqueurs stables : aucun doublon après une seconde génération. */

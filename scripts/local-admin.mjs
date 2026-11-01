@@ -15,7 +15,7 @@ const allStories=async()=>JSON.parse(await readFile('site/data/histoires.json','
 const audioFile=resolve(process.env.LOCAL_AUDIO_FILE||'.local/audio-overrides.json');
 const readAudio=async()=>{try{return new Map(Object.entries(JSON.parse(await readFile(audioFile,'utf8'))));}catch(e){if(e.code==='ENOENT')return new Map();throw e}};
 const writeAudio=async(map)=>{await mkdir(dirname(audioFile),{recursive:true});await writeFile(audioFile,JSON.stringify(Object.fromEntries(map),null,2)+'\n');};
-const denied=states=>new Set(Object.entries(states).filter(([,enabled])=>enabled===false).map(([slug])=>slug));
+const denied=(states,stories)=>new Set(stories.filter(s=>(states[s.slug]??(s.visibleByDefault!==false))===false).map(s=>s.slug));
 async function respond(res,response){res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}
 async function toWebRequest(req,port){
  // Le Host a été vérifié par handleLocalRoute : on le conserve pour que
@@ -77,7 +77,7 @@ export async function handleLocalRoute(req,res,path,{preview=false,port=5173,roo
   if(path==='/api/admin/stories'){
    if(req.method==='GET'){
     const [stories,states]=await Promise.all([allStories(),readStates()]);
-    json(res,{stories:stories.map(s=>({slug:s.slug,title:s.title,subtitle:s.subtitle||'',enabled:states[s.slug]!==false}))});return true;
+    json(res,{stories:stories.map(s=>({slug:s.slug,title:s.title,subtitle:s.subtitle||'',enabled:states[s.slug]??(s.visibleByDefault!==false)}))});return true;
    }
    if(req.method==='POST'){
     if(!['http://127.0.0.1:'+port,'http://localhost:'+port].includes(req.headers.origin)||req.headers['x-requested-with']!=='PodcastAdmin') {json(res,{error:'Origine non autorisée'},403);return true;}
@@ -95,7 +95,7 @@ export async function handleLocalRoute(req,res,path,{preview=false,port=5173,roo
  const slug=isStoryPath(path),isData=path==='/data/histoires.json',isXml=['/sitemap.xml','/histoires.xml'].includes(path);
  if(!slug&&!isData&&!isXml)return false;
  if(!['GET','HEAD'].includes(req.method)){plain(res,'Méthode non autorisée',405);return true;}
- const disabled=denied(await readStates());
+ const disabled=denied(await readStates(),await allStories());
  if(slug&&disabled.has(slug)){plain(res,'Histoire non publiée',404);return true;}
  if(isData){json(res,publicStories(mergeAudio(await allStories(),await readAudio()),disabled));return true;}
  if(isXml){const xml=await readFile(resolve(root,path.slice(1)),'utf8');res.writeHead(200,{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'no-store'});res.end(removeXmlItems(xml,disabled,path==='/sitemap.xml'?'url':'item'));return true;}

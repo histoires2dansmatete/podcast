@@ -35,7 +35,7 @@ test('Les deux variantes d’URL du calendrier et les MP3 numérotés sont prot�
 
 test('Middleware Pages : refuse la page hors saison avant la lecture D1',async()=>{
  const fn=await readFile('functions/_middleware.js','utf8');
- assert.ok(fn.indexOf('if(seasonalAccess!==null)')<fn.indexOf('disabledStories(context.env)'));
+ assert.ok(fn.indexOf('if(seasonalAccess!==null)')<fn.indexOf('disabledStories(context.env,allStories)'));
  assert.match(fn,/return christmasHeaders\(await context.next\(\)\)/);
  assert.match(fn,/return christmasDenied\(\)/);
  assert.equal(christmasAccess('/noel/',utc('2026-10-19T18:00:00Z')),false);

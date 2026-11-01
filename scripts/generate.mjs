@@ -5,7 +5,10 @@ import {configuredImages,globalImageFor} from './images.mjs';
 import {applySocialLayout} from './layout.mjs';
 import {generateCarousel} from './carousel.mjs';
 import {applyPodcastCopy} from './podcast-copy.mjs';
+import {applyShowPlatforms,configuredShowPlatforms} from './platform-links.mjs';
 const stories = await data();
+const showPlatforms=await configuredShowPlatforms();
+await writeFile('site/config.js',`// Généré depuis content/platforms.config.json — ne pas modifier ici.\nwindow.PODCAST_CONFIG = ${JSON.stringify({platforms:showPlatforms.platforms},null,2).replace(/</g,'\\u003c')};\n`);
 await writePublicStories(stories);
 await writeFile('site/data/histoires.json', JSON.stringify(stories,null,2)+'\n');
 const withoutText = stories.filter(s=>!s.bodyHtml?.trim()).length;
@@ -32,6 +35,7 @@ for(const page of pages){
  if(page==='qui-suis-je.html')html=imageInBlock(html,'bio-image',bioImage);
  if(page==='ecouter.html')html=imageInBlock(html,'listen-reading-art',listenImage);
  html=applyPodcastCopy(html,stories,page);
+ if(page==='index.html'||page==='ecouter.html')html=applyShowPlatforms(html,showPlatforms);
  html=applySocialLayout(html,'');
  await writeFile('site/'+page,html);
 }

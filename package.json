@@ -1,6 +1,6 @@
 {
   "name": "histoires-dans-ma-tete-podcast",
-  "version": "14.4.2",
+  "version": "14.5.0",
   "private": true,
   "type": "module",
   "description": "Site vitrine du podcast Les histoires de Dans ma tête — Cloudflare Pages",
@@ -38,7 +38,8 @@
     "test": "npm run test:unit && npm run check && npm run test:regression && npm run test:security && npm run test:integration && npm run test:editorial && npm run build && npm run test:dist && npm run test:audit && npm run test:privacy && npm run test:performance",
     "test:regression:update": "node scripts/generate.mjs && node scripts/seo.mjs && node scripts/test-regression.mjs --update",
     "test:audit": "node scripts/test-site-audit.mjs",
-    "test:editorial": "node scripts/test-editorial-workflow.mjs"
+    "test:editorial": "node scripts/test-editorial-workflow.mjs",
+    "site:config:setup": "node scripts/setup-content-config.mjs"
   },
   "engines": {
     "node": ">=22"

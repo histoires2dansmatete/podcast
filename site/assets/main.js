@@ -82,6 +82,22 @@
   const year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
 
+  // Teaser : visible dès novembre, mais la destination /noel/ ne s'ouvre
+  // que du 25 novembre au 26 décembre. Pas de lien menant à une page 404.
+  const christmasCover=document.querySelector('.cover-card[data-special="noel"]');
+  if(christmasCover){
+    const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const month=Number(parts.find(p=>p.type==='month')?.value),day=Number(parts.find(p=>p.type==='day')?.value);
+    const open=(month===11&&day>=25)||(month===12&&day<=26);
+    const preview=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&new URLSearchParams(location.search).has('noel-preview');
+    christmasCover.hidden=!((month===11||(month===12&&day<=26))||preview);
+    const link=christmasCover.querySelector('a'),caption=christmasCover.querySelector('.christmas-cover-cta');
+    if(link){
+      if(open||preview){link.href=preview?'/noel/?preview=1':'/noel/';link.removeAttribute('aria-disabled');}
+      else {link.removeAttribute('href');link.setAttribute('aria-disabled','true');}
+    }
+    if(caption)caption.textContent=open||preview?'Découvrir les 25 cases ↗':'Ouverture le 25 novembre';
+  }
   // Les couvertures retirées de publication ne doivent plus figurer sur l'accueil.
   const coverNodes = [...document.querySelectorAll('.cover-card[data-story-slug]')];
   if(coverNodes.length){
@@ -89,7 +105,7 @@
       const active=new Set(stories.map(s=>s.slug));
       const bySlug=new Map(stories.map(s=>[s.slug,s]));
       coverNodes.forEach(card=>{const s=bySlug.get(card.dataset.storySlug);const img=card.querySelector('img.cover-image');if(s&&img){img.dataset.fallback=`/assets/stories/${s.slug}.svg`;img.src=`/${s.image.replace(/^\//,'')}`;}
-        if(s){const ready=Boolean(s.audioUrl || Object.values(s.platforms||{}).some(Boolean));const badge=card.querySelector('.cover-status');card.dataset.podcastStatus=ready?'available':'upcoming';if(badge){badge.className=`cover-status cover-status-${card.dataset.podcastStatus}`;badge.textContent=ready?'♫ Podcast disponible':'◷ Podcast à venir';}const footnote=card.querySelector('.cover-footnote');if(footnote)footnote.textContent=ready?'DÉJÀ À ÉCOUTER':'À LIRE, BIENTÔT À ÉCOUTER';}
+        if(s){card.hidden=false;const ready=Boolean(s.audioUrl || Object.values(s.platforms||{}).some(Boolean));const badge=card.querySelector('.cover-status');card.dataset.podcastStatus=ready?'available':'upcoming';if(badge){badge.className=`cover-status cover-status-${card.dataset.podcastStatus}`;badge.textContent=ready?'♫ Podcast disponible':'◷ Podcast à venir';}const footnote=card.querySelector('.cover-footnote');if(footnote)footnote.textContent=ready?'DÉJÀ À ÉCOUTER':'À LIRE, BIENTÔT À ÉCOUTER';}
       });
       coverNodes.forEach(card=>{if(!active.has(card.dataset.storySlug)){card.remove();}});
       const cards=[...document.querySelectorAll('.cover-card[data-cover]')];
@@ -117,7 +133,7 @@
       });
       if(indexLabel) indexLabel.textContent = `${active + 1} / ${visible.length}`;
       const sticker=coverArea.querySelector('.floating-sticker');
-      if(sticker){const ready=visible[active].dataset.podcastStatus==='available';sticker.dataset.status=ready?'available':'upcoming';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'ici !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
+      if(sticker){sticker.hidden=visible[active].dataset.special==='noel';const ready=visible[active].dataset.podcastStatus==='available';sticker.dataset.status=ready?'available':'upcoming';const caption=sticker.querySelector('span:first-child');const title=sticker.querySelector('strong');if(caption)caption.textContent=ready?'À écouter':'Le podcast';if(title)title.textContent=ready?'ici !':'arrive !';sticker.setAttribute('aria-label',ready?'Un podcast est disponible':'Le podcast arrive bientôt');}
       const controls=document.querySelector('.cover-controls');if(controls)controls.hidden=visible.length<2;
     };
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));

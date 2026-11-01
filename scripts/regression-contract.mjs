@@ -30,6 +30,14 @@ export function normalizeRegressionContent(path, source) {
     }
 
   }
+  // Les destinations et statuts des plateformes générales viennent de
+  // content/platforms.config.json : contrôler leur validité séparément.
+  if(path.endsWith('index.html')||path.endsWith('ecouter.html')){
+    html=html.replace(/<a\b[^>]*\bdata-platform="(?:spotify|apple|deezer|amazon)"[^>]*>/g,tag=>tag.replace(/\s(?:href|target|rel|aria-disabled)="[^"]*"/g,''));
+    html=html.replace(/(<span class="platform-status">)[^<]*(<\/span>)/g,'$1__LIEN_PLATEFORME__$2');
+    html=html.replace(/RETROUVEZ-NOUS (?:PROCHAINEMENT )?SUR/g,'__PLATEFORMES_EMISSION__');
+    html=html.replace(/(<div class="listen-pill center-pill">)[^<]*(<\/div>)/,'$1__PLATEFORMES_EMISSION__$2');
+  }
   html=html.replace(/<body data-podcast-count="\d+">/,'<body data-podcast-count="__COUNT__">');
   html=html.replace(/Des histoires à lire(?:… et bientôt| et) à écouter/g,'__ANNONCE_AUDIO__');
   html=html.replace(/(<p>Des histoires inventées avec le cœur,<br\s*\/?>)[^<]*(<\/p>)/g,'$1__FOOTER_AUDIO__$2');

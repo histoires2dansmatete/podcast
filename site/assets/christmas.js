@@ -45,7 +45,8 @@
     const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=episode.src.startsWith('https://')?episode.src:'/'+episode.src+(localPreview?'?preview=1':'');
     audio.setAttribute('aria-label',`Écouter la partie ${n} de l’histoire de Noël`);
     content.append(audio);
-   }else{p.textContent='Cette partie est prête à être racontée. Son enregistrement audio sera bientôt ajouté.';content.append(p);}
+   }else if(!episode.platformUrl){p.textContent='Cette partie est prête à être racontée. Son enregistrement audio sera bientôt ajouté.';content.append(p);}
+   if(episode.platformUrl){const link=document.createElement('a');link.className='christmas-platform-link';link.href=episode.platformUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Écouter cet épisode sur la plateforme ↗';content.append(link);}
    panel.hidden=false;panel.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});
   });
  });
