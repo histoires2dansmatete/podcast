@@ -1,6 +1,7 @@
-import {readFile,writeFile,stat} from 'node:fs/promises';
+import {readFile,writeFile,stat,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {escapeHtml} from './stories.mjs';
+import {validateChristmasSchedule,DEFAULT_CHRISTMAS_SCHEDULE,christmasOpenLabel} from '../functions/_lib/christmas.js';
 const escapeScript=v=>JSON.stringify(v).replace(/</g,'\\u003c').replace(/\u2028|\u2029/g,'');
 /** Audio non public tant que la case n'est pas déverrouillée côté interface. */
 const localIntro='assets/audio/noel/introduction.mp3';
@@ -44,6 +45,7 @@ async function validateLocalAudio(src){
 export function validateChristmasConfig(cfg){
  if(!cfg||typeof cfg!=='object'||!Array.isArray(cfg.episodes)||cfg.episodes.length!==25)throw Error('Noël : config doit avoir 25 épisodes');
  for(const prop of ['title','subtitle','intro'])if(typeof cfg[prop]!=='string'||!cfg[prop].trim()||cfg[prop].length>300)throw Error(`Noël : ${prop} invalide`);
+ validateChristmasSchedule(cfg.schedule||DEFAULT_CHRISTMAS_SCHEDULE);
  const intro=introFor(cfg);
  if(!intro||typeof intro!=='object')throw Error('Noël : introduction requise');
  if(typeof intro.title!=='string'||!intro.title.trim()||intro.title.length>120)throw Error('Noël : titre introduction invalide');
@@ -80,11 +82,26 @@ export async function christmasHtml(config,template){
  const introPlayer=intro.src
   ? `<audio id="christmas-intro-audio" controls preload="none" data-src="${escapeHtml(intro.src)}" aria-label="Écouter l’introduction de l’histoire de Noël">Votre navigateur ne prend pas en charge l’audio HTML5.</audio>`
   : introPlatform?'':'<p class="christmas-prologue-placeholder">L’enregistrement d’introduction sera bientôt disponible.</p>';
- const clean={title:config.title,subtitle:config.subtitle,intro:config.intro,episodes};
- return template.replaceAll('__CHRISTMAS_INTRO_TITLE__',escapeHtml(intro.title)).replaceAll('__CHRISTMAS_INTRO_TEXT__',introParagraphs).replace('<!-- CHRISTMAS-INTRO-PLAYER -->',introPlayer+introPlatform).replaceAll('__CHRISTMAS_TITLE__',escapeHtml(config.title)).replaceAll('__CHRISTMAS_SUBTITLE__',escapeHtml(config.subtitle)).replaceAll('__CHRISTMAS_INTRO__',escapeHtml(config.intro)).replace('<!-- CHRISTMAS-DOORS -->',doors).replace('<!-- CHRISTMAS-CONFIG -->',`<script id="christmas-data" type="application/json">${escapeScript(clean)}</script>`);
+ const schedule=validateChristmasSchedule(config.schedule||DEFAULT_CHRISTMAS_SCHEDULE);
+ const clean={title:config.title,subtitle:config.subtitle,intro:config.intro,schedule,episodes};
+ const endMonth=Number(schedule.calendarEnd.slice(0,2)),endDay=Number(schedule.calendarEnd.slice(3));
+ const endLabel=new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(2025,endMonth-1,endDay)));
+ const windowLabel=`Calendrier accessible du ${christmasOpenLabel(schedule)} au ${endLabel}`;
+ return template
+  .replaceAll('__CHRISTMAS_WINDOW__',escapeHtml(windowLabel))
+  .replaceAll('__CHRISTMAS_INTRO_TITLE__',escapeHtml(intro.title))
+  .replaceAll('__CHRISTMAS_INTRO_TEXT__',introParagraphs)
+  .replace('<!-- CHRISTMAS-INTRO-PLAYER -->',introPlayer+introPlatform)
+  .replaceAll('__CHRISTMAS_TITLE__',escapeHtml(config.title))
+  .replaceAll('__CHRISTMAS_SUBTITLE__',escapeHtml(config.subtitle))
+  .replaceAll('__CHRISTMAS_INTRO__',escapeHtml(config.intro))
+  .replace('<!-- CHRISTMAS-DOORS -->',doors)
+  .replace('<!-- CHRISTMAS-CONFIG -->',`<script id="christmas-data" type="application/json">${escapeScript(clean)}</script>`);
 }
 export async function writeChristmas(){
  const cfg=JSON.parse(await readFile('content/noel.config.json','utf8'));
  const template=await readFile('content/noel.template.html','utf8');
+ await mkdir('site/noel',{recursive:true});
  await writeFile('site/noel/index.html',await christmasHtml(cfg,template));
+ await writeFile('site/data/noel-schedule.json',JSON.stringify(validateChristmasSchedule(cfg.schedule||DEFAULT_CHRISTMAS_SCHEDULE),null,2)+'\n');
 }

@@ -23,7 +23,6 @@ export function normalizeRegressionContent(path, source) {
     html=html.replace(/(<span aria-live="polite" class="cover-index">)[^<]*(<\/span>)/, '$1__INDEX__$2');
     // Seuls ces libellés et compteurs sont pilotés par audio.config.json/D1.
     html=html.replace(/(<em id="home-hero-audio-verb">)[^<]*(<\/em>)/, '$1__STATUT__$2');
-    html=html.replace(/(<p class="hero-description">)[\s\S]*?(<\/p>)/, '$1__PRESENTATION_AUDIO__$2');
     for(const id of ['home-audio-kicker','home-audio-emphasis','home-audio-description','home-audio-pill','home-closing-kicker']){
       const re=new RegExp(`(<(?:div|em|p)[^>]*\\bid="${id}"[^>]*>)[\\s\\S]*?(<\\/(?:div|em|p)>)`,'g');
       html=html.replace(re,(_full,start,end)=>start+'__AUDIO_DYNAMIQUE__'+end);

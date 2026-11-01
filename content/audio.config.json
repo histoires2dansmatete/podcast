@@ -44,7 +44,9 @@
     },
     "les-aventures-de-perly-et-popette": {
       "src": "",
-      "platforms": {}
+      "platforms": {
+        "spotify": "https://open.spotify.com/episode/34ezyGkUFvqDksfgoe2ARQ?si=PoRVvzOPTWmEj5Bjt1dHOw"
+      }
     },
     "la-disparition": {
       "src": "",

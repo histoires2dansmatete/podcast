@@ -2,7 +2,7 @@
 
 ## Présentation
 
-La page `/noel/` présente **une histoire de Noël en 25 parties**. Elle ouvre chaque année **du 25 novembre à 00 h 00 au 26 décembre à 23 h 59, heure de Paris** (dates incluses). En dehors de cette période, Cloudflare Pages renvoie **404** pour la page et pour les MP3 locaux placés dans `assets/audio/noel/` : le blocage est exécuté dans `functions/_middleware.js`, pas seulement par JavaScript.
+La page `/noel/` présente **une histoire de Noël en 25 parties**. Les dates d’ouverture et de fermeture sont maintenant **configurables dans `content/noel.config.json`**, avec le fuseau horaire Europe/Paris (dates incluses). Par défaut, elle ouvre du 25 novembre au 26 décembre. En dehors de cette période, Cloudflare Pages renvoie **404** pour la page et pour les MP3 locaux placés dans `assets/audio/noel/` : le blocage est exécuté dans `functions/_middleware.js`, pas seulement par JavaScript.
 
 - Du 25 au 30 novembre : page ouverte, toutes les cases fermées.
 - Du 1er au 25 décembre : ouverture progressive d'une case supplémentaire par jour.
@@ -33,7 +33,7 @@ Exemple de configuration (extrait du fichier) :
 
 Pour un MP3 local, placez **`introduction.mp3`** dans **`site/assets/audio/noel/`**, et configurez précisément `"src": "assets/audio/noel/introduction.mp3"`. Vous pouvez aussi renseigner une URL HTTPS directe, par exemple `"https://audio.example.org/noel/introduction.mp3"` si le fichier est hébergé sur R2 public. Les MP3 locaux ne doivent pas dépasser **25 Mio** chacun. Le build échoue si un fichier local référencé manque.
 
-L'introduction audio **n'est pas une 26ᵉ case** : elle est accessible pendant toute la période du calendrier, dès le 25 novembre. Comme les autres fichiers locaux de Noël, `introduction.mp3` est bloqué côté Cloudflare hors saison. En local, `?preview=1` permet de l'écouter à tout moment. Le lecteur ne démarre jamais automatiquement, et les lecteurs sont mis en pause lorsque l'on passe de l'introduction à une case.
+L'introduction audio **n'est pas une 26ᵉ case** : elle est accessible dès `schedule.calendarStart`, pendant toute la période du calendrier. Comme les autres fichiers locaux de Noël, `introduction.mp3` est bloqué côté Cloudflare hors saison. En local, `?preview=1` permet de l'écouter à tout moment. Le lecteur ne démarre jamais automatiquement, et les lecteurs sont mis en pause lorsque l'on passe de l'introduction à une case.
 
 La mention « Heure de Paris » a été retirée **du bandeau visible**. Le calendrier continue cependant à appliquer les dates selon `Europe/Paris` côté serveur.
 
@@ -105,3 +105,27 @@ Les styles s'adaptent aux trois paliers mobile/tablette/desktop et le statut cha
 Chaque entrée de `episodes` accepte maintenant `platformUrl` : une URL HTTPS de l’épisode sur Spotify, Apple Podcasts, Deezer ou une autre plateforme. Cette URL est **distincte** de `src`, l’adresse du MP3. Si les deux sont présents, la case déverrouillée propose le lecteur et le lien externe. L’introduction accepte également `platformUrl`.
 
 L’accueil dispose d’un teaser illustré configurable dans `content/carousel.config.json` (`christmasTeaser`). Il s’affiche seulement pendant l’ouverture de la page Noël, avec un aperçu local `/?noel-preview=1` hors saison. Voir `GUIDE-CONFIG-V14-5.md`.
+
+## V14.6 — Régler les dates d'affichage
+
+Ajoutez ou modifiez la rubrique `schedule` dans `content/noel.config.json` :
+
+```json
+"schedule": {
+  "teaserStart": "11-01",
+  "calendarStart": "11-25",
+  "firstEpisode": "12-01",
+  "calendarEnd": "12-26"
+}
+```
+
+- `teaserStart` : première date d'affichage de la couverture Noël dans le carrousel. Avant l'ouverture, elle annonce la date d'ouverture sans lien vers une page fermée.
+- `calendarStart` : première date d'accès à la page `/noel/` et à l'introduction audio.
+- `firstEpisode` : date à laquelle la case n° 1 est déverrouillée ; les 24 autres suivent à raison d'une par jour.
+- `calendarEnd` : dernier jour d'accès à la page et aux MP3 locaux.
+
+Les valeurs sont au format **`MM-JJ`** (`11-25` pour le 25 novembre) et se répètent **chaque année**. Les journées commencent et se terminent à minuit, fuseau `Europe/Paris`. Une saison peut traverser le 31 décembre (exemple : `calendarEnd: "01-20"`). Les dates impossibles, les saisons supérieures à 180 jours et une période trop courte pour les 25 épisodes sont refusées par `npm test` et `npm run build`.
+
+Lors de la mise à jour depuis V14.5, le correctif ne remplace **pas** `noel.config.json`. Lancez `npm run site:config:setup` : la commande ajoute les quatre dates par défaut seulement si la rubrique `schedule` est absente, sans changer vos MP3 ou vos titres. Vous pouvez ensuite les personnaliser et relancer `npm run build`.
+
+**Important :** le build publie aussi `data/noel-schedule.json`, utilisé par le contrôle d'accès Cloudflare. Ne modifiez pas ce fichier généré à la main. Déployez les changements sur GitHub pour que les dates en production soient actualisées. Les URL audio tierces restent publiquement accessibles chez leur fournisseur, même hors saison.

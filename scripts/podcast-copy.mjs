@@ -11,9 +11,6 @@ export function applyPodcastCopy(html,stories,page){
  // C'est le modèle de page d'accueil qui porte les messages dynamiques.
  if(page==='index.html'){
   replaceInner(/(<em id="home-hero-audio-verb">)[\s\S]*?(<\/em>)/,'Et '+(ready?'aussi':'bientôt'));
-  replaceInner(/(<p class="hero-description">)[\s\S]*?(<\/p>)/,ready
-   ? `Vous les avez aimées à lire. Vous pouvez aussi en écouter certaines ! Les histoires de <strong>« Dans ma tête »</strong> sont réunies ici avec leurs ${stories.length} textes intégraux et ${count} épisode${plural} audio.`
-   :`Vous les avez aimées à lire. Vous allez adorer les écouter ! Les histoires de <strong>« Dans ma tête »</strong> sont désormais réunies ici, avec leurs ${stories.length} textes intégraux et, bientôt, leur version audio.`);
   replaceInner(/(<div class="section-kicker" id="home-audio-kicker">)[\s\S]*?(<\/div>)/,`<span aria-hidden="true">✶</span> ${ready?'DES HISTOIRES À ÉCOUTER':'BIENTÔT DANS VOS ÉCOUTEURS'}`);
   replaceInner(/(<em id="home-audio-emphasis">)[\s\S]*?(<\/em>)/,ready?'la magie est là !':'la magie arrive !');
   replaceInner(/(<p id="home-audio-description">)[\s\S]*?(<\/p>)/,ready

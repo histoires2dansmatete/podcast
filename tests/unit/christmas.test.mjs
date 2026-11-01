@@ -35,7 +35,7 @@ test('Les deux variantes d’URL du calendrier et les MP3 numérotés sont prot�
 
 test('Middleware Pages : refuse la page hors saison avant la lecture D1',async()=>{
  const fn=await readFile('functions/_middleware.js','utf8');
- assert.ok(fn.indexOf('if(seasonalAccess!==null)')<fn.indexOf('disabledStories(context.env,allStories)'));
+ assert.ok(fn.indexOf('if(christmasAccess(path)!==null)')<fn.indexOf('disabledStories(context.env,allStories)'));
  assert.match(fn,/return christmasHeaders\(await context.next\(\)\)/);
  assert.match(fn,/return christmasDenied\(\)/);
  assert.equal(christmasAccess('/noel/',utc('2026-10-19T18:00:00Z')),false);
@@ -68,7 +68,8 @@ test('Génération sécurisée de 25 portes, initialement fermées, et lecteurs 
  assert.equal((html.match(/class="christmas-door"/g)||[]).length,25);
  assert.equal((html.match(/disabled aria-label="Case/g)||[]).length,25);
  assert.match(html,/data-day="25"/);
- assert.doesNotMatch(html,/<audio\b/);
+ assert.doesNotMatch(html,/class="christmas-player"[^>]*>[\s\S]*?<audio\b/);
+ // L'introduction peut déjà disposer de son propre MP3 configuré.
  assert.match(html,/content="noindex,nofollow"/);
  const attack=structuredClone(cfg);attack.episodes[0].title='</script><img src=x onerror=alert(1)>';
  const safe=await christmasHtml(attack,tpl);
@@ -122,8 +123,10 @@ test('La préface apparaît sous le hero, sans mention du fuseau dans le texte v
  const intro=html.indexOf('class="christmas-prologue"');
  const calendar=html.indexOf('class="christmas-calendar"');
  assert.ok(hero>=0&&intro>hero&&calendar>intro);
- assert.match(html,/id="christmas-prologue-title">Avant d’ouvrir la première porte/);
- assert.match(html,/class="christmas-prologue-placeholder"/);
+ assert.ok(html.includes('id="christmas-prologue-title"'));
+ // Forcer un cas sans audio ni plateforme, quelle que soit la configuration de l'éditeur.
+ const withoutAudio=structuredClone(cfg);withoutAudio.introduction.src='';withoutAudio.introduction.platformUrl='';
+ assert.match(await christmasHtml(withoutAudio,tpl),/class="christmas-prologue-placeholder"/);
  assert.doesNotMatch(html,/Heure de Paris|heure de Paris/);
  assert.equal((html.match(/class="christmas-door"/g)||[]).length,25);
 });

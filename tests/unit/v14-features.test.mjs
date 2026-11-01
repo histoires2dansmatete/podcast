@@ -10,7 +10,7 @@ test('L’accueil suit le nombre de podcasts et revient à zéro sans dérive ap
  let html=await readFile('site/index.html','utf8');
  const empty=applyPodcastCopy(html,[story],'index.html');
  const ready=applyPodcastCopy(empty,[{...story,audioUrl:'https://cdn.example.org/podcast.mp3'}],'index.html');
- assert.match(ready,/Et aussi<\/em>/);assert.match(ready,/1 épisode audio/);assert.match(ready,/la magie est là/);
+ assert.match(ready,/Et aussi<\/em>/);assert.match(ready,/la magie est là/);
  assert.equal(normalizeRegressionContent('site/index.html',empty),normalizeRegressionContent('site/index.html',ready));
  const reverted=applyPodcastCopy(ready,[story],'index.html');
  assert.match(reverted,/Et bientôt<\/em>/);assert.match(reverted,/Le podcast est en préparation/);

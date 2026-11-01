@@ -11,7 +11,7 @@ const temp=await mkdtemp(join(tmpdir(),'h2-publish-'));
 const slug='verification-histoire-test';
 const run=(script,...args)=>execFileSync(process.execPath,[`scripts/${script}`,...args],{cwd:temp,encoding:'utf8',stdio:['ignore','pipe','pipe']});
 try{
- for(const part of ['scripts','site','content'])await cp(join(origin,part),join(temp,part),{recursive:true});
+ for(const part of ['scripts','site','content','functions'])await cp(join(origin,part),join(temp,part),{recursive:true});
  run('new-story.mjs','--title','Vérification histoire test');
  const metaPath=join(temp,`content/stories/${slug}.json`);
  const story=JSON.parse(await readFile(metaPath,'utf8'));

@@ -8,7 +8,7 @@ import {readFile as readSecrets} from 'node:fs/promises';
 // Variables locales uniquement ; jamais exposées dans le site ni dans dist/.
 try {const raw=await readSecrets('.env.local','utf8');for(const line of raw.split(/\r?\n/)){const m=line.match(/^([A-Z_]+)=(.*)$/);if(m&&!(m[1] in process.env))process.env[m[1]]=m[2];}}catch(e){if(e.code!=='ENOENT')throw e;}
 import {handleLocalRoute} from './local-admin.mjs';
-import {christmasAccess} from '../functions/_lib/christmas.js';
+import {christmasAccess,validateChristmasSchedule} from '../functions/_lib/christmas.js';
 import {localChristmasPreview} from './christmas-local-preview.mjs';
 import { watch } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
@@ -59,8 +59,17 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(400); res.end('Adresse invalide'); return;
   }
 
-  const christmasDecision=christmasAccess(pathname);
+  let christmasDecision=christmasAccess(pathname);
   if(christmasDecision!==null){
+    try {
+      const schedule=validateChristmasSchedule(JSON.parse(await readFile(resolve(root,'data/noel-schedule.json'),'utf8')));
+      christmasDecision=christmasAccess(pathname,new Date(),schedule);
+    } catch(error) {
+      console.error('Configuration calendrier :',error.message);
+      res.writeHead(503,{'Cache-Control':'no-store','Content-Type':'text/plain; charset=utf-8'});
+      res.end('Configuration calendrier indisponible. Relancez npm run dev ou npm run build.');
+      return;
+    }
     const localPreview=localChristmasPreview(requestUrl,{hostname:host,enabled:process.env.CHRISTMAS_PREVIEW==='1'});
     if(!localPreview&&!christmasDecision){
       res.writeHead(404,{'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow','Content-Type':'text/plain; charset=utf-8'});

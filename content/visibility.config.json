@@ -1,18 +1,18 @@
 {
   "description": "true = visible par défaut, false = masquée ; les choix enregistrés dans /admin/ priment via D1.",
   "stories": {
-    "bas-les-masques": true,
-    "les-aventures-de-perly-et-popette-4": true,
-    "les-mysteres-de-la-rue-station": true,
-    "salade-de-trefles": true,
-    "les-aventures-de-perly-et-popette-3": true,
-    "libres": true,
-    "petit-ourson-deviendra-grand": true,
-    "les-aventures-de-perly-et-popette-2": true,
-    "herissonne-de-paques": true,
-    "flemme": true,
+    "bas-les-masques": false,
+    "les-aventures-de-perly-et-popette-4": false,
+    "les-mysteres-de-la-rue-station": false,
+    "salade-de-trefles": false,
+    "les-aventures-de-perly-et-popette-3": false,
+    "libres": false,
+    "petit-ourson-deviendra-grand": false,
+    "les-aventures-de-perly-et-popette-2": false,
+    "herissonne-de-paques": false,
+    "flemme": false,
     "les-aventures-de-perly-et-popette": true,
-    "la-disparition": true,
-    "lamitie-comme-sur-des-roulettes": true
+    "la-disparition": false,
+    "lamitie-comme-sur-des-roulettes": false
   }
 }

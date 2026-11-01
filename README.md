@@ -428,3 +428,20 @@ La configuration de l'accueil et de la page **Où écouter ?** se trouve désorm
 La visibilité initiale des histoires se règle dans `content/visibility.config.json`. Les changements faits depuis `/admin/` sont conservés dans D1 et **priment** sur les valeurs du fichier. Le serveur filtre aussi les pages directes, le catalogue, le RSS et le sitemap. Aucun changement de schéma D1 n'est requis.
 
 Le teaser Noël du carrousel est réglé dans `content/carousel.config.json` (`christmasTeaser`) et les liens par épisode de Noël dans `content/noel.config.json` (`platformUrl`). Les fichiers audio ne sont pas inclus. Pour appliquer un **correctif** sur un projet déjà personnalisé, lancez d'abord `npm run site:config:setup`, puis `npm test` ; cette migration conserve les anciens liens, MP3 et préférences. Voir **`GUIDE-CONFIG-V14-5.md`**.
+
+## V14.6 — Dates du calendrier de Noël configurables
+
+La période du teaser, les dates d'ouverture et de fermeture du calendrier et le début des 25 épisodes se règlent désormais uniquement dans **`content/noel.config.json`**, rubrique `schedule` :
+
+```json
+"schedule": {
+  "teaserStart": "11-01",
+  "calendarStart": "11-25",
+  "firstEpisode": "12-01",
+  "calendarEnd": "12-26"
+}
+```
+
+Format `MM-JJ`, reconduit chaque année, fuseau Europe/Paris. La première partie est disponible le jour indiqué par `firstEpisode`, puis les suivantes quotidiennement. Le calendrier et les MP3 locaux sont protégés côté Cloudflare entre `calendarStart` et `calendarEnd`. Le teaser apparaît à partir de `teaserStart`.
+
+**Installation par correctif** : `npm run site:config:setup` (ajoute uniquement les dates absentes, sans écraser la configuration Noël), puis `npm test && npm run dev`. Après modification du JSON, relancer `npm run build` pour synchroniser l'accueil, la page et le contrôle saisonnier serveur. Voir `GUIDE-NOEL-V14-4.md`.

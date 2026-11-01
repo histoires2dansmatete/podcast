@@ -2,6 +2,7 @@
 import {readFile} from 'node:fs/promises';
 import {escapeHtml} from './stories.mjs';
 import {isLocalImagePath} from './local-image-path.mjs';
+import {validateChristmasSchedule,DEFAULT_CHRISTMAS_SCHEDULE,christmasOpenLabel} from '../functions/_lib/christmas.js';
 
 const slugPattern=/^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const colorPattern=/^#[0-9a-fA-F]{6}$/;
@@ -39,8 +40,9 @@ export function validateCarouselConfig(config,stories){
 }
 
 const text=v=>escapeHtml(v);
-export function renderCarousel(config,stories){
+export function renderCarousel(config,stories,schedule=DEFAULT_CHRISTMAS_SCHEDULE){
   validateCarouselConfig(config,stories);
+  schedule=validateChristmasSchedule(schedule);
   const bySlug=new Map(stories.map(s=>[s.slug,s]));
   const cards=config.stories.map((entry,index)=>{
     const s=bySlug.get(entry.slug);
@@ -61,19 +63,19 @@ export function renderCarousel(config,stories){
   if(config.christmasTeaser?.enabled){
    const e=config.christmasTeaser;
    const image=text(e.image),label=text(e.label);
-   const teaser=`<div class="cover-card cover-card-stacked cover-card-christmas" data-special="noel" data-cover="${e.position-1}" data-podcast-status="christmas" hidden style="--cover-color:${e.color};"><a class="christmas-cover-link" aria-disabled="true" aria-label="Découvrir le calendrier de Noël"><img class="christmas-cover-image" src="${image}" alt="${label}" loading="lazy" decoding="async" width="720" height="900"><span class="christmas-cover-cta">Ouverture le 25 novembre</span></a></div>`;
+   const teaser=`<div class="cover-card cover-card-stacked cover-card-christmas" data-special="noel" data-cover="${e.position-1}" data-podcast-status="christmas" data-teaser-start="${schedule.teaserStart}" data-calendar-start="${schedule.calendarStart}" data-first-episode="${schedule.firstEpisode}" data-calendar-end="${schedule.calendarEnd}" data-opening-label="${christmasOpenLabel(schedule)}" hidden style="--cover-color:${e.color};"><a class="christmas-cover-link" aria-disabled="true" aria-label="Découvrir le calendrier de Noël"><img class="christmas-cover-image" src="${image}" alt="${label}" loading="lazy" decoding="async" width="720" height="900"><span class="christmas-cover-cta">Ouverture le ${christmasOpenLabel(schedule)}</span></a></div>`;
    cards.splice(e.position-1,0,teaser);
   }
   return cards.map((card,index)=>card.replace(/data-cover="\d+"/,`data-cover="${index}"`)).join('\n');
 }
 
 /** Entre deux marqueurs stables : aucun doublon après une seconde génération. */
-export function insertCarousel(html,config,stories){
+export function insertCarousel(html,config,stories,schedule=DEFAULT_CHRISTMAS_SCHEDULE){
  const start='<!-- CAROUSEL-START -->',end='<!-- CAROUSEL-END -->';
  const a=html.indexOf(start),b=html.indexOf(end);
  if(a<0||b<a||html.indexOf(start,a+1)!==-1||html.indexOf(end,b+1)!==-1)throw Error('Carrousel : marqueurs HTML absents ou dupliqués');
  const first=isPodcastAvailable(stories.find(s=>s.slug===config.stories[0].slug));
- const markup=renderCarousel(config,stories);
+ const markup=renderCarousel(config,stories,schedule);
  let result=html.slice(0,a+start.length)+'\n'+markup+'\n'+html.slice(b);
  result=result.replace(/(<div\s+aria-label=")[^"]*("\s+class="floating-sticker")/g,`$1${first?'Un podcast est disponible':'Le podcast arrive bientôt'}$2`);
  result=result.replace(/(<div[^>]*class="floating-sticker")(?: data-status="(?:available|upcoming)")?(?=[^>]*>)/,`$1 data-status="${first?'available':'upcoming'}"`);
@@ -85,5 +87,6 @@ export function insertCarousel(html,config,stories){
 
 export async function generateCarousel(html,stories,filename='content/carousel.config.json'){
  const config=JSON.parse(await readFile(filename,'utf8'));
- return insertCarousel(html,config,stories);
+ const christmasConfig=JSON.parse(await readFile('content/noel.config.json','utf8'));
+ return insertCarousel(html,config,stories,christmasConfig.schedule||DEFAULT_CHRISTMAS_SCHEDULE);
 }

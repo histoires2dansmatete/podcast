@@ -8,19 +8,31 @@
  const panel=document.getElementById('christmas-player');
  const content=document.getElementById('christmas-player-content');
  const close=document.getElementById('christmas-close');
- const monthAndDay=()=>{
-  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
-  return {month:Number(parts.find(x=>x.type==='month').value),day:Number(parts.find(x=>x.type==='day').value)};
- };
+ const schedule=data.schedule||{teaserStart:'11-01',calendarStart:'11-25',firstEpisode:'12-01',calendarEnd:'12-26'};
+ const DAY=86400000;
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const value=type=>Number(parts.find(p=>p.type===type)?.value);
+ const year=value('year'),today=Date.UTC(year,value('month')-1,value('day'));
+ const stamp=(y,md)=>Date.UTC(y,Number(md.slice(0,2))-1,Number(md.slice(3)));
+ const next=(y,md,after)=>{let d=stamp(y,md);if(d<after)d=stamp(y+1,md);return d;};
+ let opening=null,firstEpisode=null,unlocked=0;
+ for(const y of [year-1,year]){
+  const teaser=stamp(y,schedule.teaserStart),start=next(y,schedule.calendarStart,teaser),first=next(y,schedule.firstEpisode,start),end=next(y,schedule.calendarEnd,first);
+  if(today>=start&&today<=end){opening=start;firstEpisode=first;unlocked=today>=first?Math.min(25,Math.floor((today-first)/DAY)+1):0;break;}
+ }
  const localPreview=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&new URLSearchParams(location.search).get('preview')==='1';
+ if(localPreview)unlocked=25;
+ const episodeLabel=n=>{
+  // Ancre stable, même pendant un aperçu local hors saison.
+  const first=firstEpisode??next(year,schedule.firstEpisode,next(year,schedule.calendarStart,stamp(year,schedule.teaserStart)));
+  return new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(first+(n-1)*DAY));
+ };
  const introductionAudio=document.getElementById('christmas-intro-audio');
  if(introductionAudio){
   const source=introductionAudio.dataset.src;
   if(source)introductionAudio.src=source.startsWith('https://')?source:'/'+source+(localPreview?'?preview=1':'');
   introductionAudio.addEventListener('play',()=>content.querySelector('audio')?.pause());
  }
- const {month,day}=monthAndDay();
- const unlocked=localPreview?25:(month===12&&day<=26?Math.min(day,25):0);
  const opened=new Set();
  const episodes=new Map(data.episodes.map(e=>[e.day,e]));
  const closePanel=()=>{content.querySelector('audio')?.pause();content.replaceChildren();panel.hidden=true;};
@@ -31,7 +43,7 @@
   button.classList.toggle('is-unlocked',allowed);
   button.classList.toggle('is-locked',!allowed);
   button.querySelector('.door-caption').textContent=allowed?'Ouvrir la case':'Bientôt…';
-  button.setAttribute('aria-label',allowed?`Ouvrir la case ${n}`:`Case ${n}, disponible le ${n} décembre`);
+  button.setAttribute('aria-label',allowed?`Ouvrir la case ${n}`:`Case ${n}, disponible le ${episodeLabel(n)}`);
   button.addEventListener('click',()=>{
    if(!allowed)return;
    closePanel();
@@ -50,5 +62,5 @@
    panel.hidden=false;panel.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});
   });
  });
- status.textContent=localPreview?'Mode aperçu local : les 25 cases sont ouvertes.':unlocked===0?'Les portes sont en place ! La première s’ouvrira le 1er décembre.':unlocked===25?'Les 25 cases sont ouvertes ! Vous pouvez écouter toute l’histoire.':`${unlocked} case${unlocked>1?'s':''} ouverte${unlocked>1?'s':''} sur 25. Revenez demain pour la suite !`;
+ status.textContent=localPreview?'Mode aperçu local : les 25 cases sont ouvertes.':unlocked===0?`Les portes sont en place ! La première s’ouvrira le ${episodeLabel(1)}.`:unlocked===25?'Les 25 cases sont ouvertes ! Vous pouvez écouter toute l’histoire.':`${unlocked} case${unlocked>1?'s':''} ouverte${unlocked>1?'s':''} sur 25. Revenez demain pour la suite !`;
 })();

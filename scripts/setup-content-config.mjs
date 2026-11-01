@@ -1,6 +1,7 @@
 /** Migration éditoriale V14.5, additive et idempotente : ne remplace jamais une valeur. */
 import {readFile,writeFile} from 'node:fs/promises';
 import vm from 'node:vm';
+import {DEFAULT_CHRISTMAS_SCHEDULE} from '../functions/_lib/christmas.js';
 const read=async file=>{try{return JSON.parse(await readFile(file,'utf8'))}catch(error){if(error.code==='ENOENT')return null;throw error;}};
 const save=(file,data)=>writeFile(file,JSON.stringify(data,null,2)+'\n');
 const old=await read('content/platforms.config.json');
@@ -31,7 +32,8 @@ if(!('christmasTeaser' in carousel)){
 const noel=await read('content/noel.config.json');
 if(!noel)throw Error('content/noel.config.json introuvable');
 let changed=false;
+if(!Object.hasOwn(noel,'schedule')){noel.schedule={...DEFAULT_CHRISTMAS_SCHEDULE};changed=true;}
 if(noel.introduction&&!('platformUrl' in noel.introduction)){noel.introduction.platformUrl='';changed=true;}
 for(const episode of noel.episodes||[])if(!('platformUrl' in episode)){episode.platformUrl='';changed=true;}
-if(changed){await save('content/noel.config.json',noel);console.log('✓ Liens de plateformes ajoutés aux 25 cases sans écraser les MP3.');}
+if(changed){await save('content/noel.config.json',noel);console.log('✓ Configuration Noël enrichie sans écraser les titres, liens et MP3.');}
 else console.log('✓ Configuration Noël préservée.');

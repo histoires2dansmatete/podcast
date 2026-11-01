@@ -53,7 +53,7 @@ test('Le teaser saisonnier possède une vraie image locale et reste masqué hors
  const file=await readFile('site/assets/images/noel-teaser.svg','utf8');assert.match(file,/<svg/);
  assert.throws(()=>validateCarouselConfig({...c,christmasTeaser:{...c.christmasTeaser,image:'../../secret.svg'}},stories),/image locale/);
  assert.throws(()=>validateCarouselConfig({...c,christmasTeaser:{...c.christmasTeaser,position:8}},stories),/position/);
- const javascript=await readFile('site/assets/main.js','utf8');assert.match(javascript,/christmasCover\.hidden/);assert.match(javascript,/month===11/);assert.match(javascript,/Ouverture le 25 novembre/);
+ const javascript=await readFile('site/assets/main.js','utf8');assert.match(javascript,/christmasCover\.hidden/);assert.match(javascript,/schedule\.teaserStart/);assert.match(javascript,/dataset\.openingLabel/);
 });
 
 test('Noël : chaque case peut proposer son MP3 et un lien HTTPS vers un épisode',async()=>{

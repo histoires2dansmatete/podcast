@@ -1,13 +1,24 @@
-import {christmasAccess,christmasDenied,christmasHeaders} from './_lib/christmas.js';
+import {christmasAccess,christmasDenied,christmasHeaders,validateChristmasSchedule} from './_lib/christmas.js';
 import {disabledStories,publicStories,removeXmlItems,isStoryPath,statesHeaders} from './_lib/story-state.js';
 import {loadAudioOverrides,mergeAudio} from './_lib/audio-overrides.js';
 const unavailable=()=>new Response('Bibliothèque temporairement indisponible : base de données non configurée.',{status:503,headers:{...statesHeaders,'Content-Type':'text/plain; charset=utf-8','X-Robots-Tag':'noindex'}});
 /** Cloudflare Pages : toute publication est filtrée côté serveur, même si on connaît l'URL. */
 export async function onRequest(context){
  const path=new URL(context.request.url).pathname;
- const seasonalAccess=christmasAccess(path);
- if(seasonalAccess!==null){
-  if(!seasonalAccess)return christmasDenied();
+ // La configuration servie est celle du même build que la page et les MP3.
+ // En cas de configuration absente/invalide, accès refusé (jamais fail-open).
+ if(christmasAccess(path)!==null){
+  let schedule;
+  try {
+   const url=new URL('/data/noel-schedule.json',context.request.url);
+   const res=await context.env.ASSETS.fetch(new Request(url));
+   if(!res.ok)throw Error('Calendrier : configuration absente');
+   schedule=validateChristmasSchedule(await res.json());
+  } catch(error) {
+   console.error('Calendrier :',error.message);
+   return new Response('Calendrier temporairement indisponible.',{status:503,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'}});
+  }
+  if(!christmasAccess(path,new Date(),schedule))return christmasDenied();
   return christmasHeaders(await context.next());
  }
  const storySlug=isStoryPath(path);

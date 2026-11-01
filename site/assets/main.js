@@ -82,21 +82,28 @@
   const year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
 
-  // Teaser : visible dès novembre, mais la destination /noel/ ne s'ouvre
-  // que du 25 novembre au 26 décembre. Pas de lien menant à une page 404.
+  // Affichage du teaser synchronisé avec les dates du calendrier configuré.
   const christmasCover=document.querySelector('.cover-card[data-special="noel"]');
   if(christmasCover){
-    const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
-    const month=Number(parts.find(p=>p.type==='month')?.value),day=Number(parts.find(p=>p.type==='day')?.value);
-    const open=(month===11&&day>=25)||(month===12&&day<=26);
+    const schedule={teaserStart:christmasCover.dataset.teaserStart,calendarStart:christmasCover.dataset.calendarStart,firstEpisode:christmasCover.dataset.firstEpisode,calendarEnd:christmasCover.dataset.calendarEnd};
+    const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const value=type=>Number(parts.find(p=>p.type===type)?.value);
+    const year=value('year'),today=Date.UTC(year,value('month')-1,value('day'));
+    const stamp=(y,md)=>Date.UTC(y,Number(md.slice(0,2))-1,Number(md.slice(3)));
+    const next=(y,md,previous)=>{let d=stamp(y,md);if(d<previous)d=stamp(y+1,md);return d;};
+    let visible=false,open=false;
+    for(const y of [year-1,year]){
+      const teaser=stamp(y,schedule.teaserStart),start=next(y,schedule.calendarStart,teaser),first=next(y,schedule.firstEpisode,start),end=next(y,schedule.calendarEnd,first);
+      if(today>=teaser&&today<=end){visible=true;open=today>=start;break;}
+    }
     const preview=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&new URLSearchParams(location.search).has('noel-preview');
-    christmasCover.hidden=!((month===11||(month===12&&day<=26))||preview);
+    christmasCover.hidden=!(visible||preview);
     const link=christmasCover.querySelector('a'),caption=christmasCover.querySelector('.christmas-cover-cta');
     if(link){
       if(open||preview){link.href=preview?'/noel/?preview=1':'/noel/';link.removeAttribute('aria-disabled');}
       else {link.removeAttribute('href');link.setAttribute('aria-disabled','true');}
     }
-    if(caption)caption.textContent=open||preview?'Découvrir les 25 cases ↗':'Ouverture le 25 novembre';
+    if(caption)caption.textContent=open||preview?'Découvrir les 25 cases ↗':`Ouverture le ${christmasCover.dataset.openingLabel}`;
   }
   // Les couvertures retirées de publication ne doivent plus figurer sur l'accueil.
   const coverNodes = [...document.querySelectorAll('.cover-card[data-story-slug]')];
