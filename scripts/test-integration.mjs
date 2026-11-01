@@ -2,18 +2,29 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {randomBytes} from 'node:crypto';
-import {readFile,rm} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,rm} from 'node:fs/promises';
 import {createServer} from 'node:net';
 import {request as httpRequest} from 'node:http';
 import {onRequest} from '../functions/_middleware.js';
 import {onRequestGet as adminStories} from '../functions/api/admin/stories.js';
 import {passwordHash} from '../functions/_lib/access.js';
 const catalogue=JSON.parse(await readFile('site/data/histoires.json','utf8'));
-const slug=catalogue[0].slug;
+// Ne pas supposer que la première histoire du catalogue est publiée :
+// content/visibility.config.json peut masquer n'importe quelle fiche.
+const publicByDefault=catalogue.filter(story=>story.visibleByDefault!==false);
+const slug=publicByDefault[0]?.slug??catalogue[0]?.slug;
+assert.ok(slug,'Le test HTTP attend au moins une histoire dans le catalogue.');
+const isVisibleByDefault=publicByDefault.some(story=>story.slug===slug);
+// Un site peut légalement masquer toutes ses histoires ; créer un override
+// de publication uniquement dans l'environnement de test si nécessaire.
+const publicCountWithFixture=publicByDefault.length+(isVisibleByDefault?0:1);
 function mockEnv(disabled,audio=new Map()){return {
  ANALYTICS_DB:{prepare(query){return {async all(){
   if(query.includes('story_audio_overrides'))return {results:[...audio].map(([slug,v])=>({slug,audio_url:v.src,platforms_json:JSON.stringify(v.platforms)}))};
-  assert.match(query,/story_states/);return {results:[...disabled].map(slug=>({slug,enabled:0}))};}}}},
+  assert.match(query,/story_states/);
+  const rows=[...disabled].map(slug=>({slug,enabled:0}));
+  if(!isVisibleByDefault&&!disabled.has(slug))rows.push({slug,enabled:1});
+  return {results:rows};}}}},
  ASSETS:{async fetch(request){const pathname=new URL(request.url).pathname;const name=pathname==='/data/histoires.json'?'site/data/histoires.json':pathname==='/sitemap.xml'?'site/sitemap.xml':'site/histoires.xml';return new Response(await readFile(name),{status:200});}}
 };}
 async function cloud(path,disabled,env=mockEnv(disabled)){return onRequest({request:new Request('https://histoires2dansmatete.fr'+path),env,next:async()=>new Response('STATIC',{status:200})});}
@@ -21,7 +32,7 @@ const off=new Set([slug]);
 assert.equal((await cloud(`/histoires/${slug}/`,off)).status,404);
 assert.equal((await cloud(`/histoires/${slug}/index.html`,off)).status,404);
 assert.equal((await cloud(`/histoires/${slug}/`,new Set())).status,200);
-assert.equal((await (await cloud('/data/histoires.json',off)).json()).length,catalogue.length-1);
+assert.equal((await (await cloud('/data/histoires.json',off)).json()).length,publicCountWithFixture-1);
 const publishedWithAudio=mockEnv(new Set(),new Map([[slug,{src:'https://cdn.example.org/episode.mp3',platforms:{spotify:'https://open.spotify.com/episode/123'}}]]));
 const liveStories=await (await cloud('/data/histoires.json',new Set(),publishedWithAudio)).json();
 assert.equal(liveStories.find(s=>s.slug===slug).audioUrl,'https://cdn.example.org/episode.mp3','Une mise à jour D1 rend le MP3 disponible sans build');
@@ -31,7 +42,9 @@ assert.ok(!(await (await cloud('/histoires.xml',off)).text()).includes(`/histoir
 assert.equal((await cloud(`/histoires/${slug}/`,new Set(),{})).status,503);
 assert.equal((await adminStories({env:mockEnv(off),request:new Request('https://histoires2dansmatete.fr/api/admin/stories')})).status,503);
 console.log('✓ Cloudflare : pages masquées protégées, sitemap/flux/catalogue filtrés, D1 obligatoire.');
-const stateFile='.local/test-story-states.json',audioFile='.local/test-audio-overrides.json';await rm(stateFile,{force:true});await rm(audioFile,{force:true});
+const stateFile='.local/test-story-states.json',audioFile='.local/test-audio-overrides.json';
+await rm(stateFile,{force:true});await rm(audioFile,{force:true});
+if(!isVisibleByDefault){await mkdir('.local',{recursive:true});await writeFile(stateFile,JSON.stringify({[slug]:true}));}
 const temporary=createServer();await new Promise(r=>temporary.listen(0,'127.0.0.1',r));const port=temporary.address().port;await new Promise(r=>temporary.close(r));
 const password='unMotDePasseFort!2026';
 const server=spawn(process.execPath,['scripts/server.mjs'],{env:{...process.env,PORT:String(port),LOCAL_STATE_FILE:stateFile,LOCAL_AUDIO_FILE:audioFile,ADMIN_PASSWORD_HASH:await passwordHash(password),ADMIN_SESSION_SECRET:randomBytes(32).toString('base64url')},stdio:['ignore','pipe','pipe']});
@@ -99,7 +112,7 @@ try{
  assert.equal((await toggle(false,cookie,'https://evil.example')).status,403);
  assert.equal((await toggle(false)).status,200);
  assert.equal((await fetch(url+'/histoires/'+slug+'/')).status,404);
- assert.equal((await (await fetch(url+'/data/histoires.json')).json()).length,12);
+ assert.equal((await (await fetch(url+'/data/histoires.json')).json()).length,publicCountWithFixture-1);
  assert.ok(!(await (await fetch(url+'/sitemap.xml')).text()).includes(`/histoires/${slug}/`));
  assert.equal((await toggle(true)).status,200);
  assert.equal((await fetch(url+'/histoires/'+slug+'/')).status,200);
