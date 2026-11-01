@@ -11,7 +11,7 @@
   "christmasTeaser": {
     "enabled": true,
     "position": 2,
-    "image": "assets/images/noel-teaser.svg",
+    "image": "assets/images/sacha.png",
     "label": "Le calendrier de Noël",
     "color": "#285047"
   }
