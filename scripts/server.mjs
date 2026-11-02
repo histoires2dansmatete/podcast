@@ -10,6 +10,8 @@ try {const raw=await readSecrets('.env.local','utf8');for(const line of raw.spli
 import {handleLocalRoute} from './local-admin.mjs';
 import {christmasAccess,validateChristmasSchedule} from '../functions/_lib/christmas.js';
 import {localChristmasPreview} from './christmas-local-preview.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { watch } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
@@ -130,6 +132,28 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(500); res.end('Erreur de lecture');
   }
 });
+
+// Une date modifiée dans content/noel.config.json est répercutée dans les pages
+// et la protection HTTP locale, sans redémarrer le serveur de développement.
+// En production, la configuration ne change qu'après nouveau build/déploiement.
+if(!preview){
+  const runNode=promisify(execFile);
+  let pendingChristmas, regenerating=Promise.resolve();
+  try{
+    watch('content',(_event,filename)=>{
+      if(filename && filename!=='noel.config.json')return;
+      clearTimeout(pendingChristmas);
+      pendingChristmas=setTimeout(()=>{
+        regenerating=regenerating.then(async()=>{
+          try{
+            await runNode(process.execPath,['scripts/generate.mjs'],{cwd:process.cwd(),timeout:40000});
+            console.log('✓ Configuration Noël actualisée, calendrier et carrousel synchronisés.');
+          }catch(error){console.error('Calendrier non actualisé :',error.stderr?.trim()||error.message);}
+        });
+      },350);
+    });
+  }catch(error){console.warn('Surveillance du calendrier indisponible :',error.message);}
+}
 
 if (!preview) {
   let pending;

@@ -104,4 +104,15 @@ export async function writeChristmas(){
  await mkdir('site/noel',{recursive:true});
  await writeFile('site/noel/index.html',await christmasHtml(cfg,template));
  await writeFile('site/data/noel-schedule.json',JSON.stringify(validateChristmasSchedule(cfg.schedule||DEFAULT_CHRISTMAS_SCHEDULE),null,2)+'\n');
+ // Métadonnées publiques de la vignette Noël : pas de titres ou liens audio des cases fermées.
+ // La décision d'ouverture reste calculée en direct (Europe/Paris) côté navigateur et serveur.
+ const carousel=JSON.parse(await readFile('content/carousel.config.json','utf8'));
+ const teaser=carousel.christmasTeaser;
+ const image=teaser?.enabled ? teaser.image : 'assets/images/noel-teaser.svg';
+ const schedule=validateChristmasSchedule(cfg.schedule||DEFAULT_CHRISTMAS_SCHEDULE);
+ const podcastAvailable=Boolean(cfg.introduction?.src||cfg.introduction?.platformUrl||cfg.episodes.some(entry=>entry.src||entry.platformUrl));
+ await writeFile('site/data/noel-promo.json',JSON.stringify({
+  title:cfg.title,subtitle:cfg.subtitle,description:cfg.intro,
+  image,hasPodcast:podcastAvailable,schedule
+ },null,2)+'\n');
 }

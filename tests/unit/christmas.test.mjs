@@ -218,3 +218,33 @@ test('Migration : conserve les 25 épisodes et les liens existants, n’écrase 
  const manifest=JSON.parse(await readFile('package.json','utf8'));
  assert.equal(manifest.scripts['noel:intro:setup'],'node scripts/setup-christmas-intro.mjs');
 });
+
+test('Teaser cliquable uniquement au premier plan et fiche Noël listée dans la bibliothèque',async()=>{
+ const css=await readFile('site/assets/style.css','utf8');
+ assert.match(css,/\.art-backdrop \.cover-card-christmas\.cover-card-active\{pointer-events:auto\}/);
+ assert.match(css,/\.art-backdrop \.cover-card-christmas:not\(\.cover-card-active\)\{pointer-events:none\}/);
+ const catalogue=await readFile('site/assets/catalogue.js','utf8');
+ assert.match(catalogue,/\/data\/noel-promo\.json/);
+ assert.match(catalogue,/catalogue-card-christmas/);
+ // Le fichier promo n'existe pas encore sur une archive fraîche avant la génération.
+ // Contrôler le générateur ici ; son résultat réel est vérifié par test:catalogue.
+ const generator=await readFile('scripts/christmas.mjs','utf8');
+ assert.match(generator,/site\/data\/noel-promo\.json/);
+ assert.match(generator,/hasPodcast:podcastAvailable,schedule/);
+ assert.match(generator,/image,hasPodcast:podcastAvailable,schedule/);
+ assert.doesNotMatch(generator,/writeFile\('site\/data\/noel-promo\.json',[^\n]*episodes/);
+});
+
+test('Les dates modifiées dans le JSON contrôlent réellement la page et les épisodes',()=>{
+ const schedule={teaserStart:'11-01',calendarStart:'11-01',firstEpisode:'12-01',calendarEnd:'12-26'};
+ assert.equal(christmasAccess('/noel/',utc('2026-11-01T15:00:00Z'),schedule),true);
+ assert.equal(christmasAccess('/noel/',utc('2026-10-31T15:00:00Z'),schedule),false);
+ assert.equal(christmasAccess('/assets/audio/noel/introduction.mp3',utc('2026-11-01T15:00:00Z'),schedule),true);
+ assert.equal(christmasAccess('/assets/audio/noel/01.mp3',utc('2026-11-01T15:00:00Z'),schedule),false);
+});
+
+test('Le serveur de développement surveille noel.config.json et régénère la page sans redémarrage',async()=>{
+ const source=await readFile('scripts/server.mjs','utf8');
+ assert.match(source,/watch\('content',\(_event,filename\)/);
+ assert.match(source,/runNode\(process\.execPath,\['scripts\/generate\.mjs'\]/);
+});

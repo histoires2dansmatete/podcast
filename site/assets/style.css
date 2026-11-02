@@ -524,5 +524,18 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 .christmas-cover-cta{position:absolute;left:12px;right:12px;bottom:13px;padding:9px 12px;background:#f6ead2;color:#285047;text-align:center;border-radius:99px;font:700 12px/1.25 var(--sans);box-shadow:0 4px 16px #12282066}
 .christmas-cover-link:focus-visible{outline:4px solid #f2c47f;outline-offset:-8px}
 
+/* Seule la couverture de Noël au premier plan doit recevoir les clics. */
+.art-backdrop .cover-card-christmas.cover-card-active{pointer-events:auto}
+.art-backdrop .cover-card-christmas:not(.cover-card-active){pointer-events:none}
+.art-backdrop .cover-card-christmas.cover-card-active .christmas-cover-link:not([aria-disabled="true"]){cursor:pointer}
+
+/* Entrée saisonnière dans la bibliothèque, cohérente avec la couverture du carrousel. */
+.catalogue-card-christmas{border-color:#b9cbbf;background:#f9fbf5}
+.catalogue-card-christmas .story-image{background:#285047}
+.catalogue-card-christmas .story-image img{object-fit:cover}
+.catalogue-card-christmas .story-sticker{background:#285047;color:#fff9e9}
+.catalogue-card-christmas .catalogue-tag{color:#356254}
+.catalogue-card-christmas .story-link{color:#285047}
+
 .christmas-cover-link[aria-disabled="true"]{cursor:default}
 .christmas-cover-link[aria-disabled="true"] .christmas-cover-cta{background:#f1e5ce;color:#6a534b}

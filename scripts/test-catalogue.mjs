@@ -36,3 +36,34 @@ assert.equal(image(unsafe),undefined,'Les chemins relatifs dangereux doivent êt
 image(optimized).emit('error');
 assert.equal(image(optimized).src,'/assets/stories/bas-les-masques.svg','L’image de secours doit être utilisée après une erreur de chargement');
 console.log('✓ Catalogue navigateur : WebP optimized/, sous-dossiers, SVG et repli sûrs.');
+
+// La bibliothèque doit proposer l'histoire de Noël uniquement si la page est ouverte.
+const buildSeasonalContext=(iso,schedule,search='')=>{
+ const localNodes=Object.fromEntries(ids.map(id=>[id,new Element()]));
+ const FrozenDate=class extends Date {constructor(...args){super(...(args.length?args:[iso]));} static now(){return new Date(iso).getTime();}};
+ const c={
+  Date:FrozenDate,URLSearchParams,location:{hostname:'histoires2dansmatete.fr',search},
+  document:{getElementById:id=>localNodes[id],createElement:tag=>new Element(tag),querySelectorAll:()=>[]},
+  fetch:async url=>({ok:true,json:async()=>url==='/data/histoires.json'?stories:{
+   title:'Le mystère de Noël',subtitle:'25 épisodes',description:'Une aventure audio',
+   image:'assets/images/noel-teaser.svg',hasPodcast:true,schedule
+  }})
+ };
+ return {c,localNodes};
+};
+const season={teaserStart:'11-01',calendarStart:'11-01',firstEpisode:'12-01',calendarEnd:'12-26'};
+for(const [day,expected] of [['2026-11-01T15:00:00Z',true],['2026-10-31T15:00:00Z',false],['2026-12-27T12:00:00Z',false]]){
+ const {c,localNodes}=buildSeasonalContext(day,season);
+ vm.runInNewContext(await readFile('site/assets/catalogue.js','utf8'),c,{filename:'site/assets/catalogue.js'});
+ await new Promise(resolve=>setImmediate(resolve));
+ const cards=localNodes['catalogue-grid'].children;
+ assert.equal(cards.length,stories.length+(expected?1:0),`Entrée Noël conditionnelle au ${day}`);
+ if(expected){
+  assert.match(cards[0].className,/catalogue-card-christmas/);
+  assert.equal(cards[0].children[0].href,'/noel/');
+  assert.equal(cards[0].children[0].children.find(x=>x.tagName==='img')?.src,'/assets/images/noel-teaser.svg');
+  const filters=localNodes['story-theme'].children;
+  assert.ok(filters.some(option=>option.value==='Noël'));
+ }
+}
+console.log('✓ Bibliothèque : accès à Noël uniquement pendant la saison configurée.');
