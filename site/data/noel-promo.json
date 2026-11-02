@@ -1,12 +1,12 @@
 {
-  "title": "Le mystère de Noël — 25 parties à écouter",
-  "subtitle": "Une histoire à découvrir chaque jour, du 1er au 25 décembre.",
+  "title": "Chipie et Chenapan",
+  "subtitle": "Au secours de l'esprit de Noël",
   "description": "Ouvrez une case chaque jour de décembre : un nouvel épisode audio vous attend.",
   "image": "assets/images/sacha.png",
   "hasPodcast": false,
   "schedule": {
     "teaserStart": "11-01",
-    "calendarStart": "11-01",
+    "calendarStart": "11-24",
     "firstEpisode": "12-01",
     "calendarEnd": "12-26"
   }
