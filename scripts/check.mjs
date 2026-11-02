@@ -9,7 +9,7 @@ const root = resolve('site');
 const required = [
   'index.html', 'histoires.html', 'ecouter.html', 'qui-suis-je.html', 'confidentialite.html', '404.html',
   'config.js', 'robots.txt', '_headers', '_redirects',
-  'assets/main.js', 'assets/images.config.json', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'data/histoires.json'
+  'assets/main.js', 'assets/analytics.js', 'assets/consent.css', 'assets/images.config.json', 'assets/catalogue.js', 'assets/style.css', 'assets/cameleon.svg', 'assets/favicon.ico', 'assets/logo.webp', 'data/histoires.json'
 ];
 for (const filename of required) {
   const file = resolve(root, filename);

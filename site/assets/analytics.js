@@ -1,4 +1,4 @@
-/** Statistiques facultatives : consentement uniquement sur la page Confidentialité. */
+/** Statistiques facultatives : choix global sur les pages publiques, révocable dans Confidentialité. */
 (() => {
   'use strict';
 
@@ -13,7 +13,8 @@
   const saveChoice = value => {
     try { localStorage.setItem(consentKey, value); } catch { /* stockage refusé */ }
   };
-  let allowed = readChoice() === 'yes';
+  let currentChoice = readChoice();
+  let allowed = currentChoice === 'yes';
   let sessionId;
 
   const getSession = () => {
@@ -55,12 +56,44 @@
     }).catch(() => {});
   }
 
+  // Un seul bandeau non modal, créé lorsque le visiteur n'a pas encore choisi.
+  // La page Confidentialité garde ses boutons de gestion : pas de doublon sur cette page.
+  const isPrivacyPage = /\/confidentialite\.html$/.test(location.pathname);
+  let banner;
+  function updateBanner() {
+    if (currentChoice === 'yes' || currentChoice === 'no' || isPrivacyPage) {
+      banner?.remove();
+      banner = null;
+      return;
+    }
+    if (banner || !document.body) return;
+    banner = document.createElement('aside');
+    banner.id = 'analytics-choice-banner';
+    banner.className = 'analytics-choice-banner';
+    banner.setAttribute('role', 'region');
+    banner.setAttribute('aria-label', 'Choix des statistiques d’audience');
+    banner.innerHTML = `
+      <div class="analytics-choice-copy">
+        <span class="analytics-choice-eyebrow">✦ &nbsp; Votre confidentialité</span>
+        <h2>Souhaitez-vous autoriser les statistiques ?</h2>
+        <p>Des mesures d’audience limitées nous aident à améliorer les histoires. Elles restent désactivées sans votre accord. <a href="/confidentialite.html">En savoir plus</a></p>
+      </div>
+      <div class="analytics-choice-actions">
+        <button type="button" class="analytics-choice-action" data-analytics-choice="no">Refuser</button>
+        <button type="button" class="analytics-choice-action" data-analytics-choice="yes">Accepter</button>
+      </div>`;
+    banner.querySelectorAll('[data-analytics-choice]').forEach(button => {
+      button.addEventListener('click', () => choose(button.dataset.analyticsChoice));
+    });
+    document.body.appendChild(banner);
+  }
+
   const status = document.getElementById('analytics-consent-status');
   const allowButton = document.getElementById('analytics-allow');
   const denyButton = document.getElementById('analytics-deny');
   function updateStatus() {
     if (!status) return;
-    const choice = readChoice();
+    const choice = currentChoice;
     status.textContent = choice === 'yes' ? 'Statistiques activées. Vous pouvez retirer votre accord à tout moment.'
       : choice === 'no' ? 'Statistiques refusées. Aucune mesure d’audience n’est envoyée.'
       : 'Aucun choix enregistré. Les statistiques sont désactivées par défaut.';
@@ -68,21 +101,34 @@
     denyButton?.setAttribute('aria-pressed', String(choice === 'no'));
   }
   function choose(value) {
+    if (value !== 'yes' && value !== 'no') return;
+    currentChoice = value;
     allowed = value === 'yes';
     saveChoice(value);
     updateStatus();
+    updateBanner();
     if (allowed) track();
   }
-  // Aucun bandeau ni boîte de dialogue ailleurs : ce choix ne se fait que dans Confidentialité.
   window.DMT_ANALYTICS = {
     track,
     withdraw: () => choose('no'),
     accept: () => choose('yes'),
-    status: readChoice
+    status: () => currentChoice
   };
   allowButton?.addEventListener('click', () => choose('yes'));
   denyButton?.addEventListener('click', () => choose('no'));
   updateStatus();
+  updateBanner();
+  // Un choix changé dans un autre onglet doit être respecté immédiatement.
+  window.addEventListener('storage', event => {
+    if (event.key !== consentKey && event.key !== null) return;
+    const previous = currentChoice;
+    currentChoice = readChoice();
+    allowed = currentChoice === 'yes';
+    updateStatus();
+    updateBanner();
+    if (allowed && previous !== 'yes') track();
+  });
   if (allowed) track();
 
   document.addEventListener('click', event => {

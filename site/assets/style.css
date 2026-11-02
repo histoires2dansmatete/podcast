@@ -1,3 +1,4 @@
+@import url("/assets/consent.css");
 :root {
   --cream:#faf7ef; --paper:#fffdf8; --milk:#fffbf3; --ink:#302837;
   --plum:#6d526f; --deep-plum:#493452; --muted:#766e79;
@@ -539,3 +540,4 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 
 .christmas-cover-link[aria-disabled="true"]{cursor:default}
 .christmas-cover-link[aria-disabled="true"] .christmas-cover-cta{background:#f1e5ce;color:#6a534b}
+

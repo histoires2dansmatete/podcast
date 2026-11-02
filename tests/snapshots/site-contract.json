@@ -1,11 +1,11 @@
 {
   "note": "Empreintes de structure HTML/CSS, indépendantes des illustrations configurées. Toute mise à jour doit être relue.",
   "files": {
-    "site/assets/style.css": "01143fb0f6f2746b1a1b8ca92a9c00dd934d106db12e5a646a0d34656b68aa42",
+    "site/assets/style.css": "79c874dc8c1ad1b27e0c07b6b6a928f7b596b3ea0fb716bc1812b72a232059dc",
     "site/index.html": "7d886aa4d486740c620b23a253d6a8072726c02d6c77c92d2c6d1ab8e93a940d",
     "site/histoires.html": "6c186d7d20cfc0e9b3f799ea8461d969ba69e9f6f7967b2b1c6108a76e49b726",
     "site/ecouter.html": "52be95db500d50a1d02775794744bcdfc5e43da5a8282265559b5cb4a33466d2",
     "site/qui-suis-je.html": "098fe8d55f9cf6548e2b64587a860003cb9fffd0e5c4dfc78f5e034a7ad02987",
-    "site/confidentialite.html": "b13d1d4077f863d2ac33547f361dc4e43058f903c2dbb4524725a5fc9bc77e23"
+    "site/confidentialite.html": "91a003e10cbee656236ef98ad86ceade7fa791df94c6dedd9eae34c5b5cb3e25"
   }
 }
