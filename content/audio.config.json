@@ -43,7 +43,7 @@
       "platforms": {}
     },
     "les-aventures-de-perly-et-popette": {
-      "src": "",
+      "src": "assets/audio/E1-Perly-et-Popette-La-Rencontre.mp3",
       "platforms": {
         "spotify": "https://open.spotify.com/episode/34ezyGkUFvqDksfgoe2ARQ?si=PoRVvzOPTWmEj5Bjt1dHOw"
       }
