@@ -316,7 +316,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 .listen-platform.is-available:hover{transform:translateY(-4px);border-color:#a47ba3}
 .listen-platform[aria-disabled="true"]{cursor:default}
 .listen-platform-symbol{width:64px;height:64px;flex:none;display:grid;place-items:center;border-radius:18px;font:650 32px var(--serif);color:#fff}
-.listen-spotify{background:#1ed760;color:#0e3820}.listen-apple{background:#9360cc}.listen-deezer{background:#252034}.listen-amazon{background:#263244;color:#55e2df}
+.listen-spotify{background:#1ed760;color:#0e3820}.listen-youtube{background:#fff1f1;color:#b62127}
 .listen-platform-body{min-width:0;display:flex;flex-direction:column;gap:5px;flex:1}
 .listen-platform-body strong{font:600 23px var(--serif);color:#453348}
 .listen-platform-body small{font-size:13px;line-height:1.55;color:#756873}
@@ -372,7 +372,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 .player-pill{margin-left:auto;padding:11px 16px;border-radius:30px;background:#fff9ef;color:#7b5d80;font-size:12px;font-weight:800;white-space:nowrap}
 .episode-platforms{margin-top:28px}
 .episode-platforms h3{font:600 25px var(--serif);margin-bottom:19px}
-.episode-platform-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.episode-platform-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:740px}
 .episode-platform{display:flex;align-items:center;gap:10px;padding:16px 13px;border-radius:12px;border:1px solid #eee1e9;background:white;font-size:13px;font-weight:800;color:#5e4863;flex-wrap:wrap}
 .episode-platform-mark{border-radius:8px;background:#f0e2f0;display:grid;place-items:center;width:32px;height:32px;flex:none;color:#644268;font-size:21px}
 .episode-platform .platform-status{margin-left:auto}
@@ -416,7 +416,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 .platform-icon:has(.brand-icon){display:grid;place-items:center;background:#fff;border:1px solid #e7dce3;border-radius:10px}
 .platform-icon .brand-icon{width:75%;height:75%}
 .listen-platform-symbol img{filter:brightness(0) invert(1)}
-.listen-platform-symbol.listen-spotify img{filter:brightness(0) saturate(100%) invert(13%) sepia(10%) saturate(870%) hue-rotate(93deg)}
+.listen-platform-symbol.listen-spotify img{filter:brightness(0) saturate(100%) invert(13%) sepia(10%) saturate(870%) hue-rotate(93deg)}.listen-platform-symbol.listen-youtube img{filter:none}
 .episode-platform-mark img{width:23px;height:23px;object-fit:contain;display:block}
 .social-links{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .social-links a{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:#5f4565;font-size:13px;font-weight:700;background:#fff9f4;border:1px solid #e7dce0;border-radius:999px;padding:9px 13px;transition:border-color .15s ease,transform .15s ease}

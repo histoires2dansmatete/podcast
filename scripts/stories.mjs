@@ -53,8 +53,8 @@ export function renderReadingWithImages(cleanBody,images=[]){
  if(Math.max(...groups.keys())>index)throw Error('Illustration placée après un paragraphe inexistant');
  return result;
 }
-const platformNames = {spotify:'Spotify',apple:'Apple Podcasts',deezer:'Deezer',amazon:'Amazon Music'};
-const platformIcons = {spotify:'spotify.svg',apple:'apple-podcasts.svg',deezer:'deezer.svg',amazon:'amazon.svg'};
+const platformNames = {spotify:'Spotify',youtube:'YouTube'};
+const platformIcons = {spotify:'spotify.svg',youtube:'youtube.svg'};
 const plural = (n, one, many) => `${n} ${n>1?many:one}`;
 
 export function renderStory(story,index,all){

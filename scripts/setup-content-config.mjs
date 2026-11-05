@@ -2,11 +2,13 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {DEFAULT_CHRISTMAS_SCHEDULE} from '../functions/_lib/christmas.js';
+import {ensureYoutubePlatforms} from './migrate-youtube-platforms.mjs';
+await ensureYoutubePlatforms();
 const read=async file=>{try{return JSON.parse(await readFile(file,'utf8'))}catch(error){if(error.code==='ENOENT')return null;throw error;}};
 const save=(file,data)=>writeFile(file,JSON.stringify(data,null,2)+'\n');
 const old=await read('content/platforms.config.json');
 if(!old){
- let platforms={spotify:'',apple:'',deezer:'',amazon:''};
+ let platforms={spotify:'',youtube:''};
  try{
   const source=await readFile('site/config.js','utf8');
   const sandbox=vm.createContext({window:{}});

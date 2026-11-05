@@ -9,7 +9,7 @@ import {validateChristmasPlatformUrl,christmasHtml} from '../../scripts/christma
 const stories=[{slug:'premiere',title:'Première',image:'assets/stories/premiere.svg',audioUrl:'',platforms:{}},{slug:'seconde',title:'Seconde',image:'assets/stories/seconde.svg',audioUrl:'',platforms:{}}];
 
 test('Les liens d’émission activent accueil et Où écouter sans HTML arbitraire',()=>{
- const input={platforms:{spotify:'https://open.spotify.com/show/abcdef',apple:'',deezer:'',amazon:''}};
+ const input={platforms:{spotify:'https://open.spotify.com/show/abcdef',youtube:''}};
  const template='<a class="platform-card" data-platform="spotify" aria-disabled="true"><span class="platform-status">À venir</span></a>';
  const changed=applyShowPlatforms(template,input);
  assert.match(changed,/href="https:\/\/open.spotify.com\/show\/abcdef"/);

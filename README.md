@@ -121,7 +121,7 @@ L’aperçu du dossier `dist/` se trouve sur <http://localhost:4173/>. **N’env
 | `site/assets/images/` | Illustrations originales et `optimized/` pour les WebP |
 | `site/assets/images.config.json` | Correspondance entre les images et leurs usages |
 | `site/assets/audio/` | MP3 locaux de petite taille |
-| `site/config.js` | URLs **générales** du podcast (Spotify, Apple Podcasts, Deezer, Amazon Music) |
+| `site/config.js` | URLs **générales** du podcast (Spotify et YouTube) |
 | `content/audio.config.json` | MP3 et liens **par histoire** |
 | `content/inline-images.config.json` | Images intégrées **dans le corps d’un récit**, indépendamment de sa couverture |
 | `content/wordpress-stories.json` | Les 13 histoires historiques, conservées à l’identique |
@@ -201,9 +201,7 @@ La configuration par épisode se trouve dans **`content/audio.config.json`**. Po
   "src": "assets/audio/bas-les-masques.mp3",
   "platforms": {
     "spotify": "",
-    "apple": "",
-    "deezer": "",
-    "amazon": ""
+    "youtube": ""
   }
 }
 ```
@@ -214,7 +212,7 @@ L’extrait n’est pas un fichier JSON complet. Le site accepte deux solutions 
 
 **MP3 hébergé ailleurs :** indiquez directement une URL HTTPS d’un fichier audio (par exemple sur Cloudflare R2). Pour un MP3 volumineux, c’est préférable à GitHub/Pages. Vérifiez vous-même que l’URL est publique, renvoie le bon type MIME et fonctionne dans le lecteur du navigateur.
 
-Le lecteur HTML5 apparaît dès que `src` n’est plus vide. Tant que `src` vaut `""`, la fiche conserve la mention « À venir ». Les quatre champs `platforms` peuvent recevoir des **URLs HTTPS d’épisodes spécifiques** (et rester vides avant publication). Les **URLs générales** des plateformes pour la page « Où écouter ? » se configurent séparément dans `site/config.js`.
+Le lecteur HTML5 apparaît dès que `src` n’est plus vide. Tant que `src` vaut `""`, la fiche conserve la mention « À venir ». Les deux champs `platforms` peuvent recevoir des **URLs HTTPS d’épisodes spécifiques** (et rester vides avant publication). Les **URLs générales** des plateformes pour la page « Où écouter ? » se configurent dans `content/platforms.config.json` (et non dans `site/config.js`, qui est généré).
 
 Après modification :
 
@@ -445,3 +443,23 @@ La période du teaser, les dates d'ouverture et de fermeture du calendrier et le
 Format `MM-JJ`, reconduit chaque année, fuseau Europe/Paris. La première partie est disponible le jour indiqué par `firstEpisode`, puis les suivantes quotidiennement. Le calendrier et les MP3 locaux sont protégés côté Cloudflare entre `calendarStart` et `calendarEnd`. Le teaser apparaît à partir de `teaserStart`.
 
 **Installation par correctif** : `npm run site:config:setup` (ajoute uniquement les dates absentes, sans écraser la configuration Noël), puis `npm test && npm run dev`. Après modification du JSON, relancer `npm run build` pour synchroniser l'accueil, la page et le contrôle saisonnier serveur. Voir `GUIDE-NOEL-V14-4.md`.
+
+
+## V14.6.4 — Spotify et YouTube
+
+L’accueil, « Où écouter ? », les fiches audio et l’édition des liens dans `/admin/` utilisent maintenant **Spotify et YouTube** uniquement. Les anciennes cartes Amazon Music, Apple Podcasts et Deezer ne sont plus affichées.
+
+Configurez le lien général de l’émission dans `content/platforms.config.json` :
+
+```json
+{
+  "platforms": {
+    "spotify": "https://open.spotify.com/show/VOTRE_EMISSION",
+    "youtube": "https://www.youtube.com/@VOTRE_CHAINE"
+  }
+}
+```
+
+Les fiches d’histoires utilisent des liens propres à chaque épisode dans `content/audio.config.json`, par exemple `"platforms": {"youtube":"https://www.youtube.com/watch?v=..."}`.
+
+**Mise à jour conservatrice :** le correctif n’écrase pas vos `index.html`, `ecouter.html` et configurations JSON personnalisés. Au prochain `npm test`, `npm run build` ou `npm run dev`, une migration ciblée retire uniquement les anciennes cartes et clés de plateformes, et conserve vos textes, Spotify, MP3 et liens YouTube déjà définis. Une ancienne entrée D1 reste valide pour l’audio, mais les liens de plateformes supprimées sont ignorés.

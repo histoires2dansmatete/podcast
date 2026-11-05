@@ -1,10 +1,10 @@
 {
   "note": "Empreintes de structure HTML/CSS, indépendantes des illustrations configurées. Toute mise à jour doit être relue.",
   "files": {
-    "site/assets/style.css": "79c874dc8c1ad1b27e0c07b6b6a928f7b596b3ea0fb716bc1812b72a232059dc",
-    "site/index.html": "f74cc8f9c3315955504a25da57df407c02877a6ac257a850a8e1fda33de2997e",
+    "site/assets/style.css": "c92dc4fd286599ba634b16afb58c1cba4effec3e631fc7e3b86728925ada5f6d",
+    "site/index.html": "21094557f3cbbb586f5c1fda5a2417072494fd08c7cc26e24aabd073343b307e",
     "site/histoires.html": "6c186d7d20cfc0e9b3f799ea8461d969ba69e9f6f7967b2b1c6108a76e49b726",
-    "site/ecouter.html": "52be95db500d50a1d02775794744bcdfc5e43da5a8282265559b5cb4a33466d2",
+    "site/ecouter.html": "1ac60dd3499f04f5c6fc23b88058c0d09a37cadbe2bf99a03e576f7b08750b1c",
     "site/qui-suis-je.html": "098fe8d55f9cf6548e2b64587a860003cb9fffd0e5c4dfc78f5e034a7ad02987",
     "site/confidentialite.html": "91a003e10cbee656236ef98ad86ceade7fa791df94c6dedd9eae34c5b5cb3e25"
   }

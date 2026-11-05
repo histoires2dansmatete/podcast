@@ -17,9 +17,10 @@ test('Audio : chemins locaux, HTTPS et rejet des URLs dangereuses',()=>{
  assert.equal(localAudio('assets/audio/test.mp3'),true);
  assert.equal(externalAudio('https://cdn.example.com/foo.mp3'),true);
 });
-test('Les liens par épisode acceptent seulement quatre plateformes HTTPS',()=>{
+test('Les liens par épisode acceptent Spotify et YouTube uniquement en HTTPS',()=>{
  assert.deepEqual(validateEpisodeConfig({src:'',platforms:{}},'test'),{src:'',platforms:{}});
- assert.throws(()=>validateEpisodeConfig({src:'',platforms:{youtube:'https://example.org/'}},'test'),/inconnue/);
+ assert.equal(validateEpisodeConfig({src:'',platforms:{youtube:'https://www.youtube.com/watch?v=abcd'}},'test').platforms.youtube,'https://www.youtube.com/watch?v=abcd');
+ assert.throws(()=>validateEpisodeConfig({src:'',platforms:{deezer:'https://example.org/'}},'test'),/inconnue/);
  assert.throws(()=>validateEpisodeConfig({src:'',platforms:{spotify:'http://example.org/'}},'test'),/incorrect/);
  assert.equal(validateEpisodeConfig({src:'assets/audio/a.mp3',platforms:{spotify:'https://open.spotify.com/episode/123'}},'x').src,'assets/audio/a.mp3');
 });

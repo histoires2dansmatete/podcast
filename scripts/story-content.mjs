@@ -3,7 +3,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 
 export const slugOK = slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
-export const platformKeys = ['spotify','apple','deezer','amazon'];
+export const platformKeys = ['spotify','youtube'];
 export const localAudio = src => /^assets\/audio\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:mp3|m4a|ogg)$/i.test(src);
 export const externalAudio = src => { try { const u=new URL(src);return u.protocol === 'https:' && !u.username && !u.password; } catch { return false; } };
 export function validateAudioSrc(src) {

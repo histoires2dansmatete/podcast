@@ -63,7 +63,7 @@
   });
   const disclaimer = document.getElementById('platform-disclaimer');
   if (available > 0 && disclaimer) {
-    disclaimer.textContent = available === 4
+    disclaimer.textContent = available === 2
       ? 'Le podcast est disponible ! Choisissez votre application préférée pour l’écouter.'
       : 'Le podcast est disponible sur les plateformes indiquées « Écouter ». Les autres liens seront ajoutés prochainement.';
     const pill = document.querySelector('.listen-pill');

@@ -1,7 +1,7 @@
 /** Liens des plateformes de l'émission (indépendants des liens par épisode). */
 import {readFile} from 'node:fs/promises';
 import {escapeHtml} from './stories.mjs';
-export const providers=['spotify','apple','deezer','amazon'];
+export const providers=['spotify','youtube'];
 export function validateShowPlatforms(config){
  if(!config||typeof config!=='object'||Array.isArray(config)||!config.platforms||typeof config.platforms!=='object'||Array.isArray(config.platforms))throw Error('Plateformes de l’émission : objet platforms requis');
  for(const key of Object.keys(config.platforms))if(!providers.includes(key))throw Error(`Plateforme inconnue : ${key}`);

@@ -6,6 +6,8 @@ import {applySocialLayout} from './layout.mjs';
 import {generateCarousel} from './carousel.mjs';
 import {applyPodcastCopy} from './podcast-copy.mjs';
 import {applyShowPlatforms,configuredShowPlatforms} from './platform-links.mjs';
+import {ensureYoutubePlatforms} from './migrate-youtube-platforms.mjs';
+await ensureYoutubePlatforms();
 const stories = await data();
 const showPlatforms=await configuredShowPlatforms();
 await writeFile('site/config.js',`// Généré depuis content/platforms.config.json — ne pas modifier ici.\nwindow.PODCAST_CONFIG = ${JSON.stringify({platforms:showPlatforms.platforms},null,2).replace(/</g,'\\u003c')};\n`);

@@ -24,7 +24,8 @@ test('L’URL R2 HTTPS et les liens épisode sont intégrés sans créer de faux
  const html=renderStory({...story,audioUrl:'https://media.example.org/a.mp3',platforms:{spotify:'https://open.spotify.com/episode/123'}},0,[story]);
  assert.match(html,/src="https:\/\/media.example.org\/a.mp3"/);
  assert.match(html,/https:\/\/open.spotify.com\/episode\/123/);
- assert.match(html,/Apple Podcasts/);
+ assert.match(html,/YouTube/);
+ assert.doesNotMatch(html,/Apple Podcasts|Deezer|Amazon Music/);
  assert.doesNotMatch(html,/href="https:\/\/open.spotify.com\/show\/"/);
 });
 test('Les chemins d’images ne peuvent sortir de assets',()=>{

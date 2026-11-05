@@ -1,5 +1,5 @@
 /** Pure shared validation for private, database-backed audio links (no uploads). */
-export const audioProviders=['spotify','apple','deezer','amazon'];
+export const audioProviders=['spotify','youtube'];
 export function safeExternalURL(value){
  if(value==='')return '';
  if(typeof value!=='string'||value.length>2048||/[\u0000-\u001f\u007f<>"'\\]/.test(value))throw Error('URL HTTPS invalide');
@@ -28,5 +28,5 @@ export async function loadAudioOverrides(env){
 }
 export function mergeAudio(stories,map){return stories.map(story=>{
  const override=map.get(story.slug);if(!override)return story;
- try{const v=validateAudioUpdate({slug:story.slug,...override});return {...story,audioUrl:v.src,platforms:v.platforms};}catch{return story;}
+ try{const previous=override.platforms||{};const clean=Object.fromEntries(Object.entries(previous).filter(([k])=>audioProviders.includes(k)));const v=validateAudioUpdate({slug:story.slug,src:override.src,platforms:clean});return {...story,audioUrl:v.src,platforms:v.platforms};}catch{return story;}
 });}

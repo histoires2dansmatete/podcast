@@ -53,7 +53,7 @@ const context = vm.createContext({ window: {} });
 vm.runInContext(configuration, context, { timeout: 1000, filename: 'site/config.js' });
 const platformLinks = context.window.PODCAST_CONFIG?.platforms;
 assert.ok(platformLinks, 'La configuration des plateformes est absente.');
-for (const key of ['spotify', 'apple', 'deezer', 'amazon']) {
+for (const key of ['spotify', 'youtube']) {
   const link = platformLinks[key];
   assert.equal(typeof link, 'string', `${key} doit être une chaîne de caractères`);
   if (link) {
@@ -100,7 +100,7 @@ const imgConf=JSON.parse(await readFile(resolve(root,'assets/images.config.json'
 assert.ok(stories.every(s=>imgConf.stories[s.slug]),'Toutes les histoires publiées doivent avoir une image configurée');
 for(const key of ['logo','aboutVisual','bioImage','listenArt'])assert.ok(imgConf.globals[key],`Image globale ${key} non configurée`);
 for(const s of stories)assert.ok(imgConf.stories[s.slug],`Image non configurée pour ${s.slug}`);
-for(const icon of ['instagram','facebook','spotify','apple-podcasts','deezer','amazon'])assert.ok((await stat(resolve(root,`assets/icons/${icon}.svg`))).isFile(),`Icône ${icon} manquante`);
+for(const icon of ['instagram','facebook','spotify','youtube'])assert.ok((await stat(resolve(root,`assets/icons/${icon}.svg`))).isFile(),`Icône ${icon} manquante`);
 for(const page of htmlPages.filter(p=>p!=='404.html')){
  const content=await readFile(resolve(root,page),'utf8');
  assert.ok(content.includes('https://www.instagram.com/les_histoires_2_dans_ma_tete/'),`${page}: Instagram absent`);

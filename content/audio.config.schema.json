@@ -19,13 +19,7 @@
               "spotify": {
                 "type": "string"
               },
-              "apple": {
-                "type": "string"
-              },
-              "deezer": {
-                "type": "string"
-              },
-              "amazon": {
+              "youtube": {
                 "type": "string"
               }
             },

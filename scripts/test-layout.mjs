@@ -25,6 +25,6 @@ assert.match(css,/\.footer-bottom\{display:block;text-align:center\}/);
 
 assert.match(css,/\.listen-reading-art img\{[^}]*height:auto;aspect-ratio:auto;object-fit:contain/);
 assert.match(css,/\.about-visual img\{[^}]*height:auto;max-height:[^}]*object-fit:contain/);
-const icon=await readFile('site/assets/icons/apple-podcasts.svg','utf8');
-assert.match(icon,/<circle cx="24"/,'Icône Apple Podcasts non remplacée');
-console.log('✓ Layout : footer unique/idempotent, images portrait non recadrées, icône Apple Podcasts.');
+const icon=await readFile('site/assets/icons/youtube.svg','utf8');
+assert.match(icon,/<svg[^>]*viewBox="0 0 48 48"/,'Icône YouTube manquante');
+console.log('✓ Layout : footer unique/idempotent, images portrait non recadrées, icône YouTube.');

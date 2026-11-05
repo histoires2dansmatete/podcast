@@ -85,7 +85,7 @@ $('days').addEventListener('change',load);load();loadStories();
  const byId=id=>document.getElementById(id);
  const form=byId('admin-audio-form');if(!form)return;
  const status=byId('audio-status');let stories=[];
- const providers=['spotify','apple','deezer','amazon'];
+ const providers=['spotify','youtube'];
  const selected=()=>stories.find(s=>s.slug===byId('audio-story').value);
  function fill(){
   const s=selected();byId('audio-src').value=s?.src?.startsWith('https://')?s.src:'';

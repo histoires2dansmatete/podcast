@@ -19,6 +19,8 @@ test('Migration V14.5 : anciens liens repris, 25 MP3 préservés et seconde exé
   const first=run();assert.equal(first.status,0,first.stderr);
   const p=JSON.parse(await readFile(join(tmp,'content/platforms.config.json'),'utf8'));
   assert.equal(p.platforms.spotify,'https://open.spotify.com/show/existing');
+  assert.equal(p.platforms.youtube,'');
+  assert.deepEqual(Object.keys(p.platforms),['spotify','youtube']);
   const c=JSON.parse(await readFile(join(tmp,'content/carousel.config.json'),'utf8'));
   assert.equal(c.stories[0].label,'Mon ancienne sélection');
   assert.equal(c.christmasTeaser.position,2);
