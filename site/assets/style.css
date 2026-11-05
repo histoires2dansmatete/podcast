@@ -230,6 +230,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:600}
 /* Multi-cover: six images, one active, delicate rear stack & accessible controls */
 .art-backdrop{isolation:isolate}
 .art-backdrop .cover-card{position:absolute;left:50%;top:50%;margin:0;width:min(345px,79%);height:405px;transform:translate(-50%,-50%) rotate(7deg);transition:transform .82s cubic-bezier(.22,.7,.23,1),opacity .7s,filter .6s;will-change:transform;pointer-events:none}
+.cover-story-link{position:absolute;inset:0;z-index:3;pointer-events:none}
+.cover-story-link:not([href]){display:none}
+.art-backdrop .cover-card-active .cover-story-link[href]{pointer-events:auto;cursor:pointer}
+.cover-story-link:focus-visible{outline:4px solid #f2c47f;outline-offset:-7px;border-radius:inherit}
 .art-backdrop .cover-card-active{z-index:9;opacity:1;transform:translate(-50%,-50%) rotate(5deg) scale(1)}
 .art-backdrop .cover-card-stacked{z-index:calc(9 - var(--stack));opacity:calc(.75 - var(--stack)*.07);transform:translate(calc(-50% + var(--stack)*15px),calc(-50% - var(--stack)*7px)) rotate(calc(5deg + var(--stack)*5deg)) scale(calc(1 - var(--stack)*.035));filter:brightness(calc(1 - var(--stack)*.06))}
 .cover-card{background:var(--cover-color,#674871)}

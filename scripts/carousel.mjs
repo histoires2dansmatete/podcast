@@ -58,6 +58,7 @@ export function renderCarousel(config,stories,schedule=DEFAULT_CHRISTMAS_SCHEDUL
 <div class="cover-image-wrap"><img alt="Illustration de ${text(s.title)}" class="cover-image" data-fallback="${text(fallback)}" ${index===0?'fetchpriority="high"':'loading="lazy"'} src="${text(image)}"/><span class="cover-status cover-status-${status}">${available?'♫':'◷'} ${label}</span></div>
 <div class="cover-bottom"><span>${text(coverTitle)}</span><span aria-hidden="true" class="cover-headphones">♫</span></div>
 <div class="cover-footnote">${footnote}</div>
+<a class="cover-story-link" aria-label="Ouvrir l’histoire « ${text(s.title)} »" ${available?`href="histoires/${text(s.slug)}/"`:'aria-disabled="true"'} tabindex="${available&&index===0?0:-1}"></a>
 </div>`;
   });
   if(config.christmasTeaser?.enabled){

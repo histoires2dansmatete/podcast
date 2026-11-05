@@ -112,7 +112,7 @@
       const active=new Set(stories.map(s=>s.slug));
       const bySlug=new Map(stories.map(s=>[s.slug,s]));
       coverNodes.forEach(card=>{const s=bySlug.get(card.dataset.storySlug);const img=card.querySelector('img.cover-image');if(s&&img){img.dataset.fallback=`/assets/stories/${s.slug}.svg`;img.src=`/${s.image.replace(/^\//,'')}`;}
-        if(s){card.hidden=false;const ready=Boolean(s.audioUrl || Object.values(s.platforms||{}).some(Boolean));const badge=card.querySelector('.cover-status');card.dataset.podcastStatus=ready?'available':'upcoming';if(badge){badge.className=`cover-status cover-status-${card.dataset.podcastStatus}`;badge.textContent=ready?'♫ Podcast disponible':'◷ Podcast à venir';}const footnote=card.querySelector('.cover-footnote');if(footnote)footnote.textContent=ready?'DÉJÀ À ÉCOUTER':'À LIRE, BIENTÔT À ÉCOUTER';}
+        if(s){card.hidden=false;const ready=Boolean(s.audioUrl || Object.values(s.platforms||{}).some(Boolean));const badge=card.querySelector('.cover-status');card.dataset.podcastStatus=ready?'available':'upcoming';if(badge){badge.className=`cover-status cover-status-${card.dataset.podcastStatus}`;badge.textContent=ready?'♫ Podcast disponible':'◷ Podcast à venir';}const footnote=card.querySelector('.cover-footnote');if(footnote)footnote.textContent=ready?'DÉJÀ À ÉCOUTER':'À LIRE, BIENTÔT À ÉCOUTER';const link=card.querySelector('.cover-story-link');if(link){if(ready){link.href=`/histoires/${encodeURIComponent(s.slug)}/`;link.removeAttribute('aria-disabled');}else{link.removeAttribute('href');link.setAttribute('aria-disabled','true');}link.tabIndex=ready&&card.classList.contains('cover-card-active')?0:-1;}}
       });
       coverNodes.forEach(card=>{if(!active.has(card.dataset.storySlug)){card.remove();}});
       const cards=[...document.querySelectorAll('.cover-card[data-cover]')];
@@ -137,6 +137,8 @@
         card.classList.toggle('cover-card-stacked',delta!==0);
         card.style.setProperty('--stack',delta);
         card.setAttribute('aria-hidden',String(delta!==0));
+        const link=card.querySelector('.cover-story-link');
+        if(link)link.tabIndex=delta===0&&link.hasAttribute('href')?0:-1;
       });
       if(indexLabel) indexLabel.textContent = `${active + 1} / ${visible.length}`;
       const sticker=coverArea.querySelector('.floating-sticker');
@@ -146,9 +148,11 @@
     document.querySelector('.cover-prev')?.addEventListener('click',()=>show(active-1));
     document.querySelector('.cover-next')?.addEventListener('click',()=>show(active+1));
     coverArea.addEventListener('covers:updated',()=>show(0));
-    let swipeX=null,swipeY=null;
+    let swipeX=null,swipeY=null,suppressCoverClick=false;
+    // Un balayage doit changer de couverture, jamais déclencher son lien.
+    coverArea.addEventListener('click',e=>{if(suppressCoverClick&&e.target.closest?.('.cover-story-link')){e.preventDefault();suppressCoverClick=false;}},true);
     coverArea.addEventListener('touchstart',e=>{const touch=e.changedTouches?.[0];if(touch){swipeX=touch.clientX;swipeY=touch.clientY;}},{passive:true});
-    coverArea.addEventListener('touchend',e=>{const touch=e.changedTouches?.[0];if(!touch||swipeX===null)return;const dx=touch.clientX-swipeX,dy=touch.clientY-swipeY;swipeX=null;swipeY=null;if(Math.abs(dx)>48 && Math.abs(dx)>Math.abs(dy)*1.3)show(active+(dx<0?1:-1));},{passive:true});
+    coverArea.addEventListener('touchend',e=>{const touch=e.changedTouches?.[0];if(!touch||swipeX===null)return;const dx=touch.clientX-swipeX,dy=touch.clientY-swipeY;swipeX=null;swipeY=null;if(Math.abs(dx)>48 && Math.abs(dx)>Math.abs(dy)*1.3){suppressCoverClick=true;window.setTimeout(()=>{suppressCoverClick=false;},450);show(active+(dx<0?1:-1));}},{passive:true});
     coverArea.addEventListener('mouseenter',()=>{paused=true;});
     coverArea.addEventListener('mouseleave',()=>{paused=false;});
     coverArea.addEventListener('focusin',()=>{paused=true;});

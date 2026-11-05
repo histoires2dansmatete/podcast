@@ -31,6 +31,31 @@ test('Le badge distingue MP3, plateformes et épisodes à venir',()=>{
  assert.equal(isPodcastAvailable(stories[2]),true);
 });
 
+test('Seules les couvertures avec podcast possèdent un lien vers leur fiche',()=>{
+ const html=markup();
+ const before=(slug)=>html.slice(html.indexOf(`data-story-slug="${slug}"`),html.indexOf('\n</div>',html.indexOf(`data-story-slug="${slug}"`)));
+ const upcoming=before('premiere-histoire');
+ const mp3=before('une-autre-histoire');
+ const spotify=before('une-troisieme-histoire');
+ assert.match(upcoming,/<a class="cover-story-link"[^>]*aria-disabled="true" tabindex="-1"><\/a>/);
+ assert.doesNotMatch(upcoming,/href="histoires\//);
+ assert.match(mp3,/class="cover-story-link"[^>]*href="histoires\/une-autre-histoire\/" tabindex="-1"/);
+ assert.match(spotify,/class="cover-story-link"[^>]*href="histoires\/une-troisieme-histoire\/" tabindex="-1"/);
+ const firstActive=renderCarousel({rotationSeconds:5,stories:[{slug:'une-autre-histoire'}]},stories);
+ assert.match(firstActive,/href="histoires\/une-autre-histoire\/" tabindex="0"/);
+});
+
+test('Seule la couverture active est cliquable, accessible au clavier, et le balayage ne navigue pas',async()=>{
+ const css=await readFile('site/assets/style.css','utf8');
+ const js=await readFile('site/assets/main.js','utf8');
+ assert.match(css,/\.art-backdrop \.cover-card-active \.cover-story-link\[href\]\{pointer-events:auto;cursor:pointer\}/);
+ assert.match(css,/\.cover-story-link:focus-visible\{/);
+ assert.match(css,/\.cover-story-link:not\(\[href\]\)\{display:none\}/);
+ assert.match(js,/link\.removeAttribute\('href'\)/);
+ assert.match(js,/link\.tabIndex=delta===0&&link\.hasAttribute\('href'\)\?0:-1/);
+ assert.match(js,/suppressCoverClick/);
+});
+
 test('Les slugs inconnus ou privés, les doublons et les options dangereuses échouent',()=>{
  const edit=entries=>({...cfg,stories:entries});
  assert.throws(()=>validateCarouselConfig(edit([{slug:'inconnue'}]),stories),/absente ou en brouillon/);
