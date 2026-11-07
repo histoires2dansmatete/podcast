@@ -45,7 +45,8 @@
     "les-aventures-de-perly-et-popette": {
       "src": "assets/audio/E1-Perly-et-Popette-La-Rencontre.mp3",
       "platforms": {
-        "spotify": "https://open.spotify.com/episode/34ezyGkUFvqDksfgoe2ARQ?si=PoRVvzOPTWmEj5Bjt1dHOw"
+        "spotify": "https://open.spotify.com/episode/34ezyGkUFvqDksfgoe2ARQ?si=PoRVvzOPTWmEj5Bjt1dHOw",
+        "youtube": "https://www.youtube.com/watch?v=z0PE1Q_bRY0&list=PLRxYVymncVeo&index=1"
       }
     },
     "la-disparition": {
