@@ -2,10 +2,10 @@
   "$schema": "./images.config.schema.json",
   "description": "Catalogue des images pour toutes les pages. Les entrées globales pilotent explicitement le logo, la présentation accueil, la bio et la page écoute. Si un fichier est absent, le logo local est utilisé.",
   "globals": {
-    "logo": "assets/logo.webp",
-    "aboutVisual": "assets/images/logo.png",
-    "bioImage": "assets/images/about_me.png",
-    "listenArt": "assets/images/about_me.png"
+    "logo": "assets/images/optimized/logo_new.webp",
+    "aboutVisual": "assets/images/optimized/logo_new.webp",
+    "bioImage": "assets/images/optimized/logo_new.webp",
+    "listenArt": "assets/images/optimized/logo_new.webp"
   },
   "stories": {
     "lamitie-comme-sur-des-roulettes": "assets/images/minipeton.png",
