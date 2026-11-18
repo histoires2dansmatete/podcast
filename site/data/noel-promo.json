@@ -3,7 +3,7 @@
   "subtitle": "Au secours de l'esprit de Noël",
   "description": "Ouvrez une case chaque jour de décembre : un nouvel épisode audio vous attend.",
   "image": "assets/images/sacha.png",
-  "hasPodcast": false,
+  "hasPodcast": true,
   "schedule": {
     "teaserStart": "11-01",
     "calendarStart": "11-24",
