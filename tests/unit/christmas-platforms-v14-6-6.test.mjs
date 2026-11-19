@@ -26,7 +26,7 @@ test('Noël : Spotify et YouTube indépendants pour l’introduction et chacune 
  assert.equal(data.episodes.length,25);
  assert.equal(data.episodes[0].platforms.spotify,spotify);
  assert.equal(data.episodes[0].platforms.youtube,youtube);
- assert.equal(data.episodes[1].platforms.spotify,'');
+ assert.deepEqual(data.episodes[1].platforms,christmasPlatformLinks(config.episodes[1]));
 });
 
 test('Noël : une seule plateforme renseignée fonctionne, aucune plateforme affiche attente',async()=>{

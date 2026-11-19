@@ -125,7 +125,7 @@ test('La préface apparaît sous le hero, sans mention du fuseau dans le texte v
  assert.ok(hero>=0&&intro>hero&&calendar>intro);
  assert.ok(html.includes('id="christmas-prologue-title"'));
  // Forcer un cas sans audio ni plateforme, quelle que soit la configuration de l'éditeur.
- const withoutAudio=structuredClone(cfg);withoutAudio.introduction.src='';withoutAudio.introduction.platformUrl='';
+ const withoutAudio=structuredClone(cfg);withoutAudio.introduction.src='';withoutAudio.introduction.platformUrl='';withoutAudio.introduction.platforms={spotify:'',youtube:''};
  assert.match(await christmasHtml(withoutAudio,tpl),/class="christmas-prologue-placeholder"/);
  assert.doesNotMatch(html,/Heure de Paris|heure de Paris/);
  assert.equal((html.match(/class="christmas-door"/g)||[]).length,25);
