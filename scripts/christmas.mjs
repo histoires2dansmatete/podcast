@@ -8,7 +8,7 @@ const localIntro='assets/audio/noel/introduction.mp3';
 export const defaultChristmasIntroduction=Object.freeze({
  title:'Avant d’ouvrir la première porte',
  text:'Bienvenue dans notre calendrier de Noël ! Cette histoire se découvre en 25 petits épisodes, à écouter au fil du mois de décembre.\n\nInstallez-vous confortablement et laissez-vous emporter par la magie de Noël.',
- src:''
+ src:'',platforms:{spotify:'',youtube:''}
 });
 export function withChristmasIntroduction(config){
  if(Object.prototype.hasOwnProperty.call(config,'introduction'))return config;
@@ -36,6 +36,32 @@ export function validateChristmasPlatformUrl(url){
  if(parsed.protocol!=='https:'||!parsed.hostname||parsed.username||parsed.password)throw Error('Noël : lien plateforme HTTPS requis');
  return parsed.href;
 }
+/** Spotify et YouTube : mêmes clés que content/audio.config.json.
+ * Les anciens liens uniques restent lisibles ; un nouveau lien explicite prime. */
+export function christmasPlatformLinks(entry={}){
+ const explicit=Object.hasOwn(entry,'platforms')?entry.platforms:{};
+ if(explicit===null||typeof explicit!=='object'||Array.isArray(explicit))throw Error('Noël : platforms doit être un objet');
+ for(const key of Object.keys(explicit))if(!['spotify','youtube'].includes(key))throw Error(`Noël : plateforme inconnue : ${key}`);
+ const links={spotify:validateChristmasPlatformUrl(explicit.spotify),youtube:validateChristmasPlatformUrl(explicit.youtube)};
+ const previous=validateChristmasPlatformUrl(entry.platformUrl);
+ let legacy='';
+ if(previous){
+  const host=new URL(previous).hostname.toLowerCase();
+  const spotify=host==='spotify.com'||host.endsWith('.spotify.com');
+  const youtube=host==='youtube.com'||host.endsWith('.youtube.com')||host==='youtu.be';
+  if(spotify){if(!Object.hasOwn(explicit,'spotify'))links.spotify=previous;}
+  else if(youtube){if(!Object.hasOwn(explicit,'youtube'))links.youtube=previous;}
+  else legacy=previous; // Ne pas perdre un ancien lien vers un autre hébergeur.
+ }
+ return {...links,legacy};
+}
+function platformLinksMarkup(entry,context){
+ const links=christmasPlatformLinks(entry);
+ const buttons=[['spotify','Spotify'],['youtube','YouTube'],['legacy','la plateforme']]
+  .filter(([key])=>links[key])
+  .map(([key,label])=>`<a class="christmas-platform-link christmas-platform-link--${key}" href="${escapeHtml(links[key])}" target="_blank" rel="noopener noreferrer">Écouter ${context} sur ${label} <span aria-hidden="true">↗</span></a>`);
+ return buttons.length?`<div class="christmas-platform-links" aria-label="Plateformes pour ${context}">${buttons.join('')}</div>`:'';
+}
 async function validateLocalAudio(src){
  if(!src||!src.startsWith('assets/audio/noel/'))return;
  let file;
@@ -51,14 +77,14 @@ export function validateChristmasConfig(cfg){
  if(typeof intro.title!=='string'||!intro.title.trim()||intro.title.length>120)throw Error('Noël : titre introduction invalide');
  if(typeof intro.text!=='string'||!intro.text.trim()||intro.text.length>3000)throw Error('Noël : texte introduction invalide');
  validatedHttpsOrLocal(intro.src,localIntro,'Noël : MP3 introduction doit être local (assets/audio/noel/introduction.mp3) ou HTTPS');
- validateChristmasPlatformUrl(intro.platformUrl);
+ christmasPlatformLinks(intro);
  const days=new Set();
  for(const entry of cfg.episodes){
   if(!entry||!Number.isInteger(entry.day)||entry.day<1||entry.day>25||days.has(entry.day))throw Error('Noël : journées 1 à 25 uniques requises');
   days.add(entry.day);
   if(typeof entry.title!=='string'||!entry.title.trim()||entry.title.length>90)throw Error(`Noël : titre invalide au jour ${entry.day}`);
   if(typeof entry.src!=='string')throw Error(`Noël : source audio invalide au jour ${entry.day}`);
-  validateChristmasPlatformUrl(entry.platformUrl);
+  christmasPlatformLinks(entry);
   if(entry.src){
    const local=`assets/audio/noel/${String(entry.day).padStart(2,'0')}.mp3`;
    if(entry.src!==local){
@@ -78,12 +104,12 @@ export async function christmasHtml(config,template){
  const doors=episodes.map(ep=>`<button class="christmas-door" type="button" data-day="${ep.day}" disabled aria-label="Case ${ep.day}, encore fermée"><span class="door-ornament" aria-hidden="true">${['✧','✦','❄','✳','★'][ep.day%5]}</span><span class="door-number">${ep.day}</span><span class="door-caption">À découvrir</span></button>`).join('\n');
  const intro=introFor(config);
  const introParagraphs=intro.text.split(/\n\s*\n/).filter(p=>p.trim()).map(p=>`<p>${escapeHtml(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
- const introPlatform=intro.platformUrl?`<a class="christmas-platform-link" href="${escapeHtml(validateChristmasPlatformUrl(intro.platformUrl))}" rel="noopener noreferrer" target="_blank">Écouter l’introduction sur la plateforme ↗</a>`:'';
+ const introPlatform=platformLinksMarkup(intro,'l’introduction');
  const introPlayer=intro.src
   ? `<audio id="christmas-intro-audio" controls preload="none" data-src="${escapeHtml(intro.src)}" aria-label="Écouter l’introduction de l’histoire de Noël">Votre navigateur ne prend pas en charge l’audio HTML5.</audio>`
   : introPlatform?'':'<p class="christmas-prologue-placeholder">L’enregistrement d’introduction sera bientôt disponible.</p>';
  const schedule=validateChristmasSchedule(config.schedule||DEFAULT_CHRISTMAS_SCHEDULE);
- const clean={title:config.title,subtitle:config.subtitle,intro:config.intro,schedule,episodes};
+ const clean={title:config.title,subtitle:config.subtitle,intro:config.intro,schedule,episodes:episodes.map(ep=>({...ep,platforms:christmasPlatformLinks(ep)}))};
  const endMonth=Number(schedule.calendarEnd.slice(0,2)),endDay=Number(schedule.calendarEnd.slice(3));
  const endLabel=new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(2025,endMonth-1,endDay)));
  const windowLabel=`Calendrier accessible du ${christmasOpenLabel(schedule)} au ${endLabel}`;
@@ -110,7 +136,8 @@ export async function writeChristmas(){
  const teaser=carousel.christmasTeaser;
  const image=teaser?.enabled ? teaser.image : 'assets/images/noel-teaser.svg';
  const schedule=validateChristmasSchedule(cfg.schedule||DEFAULT_CHRISTMAS_SCHEDULE);
- const podcastAvailable=Boolean(cfg.introduction?.src||cfg.introduction?.platformUrl||cfg.episodes.some(entry=>entry.src||entry.platformUrl));
+ const hasLinks=entry=>Object.values(christmasPlatformLinks(entry)).some(Boolean);
+ const podcastAvailable=Boolean(cfg.introduction?.src||hasLinks(cfg.introduction)||cfg.episodes.some(entry=>entry.src||hasLinks(entry)));
  await writeFile('site/data/noel-promo.json',JSON.stringify({
   title:cfg.title,subtitle:cfg.subtitle,description:cfg.intro,
   image,hasPodcast:podcastAvailable,schedule

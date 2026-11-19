@@ -6,158 +6,173 @@
     "title": "Avant d’ouvrir la première porte",
     "text": "Bienvenue dans notre calendrier de Noël ! Cette histoire se découvre en 25 petits épisodes, à écouter au fil du mois de décembre.\n\nInstallez-vous confortablement et laissez-vous emporter par la magie de Noël.",
     "src": "",
-    "platformUrl": "https://open.spotify.com/episode/7pt8eT1rgqJMH5bY0541XA?si=CU8txXqCSi2isJHZit74zQ"
+    "platforms": {
+      "spotify": "https://open.spotify.com/episode/7pt8eT1rgqJMH5bY0541XA?si=CU8txXqCSi2isJHZit74zQ",
+      "youtube": "https://www.youtube.com/watch?v=VOTRE_VIDEO"
+    }
   },
   "episodes": [
     {
       "day": 1,
       "title": "Partie 01",
       "src": "",
-      "platformUrl": "https://open.spotify.com/episode/3GDugO3mXCbr2W9oUdRD59?si=JA8w4X_-T6qi4u18PyA4OQ"
+      "platforms": {
+        "spotify": "https://open.spotify.com/episode/3GDugO3mXCbr2W9oUdRD59?si=JA8w4X_-T6qi4u18PyA4OQ",
+        "youtube": "https://www.youtube.com/watch?v=VOTRE_VIDEO"
+      }
     },
     {
       "day": 2,
       "title": "Partie 02",
       "src": "",
-      "platformUrl": "https://open.spotify.com/episode/17bNV65tFawKpIYFESHbir?si=skWkbFaiR3ixjFSleqmUDQ"
+      "platforms": {
+        "spotify": "https://open.spotify.com/episode/17bNV65tFawKpIYFESHbir?si=skWkbFaiR3ixjFSleqmUDQ",
+        "youtube": "https://www.youtube.com/watch?v=VOTRE_VIDEO"
+      }
     },
     {
       "day": 3,
       "title": "Partie 03",
       "src": "",
-      "platformUrl": "https://open.spotify.com/episode/5GzufxZpLoaCUR3X7rWocm?si=1B7Q9nvsTBig5W5AI7dvIg"
+      "platforms": {
+        "spotify": "https://open.spotify.com/episode/5GzufxZpLoaCUR3X7rWocm?si=1B7Q9nvsTBig5W5AI7dvIg",
+        "youtube": "https://www.youtube.com/watch?v=VOTRE_VIDEO"
+      }
     },
     {
       "day": 4,
       "title": "Partie 04",
       "src": "",
-      "platformUrl": "https://open.spotify.com/episode/1zRdsQ3zIXpmRLcPBUUBtz?si=mV46XKqjSiaAimSUA_847w"
+      "platforms": {
+        "spotify": "https://open.spotify.com/episode/1zRdsQ3zIXpmRLcPBUUBtz?si=mV46XKqjSiaAimSUA_847w",
+        "youtube": "https://www.youtube.com/watch?v=VOTRE_VIDEO"
+      }
     },
     {
       "day": 5,
       "title": "Partie 05",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 6,
       "title": "Partie 06",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 7,
       "title": "Partie 07",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 8,
       "title": "Partie 08",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 9,
       "title": "Partie 09",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 10,
       "title": "Partie 10",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 11,
       "title": "Partie 11",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 12,
       "title": "Partie 12",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 13,
       "title": "Partie 13",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 14,
       "title": "Partie 14",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 15,
       "title": "Partie 15",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 16,
       "title": "Partie 16",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 17,
       "title": "Partie 17",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 18,
       "title": "Partie 18",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 19,
       "title": "Partie 19",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 20,
       "title": "Partie 20",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 21,
       "title": "Partie 21",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 22,
       "title": "Partie 22",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 23,
       "title": "Partie 23",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 24,
       "title": "Partie 24",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     },
     {
       "day": 25,
       "title": "Partie 25",
       "src": "",
-      "platformUrl": ""
+      "platforms": {}
     }
   ],
   "schedule": {

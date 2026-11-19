@@ -129,3 +129,21 @@ Les valeurs sont au format **`MM-JJ`** (`11-25` pour le 25 novembre) et se rép�
 Lors de la mise à jour depuis V14.5, le correctif ne remplace **pas** `noel.config.json`. Lancez `npm run site:config:setup` : la commande ajoute les quatre dates par défaut seulement si la rubrique `schedule` est absente, sans changer vos MP3 ou vos titres. Vous pouvez ensuite les personnaliser et relancer `npm run build`.
 
 **Important :** le build publie aussi `data/noel-schedule.json`, utilisé par le contrôle d'accès Cloudflare. Ne modifiez pas ce fichier généré à la main. Déployez les changements sur GitHub pour que les dates en production soient actualisées. Les URL audio tierces restent publiquement accessibles chez leur fournisseur, même hors saison.
+
+
+## V14.6.6 — Spotify **et** YouTube pour chaque partie de Noël
+
+Le champ historique `platformUrl` est remplacé, pour les nouvelles configurations, par `platforms` (comme les histoires du site) :
+
+```json
+"platforms": {
+  "spotify": "https://open.spotify.com/episode/VOTRE_EPISODE",
+  "youtube": "https://www.youtube.com/watch?v=VOTRE_VIDEO"
+}
+```
+
+Ajoutez ce bloc **à l'introduction ainsi qu'aux entrées des 25 épisodes**, indépendamment de `src` (MP3). Les cases déverrouillées proposent un bouton par plateforme active ; l'introduction propose également ses deux liens. Avec un seul lien, un seul bouton apparaît.
+
+`npm run site:config:setup` ajoute ces champs s'ils sont absents et récupère les anciens `platformUrl` Spotify/YouTube sans supprimer vos contenus. Ne remplacez pas l'ensemble de `noel.config.json` par un exemple. Les dates `schedule` et l'accès saisonnier sont inchangés.
+
+Voir `CORRECTIF-NOEL-SPOTIFY-YOUTUBE-V14-6-6.md` pour l'installation.

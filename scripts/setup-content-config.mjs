@@ -3,6 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {DEFAULT_CHRISTMAS_SCHEDULE} from '../functions/_lib/christmas.js';
 import {ensureYoutubePlatforms} from './migrate-youtube-platforms.mjs';
+import {christmasPlatformLinks} from './christmas.mjs';
 await ensureYoutubePlatforms();
 const read=async file=>{try{return JSON.parse(await readFile(file,'utf8'))}catch(error){if(error.code==='ENOENT')return null;throw error;}};
 const save=(file,data)=>writeFile(file,JSON.stringify(data,null,2)+'\n');
@@ -35,7 +36,14 @@ const noel=await read('content/noel.config.json');
 if(!noel)throw Error('content/noel.config.json introuvable');
 let changed=false;
 if(!Object.hasOwn(noel,'schedule')){noel.schedule={...DEFAULT_CHRISTMAS_SCHEDULE};changed=true;}
-if(noel.introduction&&!('platformUrl' in noel.introduction)){noel.introduction.platformUrl='';changed=true;}
-for(const episode of noel.episodes||[])if(!('platformUrl' in episode)){episode.platformUrl='';changed=true;}
+for(const entry of [noel.introduction,...(noel.episodes||[])]){
+ if(!entry)continue;
+ // Migration additive : l'ancien platformUrl reste présent pour ne perdre aucune URL.
+ const links=christmasPlatformLinks(entry);
+ if(!entry.platforms){entry.platforms={spotify:links.spotify,youtube:links.youtube};changed=true;}
+ else for(const provider of ['spotify','youtube'])if(!(provider in entry.platforms)){
+  entry.platforms[provider]=links[provider];changed=true;
+ }
+}
 if(changed){await save('content/noel.config.json',noel);console.log('✓ Configuration Noël enrichie sans écraser les titres, liens et MP3.');}
 else console.log('✓ Configuration Noël préservée.');

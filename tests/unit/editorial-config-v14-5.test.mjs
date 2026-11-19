@@ -61,10 +61,11 @@ test('Noël : chaque case peut proposer son MP3 et un lien HTTPS vers un épisod
  assert.equal(validateChristmasPlatformUrl('https://open.spotify.com/episode/abc'),'https://open.spotify.com/episode/abc');
  for(const value of ['javascript:alert(1)','http://example.com/x','https://x:pass@example.com/x','https://example.com/\" onload=\"a'])assert.throws(()=>validateChristmasPlatformUrl(value));
  const config=JSON.parse(await readFile('content/noel.config.json','utf8'));
+ delete config.episodes[0].platforms;delete config.introduction.platforms; // Ancien JSON sans rubrique `platforms`.
  config.episodes[0].platformUrl='https://open.spotify.com/episode/ep1';
  config.introduction.platformUrl='https://open.spotify.com/episode/intro';
  const html=await christmasHtml(config,await readFile('content/noel.template.html','utf8'));
- assert.match(html,/Écouter l’introduction sur la plateforme/);
+ assert.match(html,/Écouter l’introduction sur Spotify/);
  assert.match(html,/https:\/\/open.spotify.com\/episode\/ep1/);
- const script=await readFile('site/assets/christmas.js','utf8');assert.match(script,/episode\.platformUrl/);
+ const script=await readFile('site/assets/christmas.js','utf8');assert.match(script,/episode\.platforms/);
 });

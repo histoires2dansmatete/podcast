@@ -27,7 +27,8 @@ test('Migration V14.5 : anciens liens repris, 25 MP3 préservés et seconde exé
   const x=JSON.parse(await readFile(join(tmp,'content/noel.config.json'),'utf8'));
   assert.equal(x.episodes[24].src,'https://cdn.example.org/25.mp3');
   assert.equal(x.introduction.src,'https://cdn.example.org/my-intro.mp3');
-  assert.equal(x.episodes[24].platformUrl,'');
+  assert.deepEqual(x.episodes[24].platforms,{spotify:'',youtube:''});
+  assert.deepEqual(x.introduction.platforms,{spotify:'',youtube:''});
   assert.deepEqual(x.schedule,{teaserStart:'11-01',calendarStart:'11-25',firstEpisode:'12-01',calendarEnd:'12-26'});
   const paths=['content/platforms.config.json','content/visibility.config.json','content/noel.config.json','content/carousel.config.json'];
   const before=await Promise.all(paths.map(path=>readFile(join(tmp,path),'utf8')));

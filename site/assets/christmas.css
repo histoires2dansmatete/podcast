@@ -41,3 +41,12 @@
 /* Liens directs vers l'épisode : jamais visibles dans une case encore fermée. */
 .christmas-platform-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;margin-top:15px;padding:12px 18px;background:#f3e6d0;color:#285047;border:1px solid #cbbda1;border-radius:14px;font-weight:700;font-size:14px;text-decoration:none;overflow-wrap:anywhere}
 .christmas-platform-link:hover,.christmas-platform-link:focus-visible{background:#e8d6bc;outline-offset:3px}
+
+/* Choix indépendant de Spotify et YouTube pour l’introduction et les 25 épisodes. */
+.christmas-platform-links{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:12px}
+.christmas-platform-links .christmas-platform-link{margin-top:0;min-width:0;flex:0 1 auto;text-align:center}
+.christmas-platform-link--spotify{background:#e0eee2;border-color:#b9d4bd;color:#285047}
+.christmas-platform-link--spotify:hover,.christmas-platform-link--spotify:focus-visible{background:#cce5d1}
+.christmas-platform-link--youtube{background:#f6e1dc;border-color:#e1b7ad;color:#784549}
+.christmas-platform-link--youtube:hover,.christmas-platform-link--youtube:focus-visible{background:#f0d2ca}
+@media(max-width:480px){.christmas-platform-links{flex-direction:column;align-items:stretch}.christmas-platform-links .christmas-platform-link{width:100%;padding:12px}}

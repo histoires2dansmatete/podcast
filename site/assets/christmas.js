@@ -57,8 +57,17 @@
     const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=episode.src.startsWith('https://')?episode.src:'/'+episode.src+(localPreview?'?preview=1':'');
     audio.setAttribute('aria-label',`Écouter la partie ${n} de l’histoire de Noël`);
     content.append(audio);
-   }else if(!episode.platformUrl){p.textContent='Cette partie est prête à être racontée. Son enregistrement audio sera bientôt ajouté.';content.append(p);}
-   if(episode.platformUrl){const link=document.createElement('a');link.className='christmas-platform-link';link.href=episode.platformUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Écouter cet épisode sur la plateforme ↗';content.append(link);}
+   }else if(!Object.values(episode.platforms||{}).some(Boolean)){p.textContent='Cette partie est prête à être racontée. Son enregistrement audio sera bientôt ajouté.';content.append(p);}
+   const destinations=[['spotify','Spotify'],['youtube','YouTube'],['legacy','la plateforme']].filter(([key])=>episode.platforms?.[key]);
+   if(destinations.length){
+    const links=document.createElement('div');links.className='christmas-platform-links';links.setAttribute('aria-label',`Plateformes pour la partie ${n}`);
+    for(const [key,label] of destinations){
+     const link=document.createElement('a');link.className=`christmas-platform-link christmas-platform-link--${key}`;
+     link.href=episode.platforms[key];link.target='_blank';link.rel='noopener noreferrer';link.textContent=`Écouter sur ${label} ↗`;
+     links.append(link);
+    }
+    content.append(links);
+   }
    panel.hidden=false;panel.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});
   });
  });
